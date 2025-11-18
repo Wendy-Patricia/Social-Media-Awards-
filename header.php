@@ -10,7 +10,7 @@
         <li><a href="#categories">Catégories</a></li>
         <li><a href="#nominees">Nominés</a></li>
         <li><a href="#results">Résultats</a></li>
-        <li><a href="#contact">Contacts</a></li>
+        <li><a href="contact.php">Contacts</a></li>
         <li><a href="#about">À propos</a></li>
     </ul>
     <div class="nav-buttons">
