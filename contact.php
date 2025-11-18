@@ -102,7 +102,7 @@
                                 </div>
                                 <div class="method-content">
                                     <h3>Adresse</h3>
-                                    <p>123 Avenue des Champs-Élysées<br>75008 Paris, France</p>
+                                    <p>123 Avenue des Champs-Élysées<br>88100 Saint-Dié-des-Vosges, France</p>
                                     <span>Sur rendez-vous uniquement</span>
                                 </div>
                             </div>
@@ -175,7 +175,7 @@
                             <i class="fas fa-chevron-down"></i>
                         </div>
                         <div class="faq-answer">
-                            <p>Les gagnants sont déterminés par un système combinant les votes du public (70%) et l'évaluation d'un jury d'experts (30%).</p>
+                            <p>Les gagnants sont déterminés par un système basé sur les votes du public.</p>
                         </div>
                     </div>
                     

@@ -58,7 +58,7 @@
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-map-marker-alt"></i>
-                    <span>Paris, France</span>
+                    <span>Saint-Dié-des-Vosges, France</span>
                 </div>
             </div>
         </div>
