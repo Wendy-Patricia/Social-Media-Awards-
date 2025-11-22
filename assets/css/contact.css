@@ -1,6 +1,9 @@
-/* Contact Page Styles */
+/* STYLES POUR LA PAGE CONTACT - SOCIAL MEDIA AWARDS */
+
+/* Variables CSS pour la charte graphique */
 :root {
     --principal: #4FBDAB;
+    --principal-dark: #45a999;
     --secondary: #FF5A79;
     --tertiary: #FFD166;
     --white: #ffffff;
@@ -9,30 +12,94 @@
     --light-gray: #f8f9fa;
 }
 
+/* RESET ET CONFIGURATION GÉNÉRALE*/
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.main-content {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+/* SECTION HERO - PLEINE LARGEUR SANS ESPACE*/
+
+/**
+ * Section Hero principale sans marges latérales et sans espace avec le header
+ * @description Utilise un dégradé et compense l'espace du header fixe
+ */
 .contact-hero {
     background: linear-gradient(135deg, var(--principal) 0%, #3da895 100%);
     color: white;
-    padding: 100px 0 80px;
+    padding: 140px 0 80px; /* Compensation pour le header fixe */
     text-align: center;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-top: -80px; /* Compense l'espace du header */
+    box-sizing: border-box;
+}
+
+/**
+ * Container pour le contenu du Hero
+ * @description Centre le contenu tout en laissant le fond en pleine largeur
+ */
+.contact-hero .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
 }
 
 .contact-hero h1 {
     font-size: 3rem;
     margin-bottom: 1rem;
     font-weight: bold;
+    color: var(--white);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .contact-hero p {
     font-size: 1.2rem;
     max-width: 600px;
     margin: 0 auto;
-    opacity: 0.9;
+    color: var(--white);
+    opacity: 0.95;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+    line-height: 1.6;
 }
+
+/* SECTION PRINCIPALE DE CONTACT */
 
 .contact-section {
     padding: 80px 0;
     background: var(--light-gray);
 }
+
+/**
+ * Container principal pour le contenu
+ * @description Limite la largeur du contenu tout en maintenant le responsive
+ */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* GRILLE DE CONTACT*/
 
 .contact-grid {
     display: grid;
@@ -41,11 +108,18 @@
     align-items: start;
 }
 
+/*FORMULAIRE DE CONTACT*/
+
 .contact-form-container {
     background: white;
     padding: 40px;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.contact-form-container:hover {
+    transform: translateY(-5px);
 }
 
 .contact-form-container h2 {
@@ -121,10 +195,12 @@
 }
 
 .submit-button:hover {
-    background: #3da895;
+    background: var(--principal-dark);
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(79, 189, 171, 0.3);
 }
+
+/*INFORMATIONS DE CONTACT */
 
 .contact-info-container {
     background: white;
@@ -132,6 +208,11 @@
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     height: fit-content;
+    transition: transform 0.3s ease;
+}
+
+.contact-info-container:hover {
+    transform: translateY(-5px);
 }
 
 .contact-info-container h2 {
@@ -177,6 +258,11 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.contact-method:hover .method-icon {
+    transform: scale(1.1);
 }
 
 .method-icon i {
@@ -194,12 +280,15 @@
     color: var(--dark);
     margin-bottom: 5px;
     font-weight: 500;
+    line-height: 1.5;
 }
 
 .method-content span {
     color: var(--gray);
     font-size: 0.9rem;
 }
+
+/*  LIENS SOCIAUX */
 
 .social-contact h3 {
     color: var(--dark);
@@ -231,7 +320,8 @@
     transform: translateY(-3px);
 }
 
-/* FAQ Section */
+/*  SECTION FAQ */
+
 .faq-section {
     padding: 80px 0;
     background: white;
@@ -316,11 +406,43 @@
     padding: 0 25px;
 }
 
-/* Responsive Design */
+/* ANIMATIONS */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.contact-form-container,
+.contact-info-container {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.contact-form-container {
+    animation-delay: 0.1s;
+}
+
+.contact-info-container {
+    animation-delay: 0.2s;
+}
+
+/* DESIGN RESPONSIVE - TABLETTES */
+
 @media (max-width: 968px) {
     .contact-grid {
         grid-template-columns: 1fr;
         gap: 40px;
+    }
+    
+    .contact-hero {
+        padding: 120px 0 60px; /* Ajustement pour mobile */
+        margin-top: -70px; /* Compensation header mobile */
     }
     
     .contact-hero h1 {
@@ -328,9 +450,11 @@
     }
 }
 
+/* DESIGN RESPONSIVE - TÉLÉPHONES MOBILES*/
+
 @media (max-width: 768px) {
     .contact-hero {
-        padding: 80px 0 60px;
+        padding: 100px 0 50px;
     }
     
     .contact-hero h1 {
@@ -350,11 +474,27 @@
     .faq-section h2 {
         font-size: 2rem;
     }
+    
+    .contact-hero .container,
+    .container {
+        padding: 0 15px;
+    }
 }
 
+/*  DESIGN RESPONSIVE - PETITS TÉLÉPHONES */
+
 @media (max-width: 480px) {
+    .contact-hero {
+        padding: 90px 0 40px;
+        margin-top: -60px; /* Compensation header mobile petit */
+    }
+    
     .contact-hero h1 {
         font-size: 1.8rem;
+    }
+    
+    .contact-hero p {
+        font-size: 1rem;
     }
     
     .contact-form-container,
@@ -382,5 +522,23 @@
     
     .faq-question h3 {
         font-size: 1rem;
+    }
+    
+    .contact-hero .container,
+    .container {
+        padding: 0 10px;
+    }
+}
+
+/* GRANDS ÉCRANS*/
+
+@media (min-width: 1400px) {
+    .contact-hero .container,
+    .container {
+        max-width: 1300px;
+    }
+    
+    .contact-grid {
+        gap: 80px;
     }
 }

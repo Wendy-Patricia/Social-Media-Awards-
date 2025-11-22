@@ -1,0 +1,744 @@
+/* Styles pour la page des Résultats - Social Media Awards */
+
+/* Variables CSS pour les couleurs et le thème */
+:root {
+    --principal: #4FB9AB;
+    --secondary: #3da895;
+    --dark: #2C3E50;
+    --gray: #7F8C8D;
+    --light-gray: #F8F9FA;
+    --tertiary: #FFD700;
+    --secondary-pink: #FF5A79;
+    --white: #ffffff;
+}
+
+/* SECTION HERO - PLEINE LARGEUR SANS ESPACE*/
+
+/**
+ * Section Hero principale sans marges latérales et sans espace avec le header
+ * @description Utilise un dégradé et compense l'espace du header fixe
+ */
+.results-hero {
+    background: linear-gradient(135deg, var(--principal) 0%, #3da895 100%);
+    color: white;
+    padding: 140px 0 60px; /* Compensation pour le header fixe */
+    text-align: center;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-top: -80px; /* Compense l'espace du header */
+    box-sizing: border-box;
+}
+
+/**
+ * Container pour le contenu du Hero
+ * @description Centre le contenu tout en laissant le fond en pleine largeur
+ */
+.results-hero .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.results-hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+    color: var(--white);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.results-hero p {
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+    color: var(--white);
+    opacity: 0.95;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+    line-height: 1.6;
+}
+
+/* Sélecteur d'édition */
+.edition-selector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+
+#editionSelect {
+    padding: 12px 25px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 25px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 1rem;
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+}
+
+#editionSelect option {
+    background: var(--dark);
+    color: white;
+}
+
+/* Statistiques de votes */
+.vote-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.vote-stats .stat {
+    text-align: center;
+}
+
+.vote-stats .stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.vote-stats .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Section Vue d'ensemble des gagnants */
+.winners-overview {
+    padding: 80px 20px;
+    background: var(--light-gray);
+}
+
+.winners-overview h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    color: var(--dark);
+    margin-bottom: 50px;
+}
+
+/* Grille des gagnants */
+.winners-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Grand gagnant */
+.grand-winner {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+    position: relative;
+    border: 3px solid var(--tertiary);
+}
+
+.winner-crown {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    background: var(--tertiary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dark);
+    font-size: 1.5rem;
+}
+
+.winner-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 25px;
+    border: 5px solid var(--principal);
+}
+
+.winner-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.grand-winner h3 {
+    font-size: 1.8rem;
+    color: var(--dark);
+    margin-bottom: 10px;
+}
+
+.winner-category {
+    color: var(--principal);
+    font-weight: 600;
+    margin-bottom: 25px;
+    font-size: 1.1rem;
+}
+
+.winner-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.winner-stats .stat {
+    text-align: center;
+}
+
+.winner-stats .stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--principal);
+    margin-bottom: 5px;
+}
+
+.winner-stats .stat-label {
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+/* Badge de plateforme */
+.platform-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.platform-badge.instagram {
+    background: #E4405F;
+}
+
+.platform-badge.tiktok {
+    background: #000000;
+}
+
+.platform-badge.youtube {
+    background: #FF0000;
+}
+
+/* Top des gagnants */
+.top-winners {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.top-winner {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.top-winner:hover {
+    transform: translateY(-5px);
+}
+
+.winner-rank {
+    width: 40px;
+    height: 40px;
+    background: var(--gray);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.top-winner:nth-child(1) .winner-rank {
+    background: #C0C0C0; /* Argent */
+}
+
+.top-winner:nth-child(2) .winner-rank {
+    background: #CD7F32; /* Bronze */
+}
+
+.top-winner .winner-image {
+    width: 60px;
+    height: 60px;
+    border: 3px solid var(--light-gray);
+    margin: 0;
+}
+
+.top-winner .winner-info {
+    flex: 1;
+}
+
+.top-winner h4 {
+    color: var(--dark);
+    margin-bottom: 5px;
+    font-size: 1.1rem;
+}
+
+.top-winner p {
+    color: var(--gray);
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.votes {
+    color: var(--principal);
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+/* Section Résultats par Catégorie */
+.category-results {
+    padding: 80px 20px;
+    background: white;
+}
+
+.category-results h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    color: var(--dark);
+    margin-bottom: 50px;
+}
+
+/* Onglets des catégories */
+.results-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 50px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 12px 25px;
+    border: 2px solid var(--principal);
+    background: transparent;
+    color: var(--principal);
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.tab-btn.active,
+.tab-btn:hover {
+    background: var(--principal);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Grille des résultats */
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Carte de résultat */
+.result-card {
+    background: var(--light-gray);
+    padding: 30px;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.result-card:hover {
+    border-color: var(--principal);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+/* En-tête de catégorie */
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+}
+
+.category-header h3 {
+    color: var(--dark);
+    margin: 0;
+    font-size: 1.3rem;
+    flex: 1;
+}
+
+/* Tags des plateformes */
+.platform-tag {
+    padding: 6px 15px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+    margin-left: 15px;
+}
+
+.platform-tag.tiktok { background: #000000; }
+.platform-tag.instagram { background: #E4405F; }
+.platform-tag.youtube { background: #FF0000; }
+
+/* Liste des gagnants */
+.winners-list {
+    margin-bottom: 25px;
+}
+
+.winner-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: transform 0.3s ease;
+}
+
+.winner-item:hover {
+    transform: translateX(5px);
+}
+
+.winner-item.gold {
+    border-left: 4px solid #FFD700;
+}
+
+.winner-item.silver {
+    border-left: 4px solid #C0C0C0;
+}
+
+.winner-item.bronze {
+    border-left: 4px solid #CD7F32;
+}
+
+.winner-rank {
+    font-size: 1.5rem;
+    width: 40px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.winner-details {
+    flex: 1;
+}
+
+.winner-details h4 {
+    color: var(--dark);
+    margin-bottom: 5px;
+    font-size: 1.1rem;
+}
+
+.winner-details p {
+    color: var(--gray);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.vote-percentage {
+    color: var(--principal);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* Statistiques de catégorie */
+.category-stats {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.category-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.category-stats span {
+    color: var(--gray);
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.category-stats strong {
+    color: var(--dark);
+    font-size: 1.1rem;
+}
+
+/* SECTION STATISTIQUES GLOBALES - PLEINE LARGEUR*/
+
+/**
+ * Section des statistiques globales - Pleine largeur avec fond rose
+ * @description Utilise une couleur unie et occupe toute la largeur
+ */
+.statistics-section {
+    background: var(--secondary-pink);
+    color: white;
+    padding: 80px 0;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    box-sizing: border-box;
+}
+
+.statistics-section h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 50px;
+    color: white;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.stat-card {
+    background: rgba(255,255,255,0.2);
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.4);
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+    background: rgba(255,255,255,0.25);
+}
+
+.stat-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    opacity: 0.9;
+}
+
+.stat-content .stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.stat-content .stat-label {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+/* DESIGN RESPONSIVE - TABLETTES */
+
+@media (max-width: 968px) {
+    .winners-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .edition-selector {
+        flex-direction: column;
+        gap: 30px;
+    }
+    
+    .grand-winner {
+        padding: 30px 20px;
+    }
+    
+    .results-hero {
+        padding: 120px 0 50px; /* Ajustement pour mobile */
+        margin-top: -70px; /* Compensation header mobile */
+    }
+    
+    .results-hero h1 {
+        font-size: 2.2rem;
+    }
+    
+    .results-hero p {
+        font-size: 1.1rem;
+    }
+    
+    .statistics-section {
+        padding: 60px 0;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .stat-card {
+        padding: 20px 15px;
+    }
+    
+    .stat-icon {
+        font-size: 2.5rem;
+    }
+    
+    .stat-content .stat-number {
+        font-size: 2rem;
+    }
+}
+
+/*  DESIGN RESPONSIVE - TÉLÉPHONES MOBILES */
+
+@media (max-width: 768px) {
+    .results-hero {
+        padding: 80px 15px 50px;
+    }
+    
+    .results-hero h1 {
+        font-size: 2.2rem;
+    }
+    
+    .results-hero p {
+        font-size: 1.1rem;
+        padding: 0 10px;
+    }
+    
+    .winners-overview h2,
+    .category-results h2,
+    .statistics-section h2 {
+        font-size: 2rem;
+    }
+    
+    .category-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .platform-tag {
+        margin-left: 0;
+        align-self: flex-start;
+    }
+    
+    .winner-stats {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .stat-card {
+        padding: 20px 15px;
+    }
+    
+    .stat-icon {
+        font-size: 2.5rem;
+    }
+    
+    .stat-content .stat-number {
+        font-size: 2rem;
+    }
+    
+    .top-winner {
+        padding: 20px 15px;
+    }
+    
+    .result-card {
+        padding: 20px 15px;
+    }
+    
+    .vote-stats {
+        gap: 25px;
+    }
+    
+    .vote-stats .stat-number {
+        font-size: 1.7rem;
+    }
+}
+
+/*DESIGN RESPONSIVE - PETITS TÉLÉPHONES*/
+
+@media (max-width: 480px) {
+    .results-hero {
+        padding: 100px 0 40px;
+        margin-top: -60px; /* Compensation header mobile petit */
+    }
+    
+    .results-hero h1 {
+        font-size: 1.8rem;
+    }
+    
+    .results-hero p {
+        font-size: 1rem;
+    }
+    
+    .results-tabs {
+        gap: 10px;
+    }
+    
+    .tab-btn {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .winner-image {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .grand-winner h3 {
+        font-size: 1.5rem;
+    }
+    
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/*STYLES POUR LES TRÈS GRANDS ÉCRANS */
+
+@media (min-width: 1400px) {
+    .results-grid {
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    }
+    
+    .winners-grid {
+        max-width: 1400px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

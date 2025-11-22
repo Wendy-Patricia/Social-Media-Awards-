@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +14,7 @@
     <?php include 'header.php'; ?>
 
     <div class="main-content">
-        <!-- Hero Banner Section -->
+        <!-- SECTION HERO - PLEINE LARGEUR SANS ESPACE-->
         <section class="contact-hero">
             <div class="container">
                 <h1>Contactez-nous</h1>
@@ -23,11 +22,11 @@
             </div>
         </section>
 
-        <!-- Contact Section -->
+        <!--SECTION PRINCIPALE DE CONTACT -->
         <section class="contact-section">
             <div class="container">
                 <div class="contact-grid">
-                    <!-- Contact Form -->
+                    <!-- Formulaire de Contact -->
                     <div class="contact-form-container">
                         <h2>Envoyez-nous un message</h2>
                         <p class="form-description">Remplissez le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais.</p>
@@ -68,12 +67,13 @@
                         </form>
                     </div>
 
-                    <!-- Contact Info -->
+                    <!-- Informations de Contact -->
                     <div class="contact-info-container">
                         <h2>Nos coordonnées</h2>
                         <p class="info-description">N'hésitez pas à nous contacter par l'un des moyens suivants :</p>
                         
                         <div class="contact-methods">
+                            <!-- Méthode 1 : Email -->
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-envelope"></i>
@@ -85,6 +85,7 @@
                                 </div>
                             </div>
                             
+                            <!-- Méthode 2 : Téléphone -->
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-phone"></i>
@@ -96,6 +97,7 @@
                                 </div>
                             </div>
                             
+                            <!-- Méthode 3 : Adresse -->
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-map-marker-alt"></i>
@@ -107,6 +109,7 @@
                                 </div>
                             </div>
                             
+                            <!-- Méthode 4 : Horaires -->
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-clock"></i>
@@ -119,22 +122,23 @@
                             </div>
                         </div>
                         
+                        <!-- Liens Sociaux -->
                         <div class="social-contact">
                             <h3>Suivez-nous sur les réseaux</h3>
                             <div class="social-links">
-                                <a href="#" class="social-link">
+                                <a href="#" class="social-link" aria-label="Facebook">
                                     <i class="fab fa-facebook-f"></i>
                                 </a>
-                                <a href="#" class="social-link">
+                                <a href="#" class="social-link" aria-label="Twitter">
                                     <i class="fab fa-twitter"></i>
                                 </a>
-                                <a href="#" class="social-link">
+                                <a href="#" class="social-link" aria-label="Instagram">
                                     <i class="fab fa-instagram"></i>
                                 </a>
-                                <a href="#" class="social-link">
+                                <a href="#" class="social-link" aria-label="LinkedIn">
                                     <i class="fab fa-linkedin-in"></i>
                                 </a>
-                                <a href="#" class="social-link">
+                                <a href="#" class="social-link" aria-label="YouTube">
                                     <i class="fab fa-youtube"></i>
                                 </a>
                             </div>
@@ -144,11 +148,12 @@
             </div>
         </section>
 
-        <!-- FAQ Section -->
+        <!--  SECTION FAQ-->
         <section class="faq-section">
             <div class="container">
                 <h2>Questions fréquentes</h2>
                 <div class="faq-grid">
+                    <!-- Question 1 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Comment puis-je participer aux Social Media Awards ?</h3>
@@ -159,6 +164,7 @@
                         </div>
                     </div>
                     
+                    <!-- Question 2 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Quelles sont les catégories disponibles ?</h3>
@@ -169,6 +175,7 @@
                         </div>
                     </div>
                     
+                    <!-- Question 3 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Comment sont sélectionnés les gagnants ?</h3>
@@ -179,6 +186,7 @@
                         </div>
                     </div>
                     
+                    <!-- Question 4 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Puis-je devenir partenaire ou sponsor ?</h3>
@@ -186,6 +194,28 @@
                         </div>
                         <div class="faq-answer">
                             <p>Absolument ! Nous sommes toujours ouverts aux partenariats. Contactez-nous via le formulaire en sélectionnant "Partenariat et sponsoring" comme sujet.</p>
+                        </div>
+                    </div>
+
+                    <!-- Question 5 -->
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>Quand seront annoncés les résultats ?</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Les résultats seront annoncés lors de la cérémonie de remise des prix. Vous pourrez également les consulter sur notre site web immédiatement après l'événement.</p>
+                        </div>
+                    </div>
+
+                    <!-- Question 6 -->
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>Comment puis-je assister à la cérémonie ?</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Les billets pour la cérémonie seront disponibles en vente en ligne environ un mois avant l'événement. Les nominés recevront des invitations spéciales.</p>
                         </div>
                     </div>
                 </div>
@@ -197,5 +227,4 @@
 
     <script src="assets/js/contact.js"></script>
 </body>
-
 </html>

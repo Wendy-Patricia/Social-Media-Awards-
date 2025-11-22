@@ -1,9 +1,11 @@
+/*STYLES POUR LA PAGE D'ACCUEIL - SOCIAL MEDIA AWARDS */
+
+/* Reset et configuration de base */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-
 
 html, body {
     margin: 0;
@@ -12,8 +14,10 @@ html, body {
     overflow-x: hidden; 
 }
 
+/* Variables CSS pour la charte graphique */
 :root {
     --principal: #4FBDAB;
+    --principal-dark: #45a999;
     --secondary: #FF5A79;
     --tertiary: #FFD166;
     --white: #ffffff;
@@ -22,6 +26,7 @@ html, body {
     --light-gray: #f8f9fa;
 }
 
+/* Configuration générale du body */
 body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -32,18 +37,11 @@ body {
     position: relative;
 }
 
-.hero-banner,
-.hero-banner .banner-container {
-    width: 100%;
-    max-width: 100%;
-    padding: 0;
-    margin: 0;
-}
-
-
+/* Container principal */
 .main-content {
     padding: 0;
     min-height: calc(100vh - 160px);
+    width: 100%;
 }
 
 .container {
@@ -52,13 +50,24 @@ body {
     padding: 0 20px;
 }
 
+/*  SECTION HERO BANNER - PLEINE LARGEUR SANS ESPACE */
+
+/**
+ * Section Hero Banner principale sans marges latérales
+ * @description Utilise une image de fond et compense l'espace du header fixe
+ */
 .hero-banner {
     position: relative;
-    width: 100%;
+    width: 100vw;
     height: 100vh;
     min-height: 600px;
     max-height: 800px;
     overflow: hidden;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-top: -80px; /* Compense l'espace du header */
 }
 
 .banner-container {
@@ -103,10 +112,11 @@ body {
     font-size: 4rem;
     font-weight: bold;
     margin-bottom: 1rem;
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
     background: linear-gradient(135deg, #fff 0%, var(--principal) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .banner-subtitle {
@@ -123,6 +133,7 @@ body {
     flex-wrap: wrap;
 }
 
+/* Styles des boutons */
 .btn-primary {
     background: var(--principal);
     color: white;
@@ -136,10 +147,11 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    text-decoration: none;
 }
 
 .btn-primary:hover {
-    background: #3da895;
+    background: var(--principal-dark);
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(79, 189, 171, 0.3);
 }
@@ -157,6 +169,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    text-decoration: none;
 }
 
 .btn-secondary:hover {
@@ -166,7 +179,8 @@ body {
     box-shadow: 0 10px 25px rgba(79, 189, 171, 0.3);
 }
 
-/* Hero Section Styles */
+/*  SECTION HERO PRINCIPALE */
+
 .hero {
     padding: 80px 0;
     background: linear-gradient(135deg, var(--light-gray) 0%, #e9ecef 100%);
@@ -183,6 +197,7 @@ body {
     font-size: 2.5rem;
     color: var(--dark);
     margin-bottom: 1.5rem;
+    line-height: 1.2;
 }
 
 .hero-description {
@@ -213,6 +228,7 @@ body {
     font-size: 0.9rem;
 }
 
+/* Showcase des plateformes */
 .platforms-showcase {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -241,18 +257,20 @@ body {
     display: block;
 }
 
-.platform-item:nth-child(1) i { color: #000000; }
-.platform-item:nth-child(2) i { color: #E4405F; }
-.platform-item:nth-child(3) i { color: #FF0000; }
-.platform-item:nth-child(4) i { color: #1DA1F2; }
-.platform-item:nth-child(5) i { color: #1877F2; }
+/* Couleurs spécifiques pour chaque plateforme */
+.platform-item:nth-child(1) i { color: #000000; } /* TikTok */
+.platform-item:nth-child(2) i { color: #E4405F; } /* Instagram */
+.platform-item:nth-child(3) i { color: #FF0000; } /* YouTube */
+.platform-item:nth-child(4) i { color: #1DA1F2; } /* Twitter */
+.platform-item:nth-child(5) i { color: #1877F2; } /* Facebook */
 
 .platform-item span {
     font-weight: 600;
     color: var(--dark);
 }
 
-/* Edition Info Styles */
+/* SECTION ÉDITION INFO*/
+
 .edition-info {
     padding: 80px 0;
     background: white;
@@ -322,7 +340,8 @@ body {
     line-height: 1.6;
 }
 
-/* Categories Styles */
+/*  SECTION CATÉGORIES */
+
 .categories {
     padding: 80px 0;
     background: var(--light-gray);
@@ -422,7 +441,8 @@ body {
     display: inline-block;
 }
 
-/* Process Styles */
+/* SECTION PROCESSUS*/
+
 .process {
     padding: 80px 0;
     background: white;
@@ -478,11 +498,18 @@ body {
     line-height: 1.6;
 }
 
-/* Stats Styles */
+/* SECTION STATISTIQUES */
+
 .stats {
     padding: 80px 0;
     background: linear-gradient(135deg, var(--principal) 0%, #3da895 100%);
     color: white;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
 }
 
 .stats-grid {
@@ -500,11 +527,201 @@ body {
     font-size: 3rem;
     font-weight: bold;
     margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .stat-label {
     font-size: 1.2rem;
     opacity: 0.9;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+/* ANIMATIONS */
 
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animation pour les éléments au scroll */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease;
+}
+
+.animate-on-scroll.animated {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* DESIGN RESPONSIVE - TABLETTES*/
+
+@media (max-width: 968px) {
+    .hero .container {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    
+    .banner-title {
+        font-size: 3rem;
+    }
+    
+    .platforms-showcase {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .hero-stats {
+        justify-content: center;
+    }
+}
+
+/*  DESIGN RESPONSIVE - TÉLÉPHONES MOBILES */
+
+@media (max-width: 768px) {
+    .hero-banner {
+        height: 70vh;
+        min-height: 500px;
+        margin-top: -70px; /* Compensation header mobile */
+    }
+    
+    .banner-title {
+        font-size: 2.5rem;
+    }
+    
+    .banner-subtitle {
+        font-size: 1.2rem;
+    }
+    
+    .banner-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 250px;
+        justify-content: center;
+    }
+    
+    .hero {
+        padding: 60px 0;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .edition-info,
+    .categories,
+    .process,
+    .stats {
+        padding: 60px 0;
+    }
+    
+    .edition-info h2,
+    .categories h2,
+    .process h2 {
+        font-size: 2rem;
+    }
+    
+    .platforms-showcase {
+        grid-template-columns: 1fr;
+    }
+    
+    .hero-stats {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .timeline {
+        grid-template-columns: 1fr;
+    }
+    
+    .categories-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .process-steps {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/*  DESIGN RESPONSIVE - PETITS TÉLÉPHONES*/
+
+@media (max-width: 480px) {
+    .hero-banner {
+        height: 60vh;
+        min-height: 400px;
+        margin-top: -60px; /* Compensation header mobile petit */
+    }
+    
+    .banner-title {
+        font-size: 2rem;
+    }
+    
+    .banner-subtitle {
+        font-size: 1rem;
+    }
+    
+    .hero-title {
+        font-size: 1.8rem;
+    }
+    
+    .edition-info h2,
+    .categories h2,
+    .process h2 {
+        font-size: 1.8rem;
+    }
+    
+    .category-card {
+        padding: 30px 20px;
+    }
+    
+    .category-card h3 {
+        font-size: 1.1rem;
+        min-height: auto;
+    }
+    
+    .category-card p {
+        min-height: auto;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+    }
+    
+    .container {
+        padding: 0 15px;
+    }
+}
+
+/* GRANDS ÉCRANS*/
+
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1300px;
+    }
+    
+    .hero-banner {
+        max-height: 900px;
+    }
+    
+    .categories-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

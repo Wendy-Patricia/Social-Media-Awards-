@@ -27,9 +27,9 @@
             <h3 class="footer-title">Liens Rapides</h3>
             <ul class="footer-links">
                 <li><a href="index.php">Accueil</a></li>
-                <li><a href="#categories">Catégories</a></li>
-                <li><a href="#nominees">Nominés</a></li>
-                <li><a href="#results">Résultats</a></li>
+                <li><a href="categories.php">Catégories</a></li>
+                <li><a href="nominees.php">Nominés</a></li>
+                <li><a href="results.php">Résultats</a></li>
                 <li><a href="#winners">Vainqueurs</a></li>
             </ul>
         </div>
@@ -37,7 +37,7 @@
         <div class="footer-section">
             <h3 class="footer-title">Informations</h3>
             <ul class="footer-links">
-                <li><a href="#about">À Propos</a></li>
+                <li><a href="about.php">À Propos</a></li>
                 <li><a href="#rules">Règles</a></li>
                 <li><a href="#faq">FAQ</a></li>
                 <li><a href="#privacy">Politique de Confidentialité</a></li>
