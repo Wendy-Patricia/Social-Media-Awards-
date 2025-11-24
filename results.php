@@ -13,7 +13,6 @@
     <?php include 'header.php'; ?>
 
     <div class="main-content">
-        <!--  SECTION HERO - PLEINE LARGEUR SANS ESPACE -->
         <section class="results-hero">
             <div class="container">
                 <h1>Résultats 2025</h1>
@@ -38,12 +37,11 @@
             </div>
         </section>
 
-        <!-- Winners Overview -->
         <section class="winners-overview">
             <div class="container">
                 <h2>Les Grands Gagnants</h2>
                 <div class="winners-grid">
-                    <!-- Grand Winner -->
+
                     <div class="grand-winner">
                         <div class="winner-crown">
                             <i class="fas fa-crown"></i>
@@ -71,7 +69,6 @@
                         </div>
                     </div>
 
-                    <!-- Top Winners -->
                     <div class="top-winners">
                         <div class="top-winner">
                             <div class="winner-rank">2</div>
@@ -100,7 +97,6 @@
             </div>
         </section>
 
-        <!-- Results by Category -->
         <section class="category-results">
             <div class="container">
                 <h2>Résultats par Catégorie</h2>
@@ -112,7 +108,7 @@
                 </div>
 
                 <div class="results-grid">
-                    <!-- Catégorie 1 -->
+
                     <div class="result-card" data-platform="tiktok">
                         <div class="category-header">
                             <h3>Créateur Révélation de l'Année</h3>
@@ -156,7 +152,7 @@
                         </div>
                     </div>
 
-                    <!-- Catégorie 2 -->
+
                     <div class="result-card" data-platform="youtube">
                         <div class="category-header">
                             <h3>Meilleur Podcast en Ligne</h3>
@@ -200,7 +196,6 @@
                         </div>
                     </div>
 
-                    <!-- Catégorie 3 -->
                     <div class="result-card" data-platform="instagram">
                         <div class="category-header">
                             <h3>Meilleur Contenu Éducatif</h3>
@@ -244,7 +239,7 @@
                         </div>
                     </div>
 
-                    <!-- Catégorie 4 -->
+
                     <div class="result-card" data-platform="tiktok">
                         <div class="category-header">
                             <h3>Meilleur Contenu Humoristique</h3>
@@ -291,7 +286,6 @@
             </div>
         </section>
 
-        <!-- SECTION STATISTIQUES GLOBALES - PLEINE LARGEUR-->
         <section class="statistics-section">
             <div class="container">
                 <h2>Statistiques Globales</h2>

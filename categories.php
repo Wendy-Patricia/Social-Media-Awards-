@@ -13,7 +13,7 @@
     <?php include 'header.php'; ?>
 
     <div class="main-content">
-        <!--  SECTION HERO  -->
+
         <section class="categories-hero">
             <div class="hero-container">
                 <h1>Catégories de Compétition</h1>
@@ -35,10 +35,10 @@
             </div>
         </section>
 
-        <!-- GRILLE DES CATÉGORIES-->
+
         <section class="categories-section">
             <div class="container">
-                <!-- Filtres par plateforme -->
+
                 <div class="categories-filter">
                     <button class="filter-btn active" data-filter="all">Toutes</button>
                     <button class="filter-btn" data-filter="tiktok">TikTok</button>
@@ -49,7 +49,7 @@
                 </div>
 
                 <div class="categories-grid">
-                    <!-- Catégorie 1: Créateur Révélation de l'Année -->
+
                     <div class="category-card" data-platform="tiktok,instagram,youtube">
                         <div class="category-header">
                             <div class="category-icon">
@@ -76,7 +76,7 @@
                         <button class="btn-view-nominees">Voir les Nominés</button>
                     </div>
 
-                    <!-- Catégorie 2:Meilleur Podcast en Ligne -->
+
                     <div class="category-card" data-platform="youtube,spotify">
                         <div class="category-header">
                             <div class="category-icon">
@@ -102,7 +102,7 @@
                         <button class="btn-view-nominees">Voir les Nominés</button>
                     </div>
 
-                    <!-- Catégorie 3: Campagne Branded Content -->
+
                     <div class="category-card" data-platform="instagram">
                         <div class="category-header">
                             <div class="category-icon">
@@ -127,7 +127,7 @@
                         <button class="btn-view-nominees">Voir les Nominés</button>
                     </div>
 
-                    <!-- Catégorie 4 - Meilleur Challenge Viral -->
+
                     <div class="category-card" data-platform="tiktok,instagram">
                         <div class="category-header">
                             <div class="category-icon">
@@ -153,7 +153,7 @@
                         <button class="btn-view-nominees">Voir les Nominés</button>
                     </div>
 
-                    <!-- Catégorie 5 - Meilleur Live Stream -->
+
                     <div class="category-card" data-platform="youtube,twitch">
                         <div class="category-header">
                             <div class="category-icon">
@@ -179,7 +179,7 @@
                         <button class="btn-view-nominees">Voir les Nominés</button>
                     </div>
 
-                    <!--  Catégorie 6 - Meilleur Contenu Éducatif -->
+
                     <div class="category-card" data-platform="youtube,tiktok,instagram">
                         <div class="category-header">
                             <div class="category-icon">
@@ -206,7 +206,7 @@
                         <button class="btn-view-nominees">Voir les Nominés</button>
                     </div>
 
-                    <!--  Catégorie 7 - Meilleur Influenceur Lifestyle -->
+
                     <div class="category-card" data-platform="instagram,youtube,tiktok">
                         <div class="category-header">
                             <div class="category-icon">

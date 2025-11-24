@@ -28,14 +28,12 @@
                         <option value="revelation">Créateur Révélation</option>
                         <option value="podcast">Podcast en Ligne</option>
                         <option value="branded">Branded Content</option>
-                        <!-- ... autres catégories ... -->
                     </select>
                     <select id="platformFilter">
                         <option value="">Toutes les plateformes</option>
                         <option value="tiktok">TikTok</option>
                         <option value="instagram">Instagram</option>
                         <option value="youtube">YouTube</option>
-                        <!-- ... autres plateformes ... -->
                     </select>
                 </div>
             </div>
@@ -97,7 +95,6 @@
                         </div>
                     </div>
 
-                    <!-- Ajoute d'autres nominés ici -->
                 </div>
             </div>
         </section>

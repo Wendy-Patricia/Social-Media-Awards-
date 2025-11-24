@@ -14,7 +14,6 @@
     <?php include 'header.php'; ?>
 
     <div class="main-content">
-        <!-- SECTION HERO - PLEINE LARGEUR SANS ESPACE-->
         <section class="contact-hero">
             <div class="container">
                 <h1>Contactez-nous</h1>
@@ -22,11 +21,9 @@
             </div>
         </section>
 
-        <!--SECTION PRINCIPALE DE CONTACT -->
         <section class="contact-section">
             <div class="container">
                 <div class="contact-grid">
-                    <!-- Formulaire de Contact -->
                     <div class="contact-form-container">
                         <h2>Envoyez-nous un message</h2>
                         <p class="form-description">Remplissez le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais.</p>
@@ -67,13 +64,13 @@
                         </form>
                     </div>
 
-                    <!-- Informations de Contact -->
+
                     <div class="contact-info-container">
                         <h2>Nos coordonnées</h2>
                         <p class="info-description">N'hésitez pas à nous contacter par l'un des moyens suivants :</p>
                         
                         <div class="contact-methods">
-                            <!-- Méthode 1 : Email -->
+
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-envelope"></i>
@@ -85,7 +82,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Méthode 2 : Téléphone -->
+
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-phone"></i>
@@ -97,7 +94,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Méthode 3 : Adresse -->
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-map-marker-alt"></i>
@@ -109,7 +105,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Méthode 4 : Horaires -->
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-clock"></i>
@@ -122,7 +117,7 @@
                             </div>
                         </div>
                         
-                        <!-- Liens Sociaux -->
+
                         <div class="social-contact">
                             <h3>Suivez-nous sur les réseaux</h3>
                             <div class="social-links">
@@ -153,7 +148,6 @@
             <div class="container">
                 <h2>Questions fréquentes</h2>
                 <div class="faq-grid">
-                    <!-- Question 1 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Comment puis-je participer aux Social Media Awards ?</h3>
@@ -164,7 +158,7 @@
                         </div>
                     </div>
                     
-                    <!-- Question 2 -->
+
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Quelles sont les catégories disponibles ?</h3>
@@ -175,7 +169,6 @@
                         </div>
                     </div>
                     
-                    <!-- Question 3 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Comment sont sélectionnés les gagnants ?</h3>
@@ -186,7 +179,6 @@
                         </div>
                     </div>
                     
-                    <!-- Question 4 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Puis-je devenir partenaire ou sponsor ?</h3>
@@ -197,7 +189,6 @@
                         </div>
                     </div>
 
-                    <!-- Question 5 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Quand seront annoncés les résultats ?</h3>
@@ -208,7 +199,6 @@
                         </div>
                     </div>
 
-                    <!-- Question 6 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Comment puis-je assister à la cérémonie ?</h3>

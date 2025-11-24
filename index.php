@@ -37,7 +37,7 @@
             </div>
         </section>
 
-        <!--  SECTION HERO PRINCIPALE-->
+
         <section class="hero">
             <div class="container">
                 <div class="hero-content">
@@ -89,7 +89,7 @@
             </div>
         </section>
 
-        <!-- SECTION ÉDITION INFO -->
+
         <section class="edition-info" id="edition-info">
             <div class="container">
                 <h2>Édition 2025</h2>
@@ -119,7 +119,7 @@
             </div>
         </section>
 
-        <!-- SECTION CATÉGORIES POPULAIRES -->
+
         <section class="categories" id="categories">
             <div class="container">
                 <h2>Catégories de Compétition</h2>
@@ -134,7 +134,6 @@
                         <span class="platform-tag">Multi-Plateformes</span>
                     </div>
                     
-                    <!-- Catégorie 2 -->
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-podcast"></i>
@@ -144,7 +143,6 @@
                         <span class="platform-tag">YouTube/Spotify</span>
                     </div>
                     
-                    <!-- Catégorie 3 -->
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-bullhorn"></i>
@@ -154,7 +152,6 @@
                         <span class="platform-tag">Instagram</span>
                     </div>
                     
-                    <!-- Catégorie 4 -->
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-virus"></i>
@@ -164,7 +161,7 @@
                         <span class="platform-tag">Twitter</span>
                     </div>
                     
-                    <!-- Catégorie 5 -->
+
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-video"></i>
@@ -174,7 +171,6 @@
                         <span class="platform-tag">TikTok</span>
                     </div>
                     
-                    <!-- Catégorie 6 -->
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-graduation-cap"></i>
@@ -184,7 +180,7 @@
                         <span class="platform-tag">YouTube</span>
                     </div>
                     
-                    <!-- Catégorie 7 -->
+
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-utensils"></i>
@@ -194,7 +190,7 @@
                         <span class="platform-tag">Instagram</span>
                     </div>
                     
-                    <!-- Catégorie 8 -->
+
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-dumbbell"></i>
@@ -204,7 +200,7 @@
                         <span class="platform-tag">YouTube</span>
                     </div>
                     
-                    <!-- Catégorie 9 -->
+
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-paint-brush"></i>
@@ -214,7 +210,7 @@
                         <span class="platform-tag">Behance/Dribbble</span>
                     </div>
                     
-                    <!-- Catégorie 10 -->
+
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-gamepad"></i>
@@ -224,7 +220,7 @@
                         <span class="platform-tag">Twitch</span>
                     </div>
                     
-                    <!-- Catégorie 11 -->
+
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-heart"></i>
@@ -234,7 +230,7 @@
                         <span class="platform-tag">Multi-Plateformes</span>
                     </div>
                     
-                    <!-- Catégorie 12 -->
+
                     <div class="category-card">
                         <div class="category-icon">
                             <i class="fas fa-music"></i>
@@ -247,26 +243,26 @@
             </div>
         </section>
 
-        <!--SECTION PROCESSUS-->
+
         <section class="process">
             <div class="container">
                 <h2>Comment Participer</h2>
                 <div class="process-steps">
-                    <!-- Étape 1 -->
+
                     <div class="step">
                         <div class="step-number">1</div>
                         <h3>Créer un Compte</h3>
                         <p>Inscrivez-vous en tant qu'utilisateur pour voter ou en tant que candidat pour soumettre vos créations</p>
                     </div>
                     
-                    <!-- Étape 2 -->
+
                     <div class="step">
                         <div class="step-number">2</div>
                         <h3>Soumettre ou Voter</h3>
                         <p>Pendant les périodes ouvertes, soumettez vos candidatures ou votez pour vos favoris</p>
                     </div>
                     
-                    <!-- Étape 3 -->
+
                     <div class="step">
                         <div class="step-number">3</div>
                         <h3>Résultats</h3>
@@ -276,29 +272,29 @@
             </div>
         </section>
 
-        <!-- SECTION STATISTIQUES - PLEINE LARGEUR-->
+
         <section class="stats">
             <div class="container">
                 <div class="stats-grid">
-                    <!-- Statistique 1 -->
+
                     <div class="stat-item">
                         <div class="stat-number">50+</div>
                         <div class="stat-label">Catégories</div>
                     </div>
                     
-                    <!-- Statistique 2 -->
+
                     <div class="stat-item">
                         <div class="stat-number">1000+</div>
                         <div class="stat-label">Candidatures</div>
                     </div>
                     
-                    <!-- Statistique 3 -->
+
                     <div class="stat-item">
                         <div class="stat-number">50K+</div>
                         <div class="stat-label">Votes</div>
                     </div>
                     
-                    <!-- Statistique 4 -->
+
                     <div class="stat-item">
                         <div class="stat-number">5</div>
                         <div class="stat-label">Plateformes</div>
