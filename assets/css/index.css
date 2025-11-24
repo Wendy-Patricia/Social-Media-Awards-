@@ -1,6 +1,3 @@
-/*STYLES POUR LA PAGE D'ACCUEIL - SOCIAL MEDIA AWARDS */
-
-/* Reset et configuration de base */
 * {
     margin: 0;
     padding: 0;
@@ -14,7 +11,7 @@ html, body {
     overflow-x: hidden; 
 }
 
-/* Variables CSS pour la charte graphique */
+
 :root {
     --principal: #4FBDAB;
     --principal-dark: #45a999;
@@ -26,7 +23,7 @@ html, body {
     --light-gray: #f8f9fa;
 }
 
-/* Configuration générale du body */
+
 body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -37,7 +34,7 @@ body {
     position: relative;
 }
 
-/* Container principal */
+
 .main-content {
     padding: 0;
     min-height: calc(100vh - 160px);
@@ -50,12 +47,7 @@ body {
     padding: 0 20px;
 }
 
-/*  SECTION HERO BANNER - PLEINE LARGEUR SANS ESPACE */
 
-/**
- * Section Hero Banner principale sans marges latérales
- * @description Utilise une image de fond et compense l'espace du header fixe
- */
 .hero-banner {
     position: relative;
     width: 100vw;
@@ -112,10 +104,6 @@ body {
     font-size: 4rem;
     font-weight: bold;
     margin-bottom: 1rem;
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
-    background: linear-gradient(135deg, #fff 0%, var(--principal) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 

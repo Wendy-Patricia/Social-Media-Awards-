@@ -27,7 +27,7 @@
                                 <i class="fas fa-vote-yea"></i>
                                 Commencer à Voter
                             </a>
-                            <a href="#edition-info" class="btn-secondary">
+                            <a href="about.php" class="btn-secondary">
                                 <i class="fas fa-info-circle"></i>
                                 En savoir plus
                             </a>
