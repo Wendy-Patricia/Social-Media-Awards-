@@ -15,7 +15,7 @@
     </ul>
     <div class="nav-buttons">
         <button class="login-button">Connexion</button>
-        <button class="signup-button">Inscription</button>
+        <button><a href="inscription.php" class="signup-button">Inscription</a></button>
     </div>
     <div class="nav-toggle">
         <span></span>
