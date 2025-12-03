@@ -10,7 +10,7 @@
     <title>À Propos - Social Media Awards 2025</title>
 </head>
 <body>
-    <?php include 'header.php'; ?>
+    <?php include 'partials/header.php'; ?>
 
     <div class="main-content">
         <!-- Hero Section -->
@@ -92,6 +92,6 @@
         </section>
     </div>
 
-    <?php include 'footer.php'; ?>
+    <?php include 'partials/footer.php'; ?>
 </body>
 </html>

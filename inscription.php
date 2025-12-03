@@ -72,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="assets/css/inscription.css">
 </head>
 <body>
-    <?php include 'header.php'; ?>
+    <?php include 'partials/header.php'; ?>
 
     <div class="container">
         <div class="header">

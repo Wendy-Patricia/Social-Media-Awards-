@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <?php include 'header.php'; ?>
+    <?php include 'partials/header.php'; ?>
 
     <div class="main-content">
         <!--  SECTION HERO BANNER - PLEINE LARGEUR SANS ESPACE-->
@@ -304,7 +304,7 @@
         </section>
     </div>
 
-    <?php include 'footer.php'; ?>
+    <?php include 'partials/footer.php'; ?>
 
     <script src="assets/js/index.js"></script>
 </body>

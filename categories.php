@@ -10,7 +10,7 @@
     <title>Catégories - Social Media Awards 2025</title>
 </head>
 <body>
-    <?php include 'header.php'; ?>
+    <?php include 'partials/header.php'; ?>
 
     <div class="main-content">
 
@@ -238,7 +238,7 @@
         </section>
     </div>
 
-    <?php include 'footer.php'; ?>
+    <?php include 'partials/footer.php'; ?>
     <script src="assets/js/categories.js"></script>
 </body>
 </html>

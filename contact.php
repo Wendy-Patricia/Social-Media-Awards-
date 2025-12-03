@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <?php include 'header.php'; ?>
+    <?php include 'partials/header.php'; ?>
 
     <div class="main-content">
         <section class="contact-hero">
@@ -213,7 +213,7 @@
         </section>
     </div>
 
-    <?php include 'footer.php'; ?>
+    <?php include 'partials/footer.php'; ?>
 
     <script src="assets/js/contact.js"></script>
 </body>
