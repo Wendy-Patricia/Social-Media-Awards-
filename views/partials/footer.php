@@ -27,9 +27,9 @@
             <h3 class="footer-title">Liens Rapides</h3>
             <ul class="footer-links">
                 <li><a href="index.php">Accueil</a></li>
-                <li><a href="categories.php">Catégories</a></li>
-                <li><a href="nominees.php">Nominés</a></li>
-                <li><a href="results.php">Résultats</a></li>
+                <li><a href="public/categories.php">Catégories</a></li>
+                <li><a href="public/nominees.php">Nominés</a></li>
+                <li><a href="public/results.php">Résultats</a></li>
                 <li><a href="#winners">Vainqueurs</a></li>
             </ul>
         </div>

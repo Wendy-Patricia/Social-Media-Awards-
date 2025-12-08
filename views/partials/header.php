@@ -7,11 +7,11 @@
     </div>
     <ul>
         <li><a href="index.php">Accueil</a></li>
-        <li><a href="categories.php">Catégories</a></li>
-        <li><a href="nominees.php">Nominés</a></li>
-        <li><a href="results.php">Résultats</a></li>
-        <li><a href="contact.php">Contacts</a></li>
-        <li><a href="about.php">À propos</a></li>
+        <li><a href="public/categories.php">Catégories</a></li>
+        <li><a href="public/nominees.php">Nominés</a></li>
+        <li><a href="public/results.php">Résultats</a></li>
+        <li><a href="public/contact.php">Contacts</a></li>
+        <li><a href="public/about.php">À propos</a></li>
     </ul>
     <div class="nav-buttons">
         <button class="login-button">Connexion</button>
