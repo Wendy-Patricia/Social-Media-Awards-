@@ -1,174 +1,87 @@
 <?php
-/**
- * Modèle COMPTE - Conforme MCD
- */
-class User {
-    private $pdo;
+// app/Models/User.php
+
+require_once __DIR__ . '/Database.php';
+
+class User extends DBModel {
+    private $id_compte;
+    private $pseudonyme;
+    private $email;
+    private $date_creation;
+    private $role; // 'admin', 'candidate', 'voter'
     
     public function __construct() {
-        $this->pdo = getDB();
+        parent::__construct();
     }
     
-    /**
-     * Authentifie un utilisateur avec vérification 2FA
-     */
-    public function authenticate($email, $password, $code2fa = null) {
-        // Récupération du compte avec son type
-        $stmt = $this->pdo->prepare("
-            SELECT 
-                c.*,
-                CASE 
-                    WHEN a.id_compte IS NOT NULL THEN 'admin'
-                    WHEN ca.id_compte IS NOT NULL THEN 'candidate'
-                    ELSE 'voter'
-                END as user_type
-            FROM COMPTE c
-            LEFT JOIN ADMINISTRATEUR a ON c.id_compte = a.id_compte
-            LEFT JOIN CANDIDAT ca ON c.id_compte = ca.id_compte
-            WHERE c.email = ?
-        ");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
-        
-        if (!$user) {
-            return ['success' => false, 'message' => 'Utilisateur non trouvé'];
-        }
-        
-        // Vérification du mot de passe
-        if (!password_verify($password, $user['mot_de_passe'])) {
-            return ['success' => false, 'message' => 'Mot de passe incorrect'];
-        }
-        
-        // Vérification 2FA si activé
-        if (!empty($user['code_verification'])) {
-            if (empty($code2fa)) {
+    public function authenticate($email, $password) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT c.*, 
+                    CASE 
+                        WHEN a.id_compte IS NOT NULL THEN 'admin'
+                        WHEN ca.id_compte IS NOT NULL THEN 'candidate'
+                        ELSE 'voter'
+                    END as role
+                FROM compte c
+                LEFT JOIN administrateur a ON c.id_compte = a.id_compte
+                LEFT JOIN candidat ca ON c.id_compte = ca.id_compte
+                LEFT JOIN utilisateur u ON c.id_compte = u.id_compte
+                WHERE c.email = :email
+                LIMIT 1
+            ");
+            
+            $stmt->execute([':email' => $email]);
+            $user = $stmt->fetch();
+            
+            if ($user && password_verify($password, $user['mot_de_passe'])) {
+                $this->id_compte = $user['id_compte'];
+                $this->pseudonyme = $user['pseudonyme'];
+                $this->email = $user['email'];
+                $this->date_creation = $user['date_creation'];
+                $this->role = $user['role'];
+                
                 return [
-                    'success' => false, 
-                    'requires_2fa' => true,
-                    'email' => $email,
-                    'password_hash' => password_hash($password, PASSWORD_DEFAULT)
+                    'success' => true,
+                    'user' => [
+                        'id' => $user['id_compte'],
+                        'pseudonyme' => $user['pseudonyme'],
+                        'email' => $user['email'],
+                        'role' => $user['role']
+                    ]
                 ];
             }
             
-            if ($user['code_verification'] !== $code2fa) {
-                return ['success' => false, 'message' => 'Code 2FA incorrect'];
-            }
-        }
-        
-        return [
-            'success' => true, 
-            'user' => $user
-        ];
-    }
-    
-    /**
-     * Crée un nouveau compte (inscription)
-     */
-    public function create($data) {
-        try {
-            $this->pdo->beginTransaction();
+            return ['success' => false, 'message' => 'Email ou mot de passe incorrect'];
             
-            // Insertion dans COMPTE
-            $stmt = $this->pdo->prepare("
-                INSERT INTO COMPTE 
-                (pseudonyme, email, mot_de_passe, date_naissance, pays, genre, photo_profil) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
-            
-            $stmt->execute([
-                $data['pseudonyme'],
-                $data['email'],
-                password_hash($data['mot_de_passe'], PASSWORD_DEFAULT),
-                $data['date_naissance'],
-                $data['pays'],
-                $data['genre'] ?? null,
-                $data['photo_profil'] ?? null
-            ]);
-            
-            $id_compte = $this->pdo->lastInsertId();
-            
-            // Création du type d'utilisateur spécifique
-            switch($data['user_type']) {
-                case 'candidate':
-                    $stmt = $this->pdo->prepare("
-                        INSERT INTO CANDIDAT (id_compte, biographie, statut) 
-                        VALUES (?, '', 'en_attente')
-                    ");
-                    break;
-                case 'admin':
-                    $stmt = $this->pdo->prepare("
-                        INSERT INTO ADMINISTRATEUR (id_compte, niveau_acces) 
-                        VALUES (?, 1)
-                    ");
-                    break;
-                default: // voter
-                    $stmt = $this->pdo->prepare("
-                        INSERT INTO UTILISATEUR (id_compte, adresse, ville) 
-                        VALUES (?, ?, ?)
-                    ");
-                    $stmt->execute([
-                        $id_compte,
-                        $data['adresse'] ?? '',
-                        $data['ville'] ?? ''
-                    ]);
-                    break;
-            }
-            
-            if (isset($stmt)) {
-                $stmt->execute([$id_compte]);
-            }
-            
-            $this->pdo->commit();
-            
-            // Récupérer l'utilisateur créé
-            return $this->findById($id_compte);
-            
-        } catch (Exception $e) {
-            $this->pdo->rollBack();
-            throw new Exception("Erreur création compte: " . $e->getMessage());
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Erreur de base de données'];
         }
     }
     
-    /**
-     * Trouve un utilisateur par ID
-     */
-    public function findById($id) {
-        $stmt = $this->pdo->prepare("
-            SELECT 
-                c.*,
-                CASE 
-                    WHEN a.id_compte IS NOT NULL THEN 'admin'
-                    WHEN ca.id_compte IS NOT NULL THEN 'candidate'
-                    ELSE 'voter'
-                END as user_type
-            FROM COMPTE c
-            LEFT JOIN ADMINISTRATEUR a ON c.id_compte = a.id_compte
-            LEFT JOIN CANDIDAT ca ON c.id_compte = ca.id_compte
-            WHERE c.id_compte = ?
-        ");
-        $stmt->execute([$id]);
+    public function getUserByEmail($email) {
+        $stmt = $this->db->prepare("SELECT * FROM compte WHERE email = :email");
+        $stmt->execute([':email' => $email]);
         return $stmt->fetch();
     }
     
-    /**
-     * Vérifie si l'email existe déjà
-     */
-    public function emailExists($email) {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM COMPTE WHERE email = ?");
-        $stmt->execute([$email]);
-        return $stmt->fetchColumn() > 0;
+    public function verify2FACode($email, $code) {
+        $stmt = $this->db->prepare("
+            SELECT * FROM compte 
+            WHERE email = :email AND code_verification = :code
+        ");
+        $stmt->execute([
+            ':email' => $email,
+            ':code' => $code
+        ]);
+        
+        return $stmt->fetch() !== false;
     }
     
-    /**
-     * Met à jour le code 2FA
-     */
-    public function update2FACode($userId, $code) {
-        $stmt = $this->pdo->prepare("
-            UPDATE COMPTE 
-            SET code_verification = ? 
-            WHERE id_compte = ?
-        ");
-        return $stmt->execute([$code, $userId]);
-    }
+    // Getters
+    public function getId() { return $this->id_compte; }
+    public function getPseudonyme() { return $this->pseudonyme; }
+    public function getEmail() { return $this->email; }
+    public function getRole() { return $this->role; }
 }
 ?>

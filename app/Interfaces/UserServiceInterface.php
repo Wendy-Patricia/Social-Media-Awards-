@@ -1,10 +1,10 @@
 <?php
-namespace App\Interfaces;
+// app/Interfaces/UserServiceInterface.php
 
 interface UserServiceInterface {
-    public function register(array $data): array;
-    public function login(string $email, string $password): array;
-    public function updateProfile(int $userId, array $data): array;
-    public function getUserById(int $userId): array;
-    public function validateRegistrationData(array $data): array;
+    public function login($email, $password, $code2fa = null);
+    public function logout();
+    public function isAuthenticated();
+    public function getUserType();
 }
+?>
