@@ -10,7 +10,7 @@
     <title>Nominés - Social Media Awards 2025</title>
 </head>
 <body>
-    <?php include 'partials/header.php'; ?>
+    <?php require_once 'views/partials/header.php'; ?>
 
     <div class="main-content">
         <!--SECTION HERO  -->
@@ -100,7 +100,7 @@
         </section>
     </div>
 
-    <?php include 'partials/footer.php'; ?>
+    <?php include 'views/partials/footer.php'; ?>
     <script src="assets/js/nominees.js"></script>
 </body>
 </html>

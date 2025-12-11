@@ -1,3 +1,12 @@
+<head>
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../assets/css/admin-sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Social Media Awards 2025</title>
+</head>
+
 <aside class="sidebar">
     <div class="sidebar-header">
         <h2><i class="fas fa-crown"></i> SMA Admin</h2>
@@ -74,3 +83,4 @@
         </ul>
     </nav>
 </aside>
+<script src="../../assets/js/admin-sidebar.js"></script>
