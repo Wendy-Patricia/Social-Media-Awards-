@@ -1,27 +1,20 @@
 <?php
-require_once __DIR__ . '/../partials/header.php';
-require_once __DIR__ . '/../partials/sidebar.php';
+$page_title = 'Tableau de Bord Administratif';
+$is_admin_page = true;
+
+require_once __DIR__ . '/../partials/admin-sidebar.php';
 ?>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/assets/css/admin.css">
+    <link rel="stylesheet" href="../../assets/css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Social Media Awards 2025</title>
 </head>
 
 <main class="main-content">
-    <header class="admin-header">
-        <div class="header-left">
-            <h1>Tableau de Bord Administratif</h1>
-            <p class="subtitle">Vue d'ensemble du système Social Media Awards</p>
-        </div>
-        <div class="admin-profile">
-            <img src="assets/images/admin-avatar.png" alt="Administrateur">
-            <span>Administrateur</span>
-        </div>
-    </header>
-    
+    <?php include __DIR__ . '/../partials/admin-header.php'; ?>
     <section class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon">
@@ -33,7 +26,7 @@ require_once __DIR__ . '/../partials/sidebar.php';
                 <p class="stat-label">+12 ce mois-ci</p>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-user-tie"></i>
@@ -44,7 +37,7 @@ require_once __DIR__ . '/../partials/sidebar.php';
                 <p class="stat-label">12 en attente</p>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-vote-yea"></i>
@@ -55,7 +48,7 @@ require_once __DIR__ . '/../partials/sidebar.php';
                 <p class="stat-label">2 se terminent cette semaine</p>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-chart-line"></i>
@@ -67,7 +60,7 @@ require_once __DIR__ . '/../partials/sidebar.php';
             </div>
         </div>
     </section>
-    
+
     <div class="table-container">
         <div class="table-header">
             <h3>Activité Récente</h3>
@@ -80,7 +73,7 @@ require_once __DIR__ . '/../partials/sidebar.php';
                 </select>
             </div>
         </div>
-        
+
         <table class="data-table" id="activityTable">
             <thead>
                 <tr>
@@ -132,4 +125,4 @@ require_once __DIR__ . '/../partials/sidebar.php';
     </div>
 </main>
 
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
+<script src="../assets/js/admin-sidebar.js"></script>

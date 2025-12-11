@@ -1,7 +1,10 @@
-<?php
-require_once 'partials/header.php';
-require_once 'partials/sidebar.php';
-?>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../assets/css/add-candidate.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Social Media Awards 2025</title>
+</head>
 
 <main class="main-content">
     <header class="admin-header">
@@ -99,5 +102,3 @@ require_once 'partials/sidebar.php';
         </form>
     </div>
 </main>
-
-<?php require_once 'partials/footer.php'; ?>

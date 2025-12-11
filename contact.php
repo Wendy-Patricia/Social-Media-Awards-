@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <?php include 'partials/header.php'; ?>
+   <?php require_once 'views/partials/header.php'; ?>
 
     <div class="main-content">
         <section class="contact-hero">
@@ -213,7 +213,7 @@
         </section>
     </div>
 
-    <?php include 'partials/footer.php'; ?>
+    <?php include 'views/partials/footer.php'; ?>
 
     <script src="assets/js/contact.js"></script>
 </body>
