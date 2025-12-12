@@ -1,42 +1,49 @@
-<head>
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../assets/css/admin-sidebar.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>Social Media Awards 2025</title>
-</head>
-
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <h2><i class="fas fa-crown"></i> SMA Admin</h2>
-        <p>Social Media Awards</p>
+        <h2><i class="fas fa-crown"></i> Social Media Awards</h2>
+        <p>Admin Panel</p>
     </div>
-    
+
     <nav class="sidebar-nav">
         <ul>
             <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>">
-                <a href="dashboard.php">
+                <a href="/Social-Media-Awards-/views/admin/dashboard.php">
                     <i class="fas fa-tachometer-alt"></i> Tableau de Bord
                 </a>
             </li>
-            
+
             <li class="nav-section">
                 <span class="section-title">Gestion des Électeurs</span>
                 <ul>
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-users.php' ? 'active' : ''; ?>">
                         <a href="manage-users.php">
-                            <i class="fas fa-users"></i> Liste des Électeurs
+                            <i class="fas fa-users"></i> Liste des Edition
                         </a>
                     </li>
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'add-user.php' ? 'active' : ''; ?>">
                         <a href="add-user.php">
-                            <i class="fas fa-user-plus"></i> Ajouter un Électeur
+                            <i class="fas fa-user-plus"></i> Ajouter une Edition
                         </a>
                     </li>
                 </ul>
             </li>
-            
+
+            <li class="nav-section">
+                <span class="section-title">Gestion des Catégories</span>
+                <ul>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-categories.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/categories/manage-categories.php">
+                            <i class="fas fa-tags"></i> Liste des catégories
+                        </a>
+                    </li>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'add-category.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/categories/add-categorie.php">
+                            <i class="fas fa-plus-circle"></i> Ajouter une catégorie
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
             <li class="nav-section">
                 <span class="section-title">Gestion des Candidats</span>
                 <ul>
@@ -52,7 +59,7 @@
                     </li>
                 </ul>
             </li>
-            
+
             <li class="nav-section">
                 <span class="section-title">Élections</span>
                 <ul>
@@ -63,7 +70,7 @@
                     </li>
                 </ul>
             </li>
-            
+
             <li class="nav-section">
                 <span class="section-title">Modération</span>
                 <ul>
@@ -74,13 +81,12 @@
                     </li>
                 </ul>
             </li>
-            
+
             <li class="logout">
-                <a href="/logout.php">
+                <a href="../../controllers/logout.php">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>
             </li>
         </ul>
     </nav>
 </aside>
-<script src="../../assets/js/admin-sidebar.js"></script>

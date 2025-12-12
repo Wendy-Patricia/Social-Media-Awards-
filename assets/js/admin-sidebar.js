@@ -1,84 +1,109 @@
-// assets/js/admin-sidebar.js
+// Admin Sidebar JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    const sidebar = document.querySelector('.sidebar');
+    // Elementos DOM
+    const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
-    const mainContent = document.querySelector('.main-content');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const mainContent = document.querySelector('.admin-main-content');
     
-    // Toggle sidebar em mobile
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            sidebar.classList.toggle('active');
+    // Verificar se os elementos existem
+    if (!sidebar || !sidebarToggle) return;
+    
+    // Função para verificar o tamanho da tela
+    function checkScreenSize() {
+        if (window.innerWidth <= 768) {
+            // Mobile
+            sidebarToggle.style.display = 'flex';
+            sidebar.classList.remove('active');
             
-            // Adiciona overlay no conteúdo
+            if (mainContent) {
+                mainContent.style.marginLeft = '0';
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.style.display = 'none';
+            }
+        } else {
+            // Desktop
+            sidebarToggle.style.display = 'none';
+            sidebar.classList.add('active');
+            
+            if (mainContent) {
+                mainContent.style.marginLeft = '250px';
+            }
+        }
+    }
+    
+    // Alternar sidebar (mobile)
+    sidebarToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        sidebar.classList.toggle('active');
+        
+        // Ajustar overlay
+        if (sidebarOverlay) {
+            sidebarOverlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
+        }
+        
+        // Ajustar conteúdo principal
+        if (mainContent) {
             if (sidebar.classList.contains('active')) {
-                createOverlay();
+                mainContent.style.marginLeft = '280px';
             } else {
-                removeOverlay();
+                mainContent.style.marginLeft = '0';
+            }
+        }
+    });
+    
+    // Fechar sidebar ao clicar no overlay
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.style.display = 'none';
+            
+            if (mainContent) {
+                mainContent.style.marginLeft = '0';
             }
         });
     }
     
-    // Função para criar overlay
-    function createOverlay() {
-        const overlay = document.createElement('div');
-        overlay.className = 'sidebar-overlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-            display: block;
-        `;
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            removeOverlay();
+    // Fechar sidebar ao clicar em um link (mobile)
+    document.querySelectorAll('.sidebar-nav a').forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+                if (sidebarOverlay) {
+                    sidebarOverlay.style.display = 'none';
+                }
+                if (mainContent) {
+                    mainContent.style.marginLeft = '0';
+                }
+            }
         });
-        document.body.appendChild(overlay);
-        document.body.style.overflow = 'hidden';
-    }
-    
-    // Função para remover overlay
-    function removeOverlay() {
-        const overlay = document.querySelector('.sidebar-overlay');
-        if (overlay) {
-            overlay.remove();
-        }
-        document.body.style.overflow = '';
-    }
-    
-    // Fechar sidebar ao redimensionar para desktop
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-            sidebar.classList.remove('active');
-            removeOverlay();
-        }
     });
     
-    // Auto-hightlight do link ativo
-    highlightActiveLink();
+    // Prevenir fechamento ao clicar dentro da sidebar
+    sidebar.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+    
+    // Inicialização
+    checkScreenSize();
+    
+    // Redimensionamento da janela
+    window.addEventListener('resize', checkScreenSize);
 });
 
-function highlightActiveLink() {
-    const currentPage = window.location.pathname.split('/').pop() || 'dashboard.php';
-    const allLinks = document.querySelectorAll('.sidebar-nav a');
-    
-    allLinks.forEach(link => {
-        link.parentElement.classList.remove('active');
-        
-        const href = link.getAttribute('href');
-        if (href && currentPage.includes(href.replace('.php', ''))) {
-            link.parentElement.classList.add('active');
-            
-            // Expandir seção pai se estiver em submenu
-            const section = link.closest('.nav-section');
-            if (section) {
-                section.classList.add('expanded');
-            }
-        }
-    });
-}
+// Exportar funções para uso externo
+window.AdminSidebar = {
+    toggle: function() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.toggle('active');
+    },
+    open: function() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.add('active');
+    },
+    close: function() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.remove('active');
+    }
+};

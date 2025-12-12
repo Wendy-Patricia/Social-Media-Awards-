@@ -2,19 +2,12 @@
 $page_title = 'Tableau de Bord Administratif';
 $is_admin_page = true;
 
-require_once __DIR__ . '/../partials/admin-sidebar.php';
+require_once __DIR__ . '/../partials/admin-header.php';
 ?>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../assets/css/admin.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>Social Media Awards 2025</title>
-</head>
-
-<main class="main-content">
-    <?php include __DIR__ . '/../partials/admin-header.php'; ?>
+<link rel="stylesheet" href="../../assets/css/admin.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<main class="admin-main-content">
     <section class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon">
@@ -26,7 +19,6 @@ require_once __DIR__ . '/../partials/admin-sidebar.php';
                 <p class="stat-label">+12 ce mois-ci</p>
             </div>
         </div>
-
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-user-tie"></i>
