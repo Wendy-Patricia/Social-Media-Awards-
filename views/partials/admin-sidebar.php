@@ -13,15 +13,15 @@
             </li>
 
             <li class="nav-section">
-                <span class="section-title">Gestion des Électeurs</span>
+                <span class="section-title">Gestion des Editions</span>
                 <ul>
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-users.php' ? 'active' : ''; ?>">
-                        <a href="manage-users.php">
-                            <i class="fas fa-users"></i> Liste des Edition
+                        <a href="/Social-Media-Awards-/views/admin/editions/manage-editions.php">
+                            <i class="fas fa-users"></i> Liste des Editions
                         </a>
                     </li>
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'add-user.php' ? 'active' : ''; ?>">
-                        <a href="add-user.php">
+                        <a href="/Social-Media-Awards-/views/admin/editions/add-edition.php">
                             <i class="fas fa-user-plus"></i> Ajouter une Edition
                         </a>
                     </li>
@@ -61,11 +61,44 @@
             </li>
 
             <li class="nav-section">
+                <span class="section-title">Gestion des Nominations</span>
+                <ul>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-nominations.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/nominations/manage-nominations.php">
+                            <i class="fas fa-user-tie"></i> Liste des Nomination
+                        </a>
+                    </li>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'edit-nomination.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/nominations/edit-nomination.php">
+                            <i class="fas fa-user-plus"></i> Editer un Nominee
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+
+            <li class="nav-section">
                 <span class="section-title">Élections</span>
                 <ul>
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-elections.php' ? 'active' : ''; ?>">
                         <a href="manage-elections.php">
                             <i class="fas fa-vote-yea"></i> Gérer les Élections
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-section">
+                <span class="section-title">Gestion des Candidatures</span>
+                <ul>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-applications.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/candidatures/manage-candidatures.php">
+                            <i class="fas fa-file-alt"></i> Toutes les Candidatures
+                        </a>
+                    </li>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'view-candidatures.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/candidatures/view-candidatures.php/">
+                            <i class="fas fa-plus-circle"></i> Visualizer les Candidatures
                         </a>
                     </li>
                 </ul>
