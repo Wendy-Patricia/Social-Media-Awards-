@@ -1,12 +1,11 @@
+
 <?php
-require_once '../config/session.php';
-require_once '../app/Services/UserService.php';
+// logout.php
+require_once 'app/Controllers/UserController.php';
 
-$userService = new UserService();
-$result = $userService->logout();
+$controller = new UserController();
+$controller->logout();
 
-// Redirection avec message
-$_SESSION['logout_message'] = "Vous avez été déconnecté avec succès.";
-header('Location: /login.php');
+header('Location: index.php');
 exit();
 ?>

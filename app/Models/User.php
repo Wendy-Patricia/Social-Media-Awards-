@@ -1,7 +1,8 @@
+
 <?php
 // app/Models/User.php
 
-require_once __DIR__ . '/Database.php';
+require_once __DIR__ . '/DBModel.php';
 
 class User extends DBModel {
     private $id_compte;
@@ -21,7 +22,8 @@ class User extends DBModel {
                     CASE 
                         WHEN a.id_compte IS NOT NULL THEN 'admin'
                         WHEN ca.id_compte IS NOT NULL THEN 'candidate'
-                        ELSE 'voter'
+                        WHEN u.id_compte IS NOT NULL THEN 'voter'
+                        ELSE 'unknown'
                     END as role
                 FROM compte c
                 LEFT JOIN administrateur a ON c.id_compte = a.id_compte
@@ -55,7 +57,7 @@ class User extends DBModel {
             return ['success' => false, 'message' => 'Email ou mot de passe incorrect'];
             
         } catch (PDOException $e) {
-            return ['success' => false, 'message' => 'Erreur de base de données'];
+            return ['success' => false, 'message' => 'Erreur de base de données: ' . $e->getMessage()];
         }
     }
     
@@ -76,6 +78,22 @@ class User extends DBModel {
         ]);
         
         return $stmt->fetch() !== false;
+    }
+    
+    public function createUser($data) {
+        try {
+            $stmt = $this->db->prepare("
+                INSERT INTO compte (pseudonyme, email, mot_de_passe, date_naissance, pays, genre, code_verification)
+                VALUES (:pseudonyme, :email, :mot_de_passe, :date_naissance, :pays, :genre, :code_verification)
+            ");
+            
+            $result = $stmt->execute($data);
+            return $result ? $this->db->lastInsertId() : false;
+            
+        } catch (PDOException $e) {
+            error_log("Erro ao criar usuário: " . $e->getMessage());
+            return false;
+        }
     }
     
     // Getters

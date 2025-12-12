@@ -14,7 +14,7 @@ require_once __DIR__ . '/../partials/admin-sidebar.php';
 </head>
 
 <main class="main-content">
-    <?php include __DIR__ . '/../partials/admin-header.php'; ?>
+    <?php include __DIR__ . '../views/partials/admin-header.php'; ?>
     <section class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon">
