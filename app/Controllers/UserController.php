@@ -1,47 +1,48 @@
-
 <?php
-// app/Controllers/UserController.php - SEM 2FA
+// app/Controllers/UserController.php 
 
 require_once __DIR__ . '/../Models/User.php';
 require_once __DIR__ . '/../Services/UserService.php';
 
-class UserController {
+class UserController
+{
     private $userService;
     private $userModel;
-    
-    public function __construct() {
+
+    public function __construct()
+    {
         $this->userService = new UserService();
         $this->userModel = new User();
     }
-    
-    public function handleLogin() {
+
+    public function handleLogin()
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return [];
         }
-        
+
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['mot_de_passe'] ?? '';
-        
-        // NOTA: removido parâmetro $code2fa
+
         $result = $this->userService->login($email, $password);
-        
+
         if ($result['success']) {
             $redirect = $this->getDashboardPath($result['user']['role']);
             header('Location: ' . $redirect);
             exit();
         }
-        
+
         return [
             'error' => $result['message']
-            // Removidos: 'requires_2fa' e 'temp_email'
         ];
     }
-    
-    public function handleRegistration() {
+
+    public function handleRegistration()
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return ['success' => false, 'errors' => []];
         }
-        
+
         $errors = [];
         $data = [
             'pseudonyme' => trim($_POST['pseudonyme'] ?? ''),
@@ -53,116 +54,190 @@ class UserController {
             'pays' => $_POST['pays'] ?? '',
             'genre' => $_POST['genre'] ?? ''
         ];
-        
-        // Validações (mantidas)
+
+        // Validações
         if (empty($data['pseudonyme']) || strlen($data['pseudonyme']) < 3) {
             $errors[] = "Le pseudonyme doit contenir au moins 3 caractères";
-    
+        } elseif (strlen($data['pseudonyme']) > 50) {
+            $errors[] = "Le pseudonyme ne doit pas dépasser 50 caractères";
         }
-        
+
+        // VERIFICAR SE PSEUDONYME JÁ EXISTE - NOVA VERIFICAÇÃO
+        if (!empty($data['pseudonyme']) && strlen($data['pseudonyme']) >= 3) {
+            $existingPseudonyme = $this->userModel->getUserByPseudonyme($data['pseudonyme']);
+            if ($existingPseudonyme) {
+                $errors[] = "Ce pseudonyme est déjà utilisé. Veuillez en choisir un autre.";
+            }
+        }
+
         if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors[] = "Email invalide";
-        
         }
-        
+
+        // VERIFICAR SE EMAIL JÁ EXISTE (já existe)
+        $existingUser = $this->userModel->getUserByEmail($data['email']);
+        if ($existingUser) {
+            $errors[] = "Cet email est déjà utilisé";
+        }
+
+        // Validação de password
         if (strlen($data['mot_de_passe']) < 6) {
             $errors[] = "Le mot de passe doit contenir au moins 6 caractères";
         }
-        
+
         if ($data['mot_de_passe'] !== $data['confirm_mot_de_passe']) {
             $errors[] = "Les mots de passe ne correspondent pas";
         }
-        
+
         if (empty($data['type_user']) || !in_array($data['type_user'], ['voter', 'candidate'])) {
             $errors[] = "Veuillez sélectionner un type d'utilisateur valide";
         }
-        
+
         if (empty($data['date_naissance'])) {
             $errors[] = "La date de naissance est obligatoire";
         } elseif (strtotime($data['date_naissance']) > strtotime('-13 years')) {
             $errors[] = "Vous devez avoir au moins 13 ans";
         }
-        
+
         if (empty($data['pays'])) {
             $errors[] = "Le pays est obligatoire";
         }
-        
+
+        // Verificar se os termos foram aceitos
+        if (!isset($_POST['terms'])) {
+            $errors[] = "Vous devez accepter les conditions d'utilisation";
+        }
+
         if (!empty($errors)) {
             return ['success' => false, 'errors' => $errors, 'data' => $data];
         }
-        
-        // Hash da senha
-        $hashedPassword = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
-        
-        // Código de verificação opcional (podemos usar '000000' como placeholder)
-        $codeVerification = '000000';
-        
-        // Dados para criação
-        $userData = [
-            'pseudonyme' => $data['pseudonyme'],
-            'email' => $data['email'],
-            'mot_de_passe' => $hashedPassword,
-            'date_naissance' => $data['date_naissance'],
-            'pays' => $data['pays'],
-            'genre' => $data['genre'] ?? '',
-            'code_verification' => $codeVerification,
-            'type_user' => $data['type_user']
-        ];
-        
-        // Criar usuário
-        $userId = $this->userModel->createUser($userData);
-        
-        if ($userId) {
-            // Determinar role
-            $role = $data['type_user'] === 'candidate' ? 'candidate' : 'voter';
-            
+
+        // Resto do código permanece igual...
+        try {
+            // Hash da senha
+            $hashedPassword = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
+
+            // Código de verificação
+            $codeVerification = '000000';
+
+            // Dados para criação na tabela compte
+            $userData = [
+                ':pseudonyme' => $data['pseudonyme'],
+                ':email' => $data['email'],
+                ':mot_de_passe' => $hashedPassword,
+                ':date_naissance' => $data['date_naissance'],
+                ':pays' => $data['pays'],
+                ':genre' => $data['genre'] ?? null,
+                ':code_verification' => $codeVerification
+            ];
+
+            // Criar usuário na tabela compte
+            $userId = $this->userModel->createUser($userData);
+
+            if (!$userId) {
+                return ['success' => false, 'errors' => ['Erreur lors de la création du compte'], 'data' => $data];
+            }
+
+            // Determinar role e inserir na tabela específica
+            if ($data['type_user'] === 'candidate') {
+                $this->insertCandidate($userId);
+                $role = 'candidate';
+            } else {
+                $this->insertUtilisateur($userId);
+                $role = 'voter';
+            }
+
             // Iniciar sessão
-            session_start();
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+
             $_SESSION['user_id'] = $userId;
             $_SESSION['user_pseudonyme'] = $data['pseudonyme'];
             $_SESSION['user_email'] = $data['email'];
             $_SESSION['user_role'] = $role;
             $_SESSION['logged_in'] = true;
             $_SESSION['login_time'] = time();
-            
-            return [
-                'success' => true,
-                'user_id' => $userId,
-                'role' => $role,
-                'data' => $data
-            ];
+
+            // Redirecionar para dashboard apropriado
+            $redirect = $this->getDashboardPath($role);
+            header('Location: ' . $redirect);
+            exit();
+        } catch (Exception $e) {
+            error_log("Erreur inscription: " . $e->getMessage());
+            return ['success' => false, 'errors' => ['Une erreur technique est survenue'], 'data' => $data];
         }
-        
-        return ['success' => false, 'errors' => ['Erreur lors de l\'inscription'], 'data' => $data];
     }
-    
-    private function getDashboardPath($role) {
-        switch($role) {
+
+    private function insertCandidate($userId)
+    {
+        try {
+            $db = $this->userModel->getDb();
+            $stmt = $db->prepare("
+                INSERT INTO candidat (id_compte, nom_legal_ou_societe, type_candidature, est_nomine) 
+                VALUES (:id_compte, NULL, 'Autre', 0)
+            ");
+            return $stmt->execute([':id_compte' => $userId]);
+        } catch (Exception $e) {
+            error_log("Erreur insertion candidat: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function insertUtilisateur($userId)
+    {
+        try {
+            $db = $this->userModel->getDb();
+            $stmt = $db->prepare("
+                INSERT INTO utilisateur (id_compte) 
+                VALUES (:id_compte)
+            ");
+            return $stmt->execute([':id_compte' => $userId]);
+        } catch (Exception $e) {
+            error_log("Erreur insertion utilisateur: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function getDashboardPath($role)
+    {
+        switch ($role) {
             case 'admin':
-                return '../admin/admin-dashboard.php';
+                return '/Social-Media-Awards-/views/admin/admin-dashboard.php';
             case 'candidate':
-                return '../candidate/candidate-dashboard.php';
+                return '/Social-Media-Awards-/views/candidate/candidate-dashboard.php';
             case 'voter':
-                return '../user/user-dashboard.php';
+                return '/Social-Media-Awards-/views/user/user-dashboard.php';
             default:
-                return '../index.php';
+                return '/index.php';
         }
     }
-    
-    public function logout() {
+
+    public function logout()
+    {
         session_start();
         $_SESSION = array();
-        
+
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
             );
         }
-        
+
         session_destroy();
         return true;
     }
+
+    // Método para obter a conexão PDO (adicione no modelo User se necessário)
+    private function getDb()
+    {
+        return $this->userModel->getDb();
+    }
 }
-?>

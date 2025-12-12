@@ -7,9 +7,9 @@ require_once 'config/session.php';
 // Se já estiver autenticado, redirecionar
 if (isAuthenticated()) {
     $redirect = match(getUserType()) {
-        'admin' => 'admin/admin-dashboard.php',
-        'candidate' => 'candidate/candidate-dashboard.php',
-        'voter' => 'user/user-dashboard.php',
+        'admin' => '/Social-Media-Awards-/admin/admin-dashboard.php',
+        'candidate' => '/Social-Media-Awards-/candidate/candidate-dashboard.php',
+        'voter' => '/Social-Media-Awards-/user/user-dashboard.php',
         default => 'index.php'
     };
     header("Location: $redirect");
@@ -30,8 +30,8 @@ $data = $result['data'] ?? [];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription - Social Media Awards</title>
-    <link rel="stylesheet" href="assets/css/base.css">
-    <link rel="stylesheet" href="assets/css/inscription.css">
+    <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/base.css">
+    <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/inscription.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>

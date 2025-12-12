@@ -25,7 +25,7 @@
 
 <nav class="navbar">
     <div class="nav-logo">
-        <img src="/Social-Media-Awards/assets/images/logo.png" alt="Logo Social Media Awards" class="logo">
+        <img src="/Social-Media-Awards-/assets/images/logo.png" alt="Logo Social Media Awards" class="logo">
         <div class="logo-text">Social Media Awards</div>
     </div>
     <ul>

@@ -50,11 +50,11 @@ class UserService {
     private function getRedirectPath($role) {
         switch($role) {
             case 'admin':
-                return '../admin/admin-dashboard.php';
+                return '/Social-Media-Awards-/views/admin/admin-dashboard.php';
             case 'candidate':
-                return '../candidate/candidate-dashboard.php';
+                return '/Social-Media-Awards-/views/candidate/candidate-dashboard.php';
             case 'voter':
-                return '../user/user-dashboard.php';
+                return '/Social-Media-Awards-/views/user/user-dashboard.php';
             default:
                 return '../index.php';
         }
