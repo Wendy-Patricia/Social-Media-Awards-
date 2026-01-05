@@ -1,3 +1,9 @@
+<?php
+require_once __DIR__ . '/config/session.php';
+require_once __DIR__ . '/config/permissions.php';
+require_once __DIR__ . '/config/database.php';
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
