@@ -1,13 +1,25 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 require_once __DIR__ . '/config/session.php';
 require_once __DIR__ . '/config/permissions.php';
-require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/app/Services/StatisticsService.php';
+require_once __DIR__ . '/config/database.php'; // pode manter, não faz mal (não é usado aqui agora)
 
-$statsService = new StatisticsService();
-$heroStats = $statsService->getHomePageStats();
-$sectionStats = $statsService->getStatsSection();
+// Valores fixos (iguais aos que apareciam antes quando não havia dados reais)
+$heroStats = [
+    'categories' => 12,
+    'platforms'  => 5,
+    'votes'      => '50K+',
+    'candidatures' => 1000
+];
 
+$sectionStats = [
+    'categories'    => 50,
+    'candidatures'  => 1000,
+    'votes'         => '50K+',
+    'platforms'     => 5
+];
 ?>
 
 <!DOCTYPE html>
@@ -48,7 +60,6 @@ $sectionStats = $statsService->getStatsSection();
             </div>
         </section>
 
-
         <section class="hero">
             <div class="container">
                 <div class="hero-content">
@@ -60,7 +71,6 @@ $sectionStats = $statsService->getStatsSection();
                     </p>
                     <div class="hero-stats">
                         <div class="hero-stat">
-                            <!-- APENAS ESTA LINHA MUDA - o número fica dinâmico -->
                             <div class="stat-number"><?php echo $heroStats['categories']; ?></div>
                             <div class="stat-label">Catégories</div>
                         </div>

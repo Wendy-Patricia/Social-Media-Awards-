@@ -24,7 +24,8 @@ class Database {
             );
             
         } catch (PDOException $e) {
-            die("Erro de conexão: " . $e->getMessage());
+            // Mensagem mais amigável em produção (podes mudar para log em vez de die)
+            die("Erro de conexão à base de dados. Verifique se o MySQL está a correr e se os dados estão corretos.");
         }
     }
     
@@ -40,7 +41,7 @@ class Database {
     }
 }
 
-// Função auxiliar para obter conexão (a que está causando o erro)
+// Função auxiliar (mantida, mas não é usada diretamente no projeto atual)
 function getDB() {
     return Database::getInstance()->getConnection();
 }

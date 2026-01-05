@@ -1,20 +1,19 @@
 <?php
+// config/permissions.php
+
 require_once __DIR__ . '/session.php';
 
 function isLoggedIn(): bool {
-    return isset($_SESSION['user']);
+    return isAuthenticated();
 }
 
 function requireLogin() {
-    if (!isLoggedIn()) {
-        header('Location: /Social-Media-Awards-/login.php');
-        exit;
-    }
+    requireAuth(); // Reutiliza a função existente
 }
 
 function requireAdmin() {
-    requireLogin();
-    if (!isset($_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin') {
+    requireAuth();
+    if (!isAdmin()) {
         http_response_code(403);
         die('Accès refusé. Vous devez être administrateur.');
     }

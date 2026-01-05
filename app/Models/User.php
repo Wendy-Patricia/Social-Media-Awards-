@@ -1,24 +1,17 @@
 <?php
-// app/Models/User.php - VERSÃO CORRIGIDA
+require_once __DIR__ . '/../../config/database.php';
 
-require_once __DIR__ . '/DBModel.php';
+class User {
+    private $db;
 
-class User extends DBModel {
-    private $id_compte;
-    private $pseudonyme;
-    private $email;
-    private $date_creation;
-    private $role;
-    
     public function __construct() {
-        parent::__construct();
+        $this->db = Database::getInstance()->getConnection();
     }
-    
-    // Adicione este método para obter a conexão PDO
+
     public function getDb() {
         return $this->db;
     }
-    
+
     public function authenticate($email, $password) {
         try {
             $stmt = $this->db->prepare("
@@ -59,13 +52,19 @@ class User extends DBModel {
             return ['success' => false, 'message' => 'Erreur de connexion'];
         }
     }
-    
+
     public function getUserByEmail($email) {
         $stmt = $this->db->prepare("SELECT * FROM compte WHERE email = :email");
         $stmt->execute([':email' => $email]);
         return $stmt->fetch();
     }
-    
+
+    public function getUserByPseudonyme($pseudonyme) {
+        $stmt = $this->db->prepare("SELECT * FROM compte WHERE pseudonyme = :pseudonyme");
+        $stmt->execute([':pseudonyme' => $pseudonyme]);
+        return $stmt->fetch();
+    }
+
     public function createUser($data) {
         try {
             $stmt = $this->db->prepare("
@@ -78,13 +77,10 @@ class User extends DBModel {
             
         } catch (PDOException $e) {
             error_log("Erreur createUser: " . $e->getMessage());
-            error_log("Dados: " . print_r($data, true));
             return false;
         }
     }
-    /**
-     * Obter usuário pelo ID
-     */
+
     public function getUserById($userId) {
         try {
             $stmt = $this->db->prepare("
@@ -111,13 +107,9 @@ class User extends DBModel {
             return false;
         }
     }
-    
-    /**
-     * Atualizar perfil do usuário
-     */
+
     public function updateUserProfile($userId, $data) {
         try {
-            // Construir a query dinamicamente
             $fields = [];
             $params = [':id_compte' => $userId];
             
@@ -152,7 +144,7 @@ class User extends DBModel {
             }
             
             if (empty($fields)) {
-                return false; // Nada para atualizar
+                return false;
             }
             
             $sql = "UPDATE compte SET " . implode(', ', $fields) . " WHERE id_compte = :id_compte";
@@ -165,10 +157,7 @@ class User extends DBModel {
             return false;
         }
     }
-    
-    /**
-     * Verificar se email já existe (exceto para o usuário atual)
-     */
+
     public function isEmailTaken($email, $excludeUserId = null) {
         try {
             $sql = "SELECT COUNT(*) as count FROM compte WHERE email = :email";
@@ -190,10 +179,7 @@ class User extends DBModel {
             return false;
         }
     }
-    
-    /**
-     * Verificar se pseudonyme já existe (exceto para o usuário atual)
-     */
+
     public function isPseudonymeTaken($pseudonyme, $excludeUserId = null) {
         try {
             $sql = "SELECT COUNT(*) as count FROM compte WHERE pseudonyme = :pseudonyme";
@@ -215,21 +201,5 @@ class User extends DBModel {
             return false;
         }
     }
-    public function getUserByPseudonyme($pseudonyme) {
-    try {
-        $stmt = $this->db->prepare("SELECT * FROM compte WHERE pseudonyme = :pseudonyme");
-        $stmt->execute([':pseudonyme' => $pseudonyme]);
-        return $stmt->fetch();
-    } catch (PDOException $e) {
-        error_log("Erreur getUserByPseudonyme: " . $e->getMessage());
-        return false;
-    }
-}
-    
-    // Getters
-    public function getId() { return $this->id_compte; }
-    public function getPseudonyme() { return $this->pseudonyme; }
-    public function getEmail() { return $this->email; }
-    public function getRole() { return $this->role; }
 }
 ?>

@@ -1,5 +1,3 @@
-// admin-category-form.js
-
 document.addEventListener('DOMContentLoaded', function() {
     // Elements
     const form = document.getElementById('categoryForm');
@@ -12,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const platformOptions = document.querySelectorAll('.platform-option');
     const platformSelect = document.getElementById('plateforme_cible');
     const submitBtn = document.getElementById('submitBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const currentImageContainer = document.getElementById('currentImageContainer');
     
     // Character counter for description
     if (descriptionInput && charCounter) {
@@ -108,6 +108,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 fileUploadArea.querySelector('.file-upload-text').textContent = file.name;
                 fileUploadArea.querySelector('.file-upload-hint').textContent = 
                     `(${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                
+                // Hide current image if new one is uploaded
+                if (currentImageContainer) {
+                    currentImageContainer.style.opacity = '0.5';
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -169,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok) {
                     window.location.href = 'gerer-categories.php?success=1';
                 } else {
-                    throw new Error('Erreur lors de la création');
+                    throw new Error('Erreur lors de la mise à jour');
                 }
             })
             .catch(error => {
@@ -182,6 +187,25 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 form.submit();
             }, 3000);
+        });
+    }
+    
+    // Delete button confirmation
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const categoryName = this.getAttribute('data-category-name');
+            const categoryId = this.getAttribute('data-category-id');
+            
+            if (confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${categoryName}" ?\n\nCette action est irréversible et supprimera toutes les données associées (candidatures, votes, etc.).`)) {
+                // Show loading
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Suppression...';
+                this.disabled = true;
+                
+                // Redirect to delete
+                window.location.href = `gerer-categories.php?delete=${categoryId}`;
+            }
         });
     }
     
@@ -269,9 +293,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Format datetime values for input[type="datetime-local"]
+    const dateInputs = document.querySelectorAll('input[type="datetime-local"]');
+    dateInputs.forEach(input => {
+        // Convert from MySQL datetime (YYYY-MM-DD HH:MM:SS) to datetime-local format
+        if (input.value && input.value.includes(' ')) {
+            input.value = input.value.replace(' ', 'T');
+        }
+    });
+    
     // Set minimum date for date inputs
     const today = new Date().toISOString().split('T')[0];
     document.querySelectorAll('input[type="datetime-local"]').forEach(input => {
         input.min = today + 'T00:00';
     });
+    
+    // Show image size warning for current image
+    if (currentImageContainer) {
+        const currentImage = currentImageContainer.querySelector('img');
+        if (currentImage) {
+            // Check image size after load
+            currentImage.addEventListener('load', function() {
+                if (this.naturalWidth > 1200 || this.naturalHeight > 800) {
+                    const warning = document.createElement('div');
+                    warning.className = 'image-warning';
+                    warning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Image trop grande, recommandez 1200×800px';
+                    warning.style.color = 'var(--warning-color)';
+                    warning.style.fontSize = '0.875rem';
+                    warning.style.marginTop = '0.5rem';
+                    currentImageContainer.appendChild(warning);
+                }
+            });
+        }
+    }
 });

@@ -1,18 +1,22 @@
 <?php
+// app/Controllers/AdminController.php
 
 namespace App\Controllers;
 
-use App\Services\CategoryService;
 use PDO;
+use PDOException;
 
 class AdminController
 {
-    private CategoryService $categoryService;
-    private PDO $pdo;
+    private $categoryService;
+    private $pdo;
 
     public function __construct()
     {
-        // Cria a conexão PDO diretamente aqui (sem classe Database)
+        // Incluir o autoloader
+        require_once __DIR__ . '/../autoload.php';
+        
+        // Cria a conexão PDO
         try {
             $this->pdo = new PDO(
                 "mysql:host=localhost;dbname=social_media_awards;charset=utf8",
@@ -27,7 +31,8 @@ class AdminController
             die("Erreur de connexion à la base de données : " . $e->getMessage());
         }
 
-        $this->categoryService = new CategoryService($this->pdo);
+        // Agora podemos instanciar a classe
+        $this->categoryService = new \App\Services\CategoryService($this->pdo);
     }
 
     public function getAllCategories(): array

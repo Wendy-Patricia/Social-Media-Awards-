@@ -203,7 +203,7 @@ class UserController
     {
         switch ($role) {
             case 'admin':
-                return '/Social-Media-Awards-/views/admin/admin-dashboard.php';
+                return '/Social-Media-Awards-/views/admin/dashboard.php';
             case 'candidate':
                 return '/Social-Media-Awards-/views/candidate/candidate-dashboard.php';
             case 'voter':

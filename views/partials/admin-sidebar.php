@@ -31,13 +31,13 @@
             <li class="nav-section">
                 <span class="section-title">Gestion des Catégories</span>
                 <ul>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-categories.php' ? 'active' : ''; ?>">
-                        <a href="/Social-Media-Awards-/views/admin/categories/manage-categories.php">
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'gerer-categories.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/categories/gerer-categories.php">
                             <i class="fas fa-tags"></i> Liste des catégories
                         </a>
                     </li>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'add-category.php' ? 'active' : ''; ?>">
-                        <a href="/Social-Media-Awards-/views/admin/categories/add-categorie.php">
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'ajouter-category.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/categories/ajouter-categorie.php">
                             <i class="fas fa-plus-circle"></i> Ajouter une catégorie
                         </a>
                     </li>
@@ -116,8 +116,9 @@
             </li>
 
             <li class="logout">
-                <a href="../../controllers/logout.php">
-                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                <a href="/Social-Media-Awards-/logout.php" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Déconnexion
                 </a>
             </li>
         </ul>

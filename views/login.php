@@ -1,5 +1,6 @@
 
 <?php
+error_reporting(E_ALL); ini_set('display_errors', 1);
 // views/login.php - SEM 2FA
 require_once '../app/Controllers/UserController.php';
 require_once '../config/session.php';
@@ -7,7 +8,7 @@ require_once '../config/session.php';
 // Se já estiver autenticado, redirecionar
 if (isAuthenticated()) {
     $redirect = match(getUserType()) {
-        'admin' => '../views/admin/admin-dashboard.php',
+        'admin' => '../views/admin/dashboard.php',
         'candidate' => '../views/candidate/candidate-dashboard.php',
         'voter' => '../views/user/user-dashboard.php',
         default => '../index.php'
