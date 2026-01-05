@@ -1,23 +1,47 @@
 <?php
-class Database {
-    private static ?PDO $pdo = null;
+// config/database.php
 
-    public static function getConnection(): PDO {
-        if (self::$pdo === null) {
-            try {
-                self::$pdo = new PDO(
-                    "mysql:host=localhost;dbname=social_media_awards;charset=utf8",
-                    "root",
-                    "",
-                    [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-                    ]
-                );
-            } catch (PDOException $e) {
-                die("Erreur de connexion à la base de données");
-            }
+class Database {
+    private static $instance = null;
+    private $connection;
+    
+    private function __construct() {
+        try {
+            $host = 'localhost';
+            $dbname = 'social_media_awards';
+            $username = 'root';
+            $password = '';
+            
+            $this->connection = new PDO(
+                "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
+                $username,
+                $password,
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false
+                ]
+            );
+            
+        } catch (PDOException $e) {
+            die("Erro de conexão: " . $e->getMessage());
         }
-        return self::$pdo;
+    }
+    
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new Database();
+        }
+        return self::$instance;
+    }
+    
+    public function getConnection() {
+        return $this->connection;
     }
 }
+
+// Função auxiliar para obter conexão (a que está causando o erro)
+function getDB() {
+    return Database::getInstance()->getConnection();
+}
+?>
