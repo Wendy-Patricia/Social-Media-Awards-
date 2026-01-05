@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/session.php';
 
 function isLoggedIn(): bool {
     return isset($_SESSION['user']);
@@ -6,23 +7,15 @@ function isLoggedIn(): bool {
 
 function requireLogin() {
     if (!isLoggedIn()) {
-        header('Location: /login');
+        header('Location: /Social-Media-Awards-/login.php');
         exit;
     }
 }
 
 function requireAdmin() {
     requireLogin();
-    if ($_SESSION['user']['role'] !== 'admin') {
+    if (!isset($_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin') {
         http_response_code(403);
-        die('Access denied');
-    }
-}
-
-function requireCandidate() {
-    requireLogin();
-    if ($_SESSION['user']['role'] !== 'candidate') {
-        http_response_code(403);
-        die('Access denied');
+        die('Accès refusé. Vous devez être administrateur.');
     }
 }

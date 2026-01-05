@@ -1,4 +1,3 @@
-
 // Variables globales
 let categoryToDelete = null;
 let categoryNameToDelete = '';
@@ -156,10 +155,10 @@ function initDeleteModal() {
     // Confirmer la suppression
     const confirmBtn = document.getElementById('confirmDeleteBtn');
     confirmBtn.addEventListener('click', function(e) {
-        e.preventDefault();
+        // Remover e.preventDefault() para seguir o link
         if (categoryToDelete) {
-            // Rediriger vers l'URL de suppression
-            window.location.href = `manage-categories.php?delete=${categoryToDelete}`;
+            // O href já está definido em confirmDelete()
+            // Permet redirecionamento natural
         }
     });
 }
@@ -176,9 +175,9 @@ function confirmDelete(id, name) {
     const modal = document.getElementById('deleteModal');
     modal.style.display = 'flex';
     
-    // Mettre à jour le lien de suppression
-    const deleteBtn = document.getElementById('confirmDeleteBtn');
-    deleteBtn.href = `manage-categories.php?delete=${id}`;
+    // Definir a rota para supprimer
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    confirmDeleteBtn.href = `/Social-Media-Awards-/admin/categories/supprimer?id=${id}`;
 }
 
 // Fermer le modal de suppression
