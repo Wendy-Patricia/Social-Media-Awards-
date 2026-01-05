@@ -3,54 +3,62 @@
 namespace App\Controllers;
 
 use App\Services\CategoryService;
+use PDO;
 
 class AdminController
 {
     private CategoryService $categoryService;
+    private PDO $pdo;
 
     public function __construct()
     {
-        // Conexão direta à classe Database no namespace global
-        $pdo = \Database::getConnection();
-        $this->categoryService = new CategoryService($pdo);
+        // Cria a conexão PDO diretamente aqui (sem classe Database)
+        try {
+            $this->pdo = new PDO(
+                "mysql:host=localhost;dbname=social_media_awards;charset=utf8",
+                "root",
+                "",
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                ]
+            );
+        } catch (PDOException $e) {
+            die("Erreur de connexion à la base de données : " . $e->getMessage());
+        }
+
+        $this->categoryService = new CategoryService($this->pdo);
     }
 
-    // Método público para listar todas as categorias
     public function getAllCategories(): array
     {
         return $this->categoryService->getAllCategories();
     }
 
-    // Método público para obter uma categoria por ID
     public function getCategoryById(int $id): ?array
     {
         return $this->categoryService->getCategoryById($id);
     }
 
-    // Método público para criar categoria
     public function createCategory(array $data, ?array $imageFile = null): bool
     {
         return $this->categoryService->createCategory($data, $imageFile);
     }
 
-    // Método público para atualizar categoria
     public function updateCategory(int $id, array $data, ?array $imageFile = null): bool
     {
         return $this->categoryService->updateCategory($id, $data, $imageFile);
     }
 
-    // Método público para apagar categoria
     public function deleteCategory(int $id): bool
     {
         return $this->categoryService->deleteCategory($id);
     }
 
-    // Método público para listar edições (para os selects)
     public function getEditionsList(): array
     {
-        $pdo = \Database::getConnection();
         $sql = "SELECT id_edition, nom, annee FROM edition ORDER BY annee DESC";
-        $stmt = $pdo->query($sql);
+        $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll();
     }
 }

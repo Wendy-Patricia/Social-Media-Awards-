@@ -1,16 +1,13 @@
 <?php
-// Adicionar apenas estas 4 linhas no TOPO do arquivo
+require_once __DIR__ . '/config/session.php';
+require_once __DIR__ . '/config/permissions.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/app/Services/StatisticsService.php';
 
 $statsService = new StatisticsService();
 $heroStats = $statsService->getHomePageStats();
 $sectionStats = $statsService->getStatsSection();
-?>
-<?php
-require_once __DIR__ . '/config/session.php';
-require_once __DIR__ . '/config/permissions.php';
-require_once __DIR__ . '/config/database.php';
+
 ?>
 
 <!DOCTYPE html>
@@ -29,7 +26,6 @@ require_once __DIR__ . '/config/database.php';
     <?php require_once 'views/partials/header.php'; ?>
 
     <div class="main-content">
-        <!-- SECTION HERO BANNER - PLEINE LARGEUR SANS ESPACE-->
         <section class="hero-banner">
             <div class="banner-container">
                 <img src="assets/images/banner1.png" alt="Bannière Social Media Awards 2025" class="hero-banner-image">
@@ -69,18 +65,15 @@ require_once __DIR__ . '/config/database.php';
                             <div class="stat-label">Catégories</div>
                         </div>
                         <div class="hero-stat">
-                            <!-- APENAS ESTA LINHA MUDA -->
                             <div class="stat-number"><?php echo $heroStats['platforms']; ?></div>
                             <div class="stat-label">Plateformes</div>
                         </div>
                         <div class="hero-stat">
-                            <!-- APENAS ESTA LINHA MUDA -->
                             <div class="stat-number"><?php echo $heroStats['votes']; ?></div>
                             <div class="stat-label">Votes</div>
                         </div>
                     </div>
                 </div>
-                <!-- TODO O RESTO PERMANECE IGUAL -->
                 <div class="hero-visual">
                     <div class="platforms-showcase">
                         <div class="platform-item">
@@ -108,13 +101,9 @@ require_once __DIR__ . '/config/database.php';
             </div>
         </section>
 
-        <!-- ... TODO O MEIO DO ARQUIVO PERMANECE EXATAMENTE IGUAL ... -->
-
-        <!-- APENAS ATUALIZAR A SEÇÃO DE STATS -->
         <section class="stats">
             <div class="container">
                 <div class="stats-grid">
-                    <!-- APENAS OS NÚMEROS MUDAM -->
                     <div class="stat-item">
                         <div class="stat-number"><?php echo $sectionStats['categories']; ?>+</div>
                         <div class="stat-label">Catégories</div>
