@@ -79,7 +79,6 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
         </div>
         <?php endif; ?>
 
-        <!-- Controles da Tabela -->
         <div class="table-controls">
             <div class="search-box">
                 <i class="fas fa-search"></i>
@@ -185,8 +184,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                                     <?php if ($cat['image']): ?>
                                         <img src="../../../public/<?= htmlspecialchars($cat['image']) ?>" 
                                              alt="<?= htmlspecialchars($cat['nom']) ?>" 
-                                             class="category-image"
-                                             onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 40 40\"><rect width=\"40\" height=\"40\" fill=\"%23f0f2f5\"/><text x=\"20\" y=\"22\" font-family=\"Arial\" font-size=\"14\" fill=\"%237f8c8d\" text-anchor=\"middle\">📷</text></svg>'">
+                                             class="category-image">
                                     <?php else: ?>
                                         <div class="category-image" style="background: #f0f2f5; display: flex; align-items: center; justify-content: center; color: #7f8c8d;">
                                             <i class="fas fa-tag"></i>
@@ -283,7 +281,6 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
 <script src="../../../assets/js/admin-categories.js"></script>
 
 <?php
-// Traitement suppression
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     if ($controller->deleteCategory($id)) {

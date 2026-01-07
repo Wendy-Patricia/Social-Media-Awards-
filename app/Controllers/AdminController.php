@@ -5,10 +5,13 @@ namespace App\Controllers;
 
 use PDO;
 use PDOException;
+use App\Services\CategoryService;
+use App\Services\EditionService;
 
 class AdminController
 {
-    private $categoryService;
+    private CategoryService $categoryService;
+    private EditionService $editionService;
     private $pdo;
 
     public function __construct()
@@ -32,7 +35,8 @@ class AdminController
         }
 
         // Agora podemos instanciar a classe
-        $this->categoryService = new \App\Services\CategoryService($this->pdo);
+        $this->categoryService = new CategoryService($this->pdo);
+        $this->editionService = new EditionService($this->pdo);
     }
 
     public function getAllCategories(): array
@@ -66,4 +70,30 @@ class AdminController
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll();
     }
+
+    public function getAllEditions(): array
+    {
+        return $this->editionService->getAllEditions();
+    }
+
+    public function getEditionById(int $id): ?array
+    {
+        return $this->editionService->getEditionById($id);
+    }
+
+    public function createEdition(array $data, ?array $imageFile = null): bool
+    {
+        return $this->editionService->createEdition($data, $imageFile);
+    }
+
+    public function updateEdition(int $id, array $data, ?array $imageFile = null): bool
+    {
+        return $this->editionService->updateEdition($id, $data, $imageFile);
+    }
+
+    public function deleteEdition(int $id): bool
+    {
+        return $this->editionService->deleteEdition($id);
+    }
+    
 }

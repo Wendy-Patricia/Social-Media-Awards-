@@ -15,13 +15,13 @@
             <li class="nav-section">
                 <span class="section-title">Gestion des Editions</span>
                 <ul>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-users.php' ? 'active' : ''; ?>">
-                        <a href="/Social-Media-Awards-/views/admin/editions/manage-editions.php">
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'gerer-editions.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/editions/gerer-editions.php">
                             <i class="fas fa-users"></i> Liste des Editions
                         </a>
                     </li>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'add-user.php' ? 'active' : ''; ?>">
-                        <a href="/Social-Media-Awards-/views/admin/editions/add-edition.php">
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'ajouter-edition.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/editions/ajouter-edition.php">
                             <i class="fas fa-user-plus"></i> Ajouter une Edition
                         </a>
                     </li>
@@ -39,22 +39,6 @@
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'ajouter-category.php' ? 'active' : ''; ?>">
                         <a href="/Social-Media-Awards-/views/admin/categories/ajouter-categorie.php">
                             <i class="fas fa-plus-circle"></i> Ajouter une catégorie
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            <li class="nav-section">
-                <span class="section-title">Gestion des Candidats</span>
-                <ul>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-candidates.php' ? 'active' : ''; ?>">
-                        <a href="manage-candidates.php">
-                            <i class="fas fa-user-tie"></i> Liste des Candidats
-                        </a>
-                    </li>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'add-candidate.php' ? 'active' : ''; ?>">
-                        <a href="add-candidate.php">
-                            <i class="fas fa-user-plus"></i> Ajouter un Candidat
                         </a>
                     </li>
                 </ul>

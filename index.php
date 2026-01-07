@@ -1,12 +1,7 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 require_once __DIR__ . '/config/session.php';
 require_once __DIR__ . '/config/permissions.php';
-require_once __DIR__ . '/config/database.php'; // pode manter, não faz mal (não é usado aqui agora)
 
-// Valores fixos (iguais aos que apareciam antes quando não havia dados reais)
 $heroStats = [
     'categories' => 12,
     'platforms'  => 5,
@@ -20,6 +15,7 @@ $sectionStats = [
     'votes'         => '50K+',
     'platforms'     => 5
 ];
+
 ?>
 
 <!DOCTYPE html>
