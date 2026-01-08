@@ -1,12 +1,96 @@
 <?php
-// Adicionar no início (apenas estas 4 linhas)
-require_once __DIR__ . '/config/database.php';
+// categories.php
+
+// ===============================================
+// 1. Criar conexão PDO
+// ===============================================
+try {
+    $pdo = new PDO(
+        "mysql:host=localhost;dbname=social_media_awards;charset=utf8mb4",
+        "root",
+        "",
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ]
+    );
+} catch (PDOException $e) {
+    die("Erreur de connexion à la base de données : " . $e->getMessage());
+}
+
+// ===============================================
+// 2. Incluir o CategoryService
+// ===============================================
 require_once __DIR__ . '/app/Services/CategoryService.php';
 
-$categoryService = new CategoryService();
-$pageStats = $categoryService->getCategoryPageStats();
-$categories = $categoryService->getCategoriesWithDynamicStats();
+// ===============================================
+// 3. Instanciar o serviço
+// ===============================================
+$categoryService = new \App\Services\CategoryService($pdo);
+
+// ===============================================
+// 4. Buscar todas as categorias
+// ===============================================
+$rawCategories = $categoryService->getAllCategories();
+
+// ===============================================
+// 5. Estatísticas por categoria (nominés e votos)
+// ===============================================
+$categories = [];
+foreach ($rawCategories as $cat) {
+    $catId = $cat['id_categorie'];
+
+    // Número de nominés = quantas linhas em nomination para esta categoria
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM nomination WHERE id_categorie = ?");
+    $stmt->execute([$catId]);
+    $nominees = (int)$stmt->fetchColumn();
+
+    // Total de votos reais nesta categoria
+    $stmt = $pdo->prepare("
+        SELECT COUNT(v.id_vote) 
+        FROM vote v
+        JOIN nomination n ON v.id_nomination = n.id_nomination
+        WHERE n.id_categorie = ?
+    ");
+    $stmt->execute([$catId]);
+    $votes = (int)$stmt->fetchColumn();
+
+    $categories[] = [
+        'nominees' => $nominees,
+        'votes'    => $votes,
+    ];
+}
+
+// ===============================================
+// 6. Estatísticas globais para o hero
+// ===============================================
+$totalCategories = count($rawCategories);
+
+// Número de plataformas distintas (baseado na coluna plateforme da tabela candidature)
+$stmt = $pdo->query("
+    SELECT COUNT(DISTINCT plateforme) 
+    FROM candidature 
+    WHERE plateforme IS NOT NULL AND plateforme != ''
+");
+$totalPlatforms = (int)$stmt->fetchColumn();
+$totalPlatforms = $totalPlatforms > 0 ? $totalPlatforms : 6; // fallback visual
+
+// Total de nominés únicos (contas distintas nomeadas na edição ativa)
+$stmt = $pdo->query("
+    SELECT COUNT(DISTINCT n.id_compte) 
+    FROM nomination n
+    JOIN categorie c ON n.id_categorie = c.id_categorie
+    WHERE c.id_edition = (SELECT id_edition FROM edition WHERE est_active = 1 LIMIT 1)
+");
+$totalNominees = (int)$stmt->fetchColumn();
+
+$pageStats = [
+    'categories' => $totalCategories,
+    'platforms'  => $totalPlatforms,
+    'nominees'   => $totalNominees,
+];
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -28,17 +112,14 @@ $categories = $categoryService->getCategoriesWithDynamicStats();
                 <p>Découvrez les <?php echo $pageStats['categories']; ?> catégories qui célèbrent l'excellence à travers toutes les plateformes sociales</p>
                 <div class="hero-stats">
                     <div class="stat">
-                        <!-- NÚMERO DINÂMICO -->
                         <div class="stat-number"><?php echo $pageStats['categories']; ?></div>
                         <div class="stat-label">Catégories</div>
                     </div>
                     <div class="stat">
-                        <!-- NÚMERO DINÂMICO -->
                         <div class="stat-number"><?php echo $pageStats['platforms']; ?></div>
                         <div class="stat-label">Plateformes</div>
                     </div>
                     <div class="stat">
-                        <!-- NÚMERO DINÂMICO -->
                         <div class="stat-number"><?php echo $pageStats['nominees']; ?></div>
                         <div class="stat-label">Nominés</div>
                     </div>
@@ -48,77 +129,60 @@ $categories = $categoryService->getCategoriesWithDynamicStats();
 
         <section class="categories-section">
             <div class="container">
-                <!-- FILTROS MANTIDOS IGUAIS -->
                 <div class="categories-filter">
                     <button class="filter-btn active" data-filter="all">Toutes</button>
-                    <button class="filter-btn" data-filter="tiktok">TikTok</button>
-                    <button class="filter-btn" data-filter="instagram">Instagram</button>
                     <button class="filter-btn" data-filter="youtube">YouTube</button>
-                    <button class="filter-btn" data-filter="twitter">Twitter</button>
-                    <button class="filter-btn" data-filter="facebook">Facebook</button>
+                    <button class="filter-btn" data-filter="instagram">Instagram</button>
+                    <button class="filter-btn" data-filter="tiktok">TikTok</button>
+                    <button class="filter-btn" data-filter="spotify">Spotify</button>
+                    <button class="filter-btn" data-filter="twitch">Twitch</button>
                 </div>
 
                 <div class="categories-grid">
-                    <!-- CATEGORIA 1 (estrutura mantida, números dinâmicos) -->
-                    <div class="category-card" data-platform="tiktok instagram youtube">
-                        <div class="category-header">
-                            <div class="category-icon">
-                                <i class="fas fa-star"></i>
+                    <?php if (empty($rawCategories)): ?>
+                        <p style="grid-column: 1 / -1; text-align:center; padding:60px; font-size:1.3em; color:#888;">
+                            Aucune catégorie disponible pour le moment.
+                        </p>
+                    <?php else: ?>
+                        <?php foreach ($rawCategories as $index => $cat): ?>
+                        <?php 
+                            $platforms = [];
+                            if (!empty($cat['plateforme_cible']) && $cat['plateforme_cible'] !== 'Toutes') {
+                                $platforms = array_map('trim', explode(',', $cat['plateforme_cible']));
+                            }
+                            $dataPlatform = !empty($platforms) ? implode(' ', array_map('strtolower', $platforms)) : 'all';
+                        ?>
+                        <div class="category-card" data-platform="<?php echo htmlspecialchars($dataPlatform); ?>">
+                            <div class="category-header">
+                                <div class="category-icon">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div class="platform-tags">
+                                    <?php foreach ($platforms as $plat): ?>
+                                        <span class="platform-tag <?php echo strtolower(htmlspecialchars($plat)); ?>">
+                                            <?php echo htmlspecialchars($plat); ?>
+                                        </span>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
-                            <div class="platform-tags">
-                                <span class="platform-tag tiktok">TikTok</span>
-                                <span class="platform-tag instagram">Instagram</span>
-                                <span class="platform-tag youtube">YouTube</span>
+                            <h3><?php echo htmlspecialchars($cat['nom']); ?></h3>
+                            <p><?php echo htmlspecialchars($cat['description'] ?? 'Description à venir...'); ?></p>
+                            <div class="category-stats">
+                                <div class="stat">
+                                    <div class="stat-number"><?php echo $categories[$index]['nominees']; ?></div>
+                                    <div class="stat-label">Nominés</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-number"><?php echo $categories[$index]['votes']; ?></div>
+                                    <div class="stat-label">Votes</div>
+                                </div>
                             </div>
+                            <button class="btn-view-nominees" onclick="window.location.href='nominees.php?category=<?php echo $cat['id_categorie']; ?>'">
+                                Voir les Nominés
+                            </button>
                         </div>
-                        <h3>Créateur Révélation de l'Année</h3>
-                        <p>Les nouveaux talents qui ont marqué l'année par leur croissance exceptionnelle et leur contenu innovant</p>
-                        <div class="category-stats">
-                            <div class="stat">
-                                <!-- NÚMERO DINÂMICO -->
-                                <div class="stat-number"><?php echo $categories[0]['nominees']; ?></div>
-                                <div class="stat-label">Nominés</div>
-                            </div>
-                            <div class="stat">
-                                <!-- NÚMERO DINÂMICO -->
-                                <div class="stat-number"><?php echo $categories[0]['votes']; ?></div>
-                                <div class="stat-label">Votes</div>
-                            </div>
-                        </div>
-                        <button class="btn-view-nominees">Voir les Nominés</button>
-                    </div>
-
-                    <!-- CATEGORIA 2 (estrutura mantida, números dinâmicos) -->
-                    <div class="category-card" data-platform="youtube spotify">
-                        <div class="category-header">
-                            <div class="category-icon">
-                                <i class="fas fa-podcast"></i>
-                            </div>
-                            <div class="platform-tags">
-                                <span class="platform-tag youtube">YouTube</span>
-                                <span class="platform-tag spotify">Spotify</span>
-                            </div>
-                        </div>
-                        <h3>Meilleur Podcast en Ligne</h3>
-                        <p>Les podcasts les plus engageants, innovants et influents de l'année</p>
-                        <div class="category-stats">
-                            <div class="stat">
-                                <!-- NÚMERO DINÂMICO -->
-                                <div class="stat-number"><?php echo $categories[1]['nominees']; ?></div>
-                                <div class="stat-label">Nominés</div>
-                            </div>
-                            <div class="stat">
-                                <!-- NÚMERO DINÂMICO -->
-                                <div class="stat-number"><?php echo $categories[1]['votes']; ?></div>
-                                <div class="stat-label">Votes</div>
-                            </div>
-                        </div>
-                        <button class="btn-view-nominees">Voir les Nominés</button>
-                    </div>
-
-                    <!-- REPETIR PARA AS OUTRAS CATEGORIAS, USANDO $categories[2], $categories[3], etc. -->
-                    <!-- Como você tem muitas categorias, vou mostrar só as primeiras como exemplo -->
-                    
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </section>

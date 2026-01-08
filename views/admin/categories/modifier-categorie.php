@@ -1,7 +1,9 @@
 <?php
+require_once __DIR__ . '/../../../app/autoload.php';
 require_once __DIR__ . '/../../../config/session.php';
 require_once __DIR__ . '/../../../config/permissions.php';
 requireAdmin();
+require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) {
@@ -11,9 +13,9 @@ if ($id <= 0) {
 
 require_once __DIR__ . '/../../../app/Controllers/AdminController.php';
 
-$controller = new App\Controllers\AdminController();
-$category = $controller->getCategoryById($id);
-$editions = $controller->getEditionsList();
+
+$category = $categoryController->getCategoryById($id);
+$editions = $editionController->getEditionsList();
 
 if (!$category) {
     header("Location: gerer-categories.php");

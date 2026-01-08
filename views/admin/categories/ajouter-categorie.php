@@ -1,12 +1,12 @@
 <?php
+require_once __DIR__ . '/../../../app/autoload.php';
 require_once __DIR__ . '/../../../config/session.php';
 require_once __DIR__ . '/../../../config/permissions.php';
 requireAdmin();
+require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 
-require_once __DIR__ . '/../../../app/Controllers/AdminController.php';
 
-$controller = new App\Controllers\AdminController();
-$editions = $controller->getEditionsList();
+$editions = $editionController->getEditionsList();
 
 $error = '';
 $success = '';

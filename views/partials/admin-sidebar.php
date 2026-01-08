@@ -45,6 +45,17 @@
             </li>
 
             <li class="nav-section">
+                <span class="section-title">Gestion des Candidatures</span>
+                <ul>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-application.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/views/admin/candidatures/manage-candidature.php">
+                            <i class="fas fa-file-alt"></i> Toutes les Candidatures
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-section">
                 <span class="section-title">Gestion des Nominations</span>
                 <ul>
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-nominations.php' ? 'active' : ''; ?>">
@@ -67,22 +78,6 @@
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-elections.php' ? 'active' : ''; ?>">
                         <a href="manage-elections.php">
                             <i class="fas fa-vote-yea"></i> Gérer les Élections
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            <li class="nav-section">
-                <span class="section-title">Gestion des Candidatures</span>
-                <ul>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-applications.php' ? 'active' : ''; ?>">
-                        <a href="/Social-Media-Awards-/views/admin/candidatures/manage-candidatures.php">
-                            <i class="fas fa-file-alt"></i> Toutes les Candidatures
-                        </a>
-                    </li>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'view-candidatures.php' ? 'active' : ''; ?>">
-                        <a href="/Social-Media-Awards-/views/admin/candidatures/view-candidatures.php/">
-                            <i class="fas fa-plus-circle"></i> Visualizer les Candidatures
                         </a>
                     </li>
                 </ul>

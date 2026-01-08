@@ -1,15 +1,13 @@
 <?php
+require_once __DIR__ . '/../../../app/autoload.php';
 require_once __DIR__ . '/../../../config/session.php';
 require_once __DIR__ . '/../../../config/permissions.php';
 requireAdmin();
-
-require_once __DIR__ . '/../../../app/Controllers/AdminController.php';
-
-$controller = new App\Controllers\AdminController();
+require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 
 $error = '';
 $formData = [
-    'annee' => $_POST['annee'] ?? date('Y'),
+    'annee' => $_POST['annee'] ?? date('Y') + 1, // Change to next year by default
     'nom' => $_POST['nom'] ?? '',
     'description' => $_POST['description'] ?? '',
     'theme' => $_POST['theme'] ?? '',
@@ -41,28 +39,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($data['nom'])) {
         $validationErrors[] = "Le nom de l'édition est requis.";
     }
-    if (empty($data['date_debut_candidatures']) || empty($data['date_fin_candidatures']) ||
-        empty($data['date_debut']) || empty($data['date_fin'])) {
+    if (
+        empty($data['date_debut_candidatures']) || empty($data['date_fin_candidatures']) ||
+        empty($data['date_debut']) || empty($data['date_fin'])
+    ) {
         $validationErrors[] = "Toutes les dates sont obligatoires.";
     } else {
-        if (strtotime($data['date_debut_candidatures']) >= strtotime($data['date_fin_candidatures']) ||
+        if (
+            strtotime($data['date_debut_candidatures']) >= strtotime($data['date_fin_candidatures']) ||
             strtotime($data['date_fin_candidatures']) >= strtotime($data['date_debut']) ||
-            strtotime($data['date_debut']) >= strtotime($data['date_fin'])) {
+            strtotime($data['date_debut']) >= strtotime($data['date_fin'])
+        ) {
             $validationErrors[] = "Les dates doivent être dans l'ordre logique.";
         }
     }
 
     if (empty($validationErrors)) {
         $image = $_FILES['image'] ?? null;
-        if ($controller->createEdition($data, $image)) {
-            header("Location: gerer-editions.php?success=1");
-            exit;
-        } else {
-            $error = "Erreur lors de la création de l'édition.";
+        try {
+            if ($editionController->createEdition($data, $image)) {
+                header("Location: gerer-editions.php?success=1");
+                exit;
+            } else {
+                $error = "Erreur lors de la création de l'édition.";
+            }
+        } catch (Exception $e) {
+            $error = $e->getMessage();
         }
     } else {
         $error = implode("<br>", $validationErrors);
     }
+}
+
+$existingYears = [];
+try {
+    $sql = "SELECT annee FROM edition ORDER BY annee DESC";
+    $stmt = $pdo->query($sql);
+    $existingYears = $stmt->fetchAll(PDO::FETCH_COLUMN);
+} catch (Exception $e) {
 }
 
 require_once __DIR__ . '/../../../views/partials/admin-header.php';
@@ -86,7 +100,14 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
         <?php if ($error): ?>
             <div class="alert alert-error">
                 <i class="fas fa-exclamation-circle"></i>
-                <?= $error ?>
+                <?= htmlspecialchars($error) ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (!empty($existingYears)): ?>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                Années déjà utilisées: <strong><?= implode(', ', $existingYears) ?></strong>
             </div>
         <?php endif; ?>
 
@@ -95,12 +116,13 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                 <div class="form-group">
                     <label for="nom" class="form-label required">Nom de l'édition</label>
                     <input type="text" name="nom" id="nom" class="form-control" required maxlength="100"
-                           value="<?= htmlspecialchars($formData['nom']) ?>">
+                        value="<?= htmlspecialchars($formData['nom']) ?>" placeholder="Ex: Social Media Awards <?= date('Y') + 1 ?>">
                 </div>
                 <div class="form-group">
                     <label for="annee" class="form-label required">Année</label>
                     <input type="number" name="annee" id="annee" class="form-control" required min="2000" max="2100"
-                           value="<?= htmlspecialchars($formData['annee']) ?>">
+                        value="<?= htmlspecialchars($formData['annee']) ?>">
+                    <small class="form-text">Choisissez une année qui n'est pas déjà utilisée</small>
                 </div>
             </div>
 
@@ -112,7 +134,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
             <div class="form-group">
                 <label for="theme" class="form-label">Thème</label>
                 <input type="text" name="theme" id="theme" class="form-control"
-                       value="<?= htmlspecialchars($formData['theme']) ?>">
+                    value="<?= htmlspecialchars($formData['theme']) ?>" placeholder="Ex: L'innovation digitale">
             </div>
 
             <div class="form-row">
@@ -120,20 +142,20 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                     <label class="form-label required">Période des candidatures</label>
                     <div class="date-picker-group">
                         <input type="datetime-local" name="date_debut_candidatures" required
-                               value="<?= htmlspecialchars($formData['date_debut_candidatures']) ?>">
+                            value="<?= htmlspecialchars($formData['date_debut_candidatures']) ?>">
                         <span class="date-separator">à</span>
                         <input type="datetime-local" name="date_fin_candidatures" required
-                               value="<?= htmlspecialchars($formData['date_fin_candidatures']) ?>">
+                            value="<?= htmlspecialchars($formData['date_fin_candidatures']) ?>">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label required">Période de l'édition (votes)</label>
                     <div class="date-picker-group">
                         <input type="datetime-local" name="date_debut" required
-                               value="<?= htmlspecialchars($formData['date_debut']) ?>">
+                            value="<?= htmlspecialchars($formData['date_debut']) ?>">
                         <span class="date-separator">à</span>
                         <input type="datetime-local" name="date_fin" required
-                               value="<?= htmlspecialchars($formData['date_fin']) ?>">
+                            value="<?= htmlspecialchars($formData['date_fin']) ?>">
                     </div>
                 </div>
             </div>
@@ -143,6 +165,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                     <input type="checkbox" name="est_active" value="1" <?= $formData['est_active'] ? 'checked' : '' ?>>
                     Édition active (en cours)
                 </label>
+                <small class="form-text">Une seule édition peut être active à la fois</small>
             </div>
 
             <div class="form-group">

@@ -7,19 +7,20 @@ use PDO;
 use PDOException;
 use App\Services\CategoryService;
 use App\Services\EditionService;
+use App\Services\CandidatureService;
 
 class AdminController
 {
     private CategoryService $categoryService;
     private EditionService $editionService;
+    private CandidatureService $candidatureService;
     private $pdo;
 
     public function __construct()
     {
-        // Incluir o autoloader
+
         require_once __DIR__ . '/../autoload.php';
         
-        // Cria a conexão PDO
         try {
             $this->pdo = new PDO(
                 "mysql:host=localhost;dbname=social_media_awards;charset=utf8",
@@ -37,6 +38,7 @@ class AdminController
         // Agora podemos instanciar a classe
         $this->categoryService = new CategoryService($this->pdo);
         $this->editionService = new EditionService($this->pdo);
+        $this->candidatureService = new CandidatureService($this->pdo);
     }
 
     public function getAllCategories(): array
@@ -94,6 +96,26 @@ class AdminController
     public function deleteEdition(int $id): bool
     {
         return $this->editionService->deleteEdition($id);
+    }
+
+    public function getAllCandidatures(): array
+    {
+        return $this->candidatureService->getAllCandidatures();
+    }
+
+    public function getCandidatureById(int $id): ?array
+    {
+        return $this->candidatureService->getCandidatureById($id);
+    }
+
+    public function updateCandidatureStatus(int $id, string $statut): bool
+    {
+        return $this->candidatureService->updateStatus($id, $statut);
+    }
+
+    public function deleteCandidature(int $id): bool
+    {
+        return $this->candidatureService->deleteCandidature($id);
     }
     
 }

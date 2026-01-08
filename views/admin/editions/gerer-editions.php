@@ -1,12 +1,12 @@
 <?php
+require_once __DIR__ . '/../../../app/autoload.php';
 require_once __DIR__ . '/../../../config/session.php';
 require_once __DIR__ . '/../../../config/permissions.php';
 requireAdmin();
+require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 
-require_once __DIR__ . '/../../../app/Controllers/AdminController.php';
 
-$controller = new App\Controllers\AdminController();
-$editions = $controller->getAllEditions();
+$editions = $editionController->getAllEditions();
 
 require_once __DIR__ . '/../../../views/partials/admin-header.php';
 ?>
@@ -90,7 +90,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
 
 <?php if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
-    $controller->deleteEdition($id);
+    $editionController->deleteEdition($id);
     header("Location: gerer-editions.php?success=1");
     exit;
 } ?>

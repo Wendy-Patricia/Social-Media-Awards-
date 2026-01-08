@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use PDO;
@@ -50,6 +51,13 @@ class EditionService
 
     public function createEdition(array $data, ?array $imageFile = null): bool
     {
+        $checkSql = "SELECT id_edition FROM edition WHERE annee = :annee";
+        $checkStmt = $this->pdo->prepare($checkSql);
+        $checkStmt->execute([':annee' => $data['annee']]);
+
+        if ($checkStmt->fetch()) {
+            throw new \Exception("Une édition avec l'année {$data['annee']} existe déjà.");
+        }
         $imagePath = $this->uploadImage($imageFile);
 
         $sql = "INSERT INTO edition 

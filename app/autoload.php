@@ -1,18 +1,21 @@
 <?php
-// app/autoload.php
-
 spl_autoload_register(function ($class) {
-    // Base directory
-    $base_dir = __DIR__ . '/';
-    
-    // Remove o namespace principal
-    $class = str_replace('App\\', '', $class);
-    
-    // Converte namespace para caminho de arquivo
-    $file = $base_dir . str_replace('\\', '/', $class) . '.php';
-    
-    // Verifica se o arquivo existe
+    // Apenas processa classes que começam com "App\"
+    $prefix = 'App\\';
+    $base_dir = __DIR__ . '/'; // Pasta atual: app/
+
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) !== 0) {
+        // Não é uma classe do nosso namespace → ignora
+        return;
+    }
+
+    // Remove o prefixo e converte namespace em caminho de diretório
+    $relative_class = substr($class, $len);
+    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+
+    // Se o ficheiro existir, inclui-o
     if (file_exists($file)) {
-        require_once $file;
+        require $file;
     }
 });

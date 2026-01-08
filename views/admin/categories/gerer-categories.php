@@ -1,13 +1,12 @@
 <?php
+require_once __DIR__ . '/../../../app/autoload.php';
 require_once __DIR__ . '/../../../config/session.php';
 require_once __DIR__ . '/../../../config/permissions.php';
 requireAdmin();
+require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 
-require_once __DIR__ . '/../../../app/Controllers/AdminController.php';
-
-$controller = new App\Controllers\AdminController();
-$categories = $controller->getAllCategories();
-$editions = $controller->getEditionsList();
+$categories = $categoryController->getAllCategories();
+$editions = $editionController->getEditionsList();
 
 require_once __DIR__ . '/../../../views/partials/admin-header.php';
 ?>
@@ -283,7 +282,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
 <?php
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
-    if ($controller->deleteCategory($id)) {
+    if ($categoryController->deleteCategory($id)) {
         echo '<script>window.location.href = "gerer-categories.php?success=1";</script>';
         exit;
     } else {

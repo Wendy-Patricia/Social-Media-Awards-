@@ -1,7 +1,9 @@
 <?php
+require_once __DIR__ . '/../../../app/autoload.php';
 require_once __DIR__ . '/../../../config/session.php';
 require_once __DIR__ . '/../../../config/permissions.php';
 requireAdmin();
+require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) {
@@ -9,10 +11,7 @@ if ($id <= 0) {
     exit;
 }
 
-require_once __DIR__ . '/../../../app/Controllers/AdminController.php';
-
-$controller = new App\Controllers\AdminController();
-$edition = $controller->getEditionById($id);
+$edition = $editionController->getEditionById($id);
 
 if (!$edition) {
     header("Location: gerer-editions.php");
@@ -68,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $image = $_FILES['image'] ?? null;
         $removeImage = isset($_POST['remove_image']) && $_POST['remove_image'] == 1;
         
-        if ($controller->updateEdition($id, $data, $image, $removeImage)) {
+        if ($editionController->updateEdition($id, $data, $image, $removeImage)) {
             header("Location: gerer-editions.php?success=1");
             exit;
         } else {
