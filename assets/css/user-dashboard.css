@@ -21,7 +21,7 @@
 
 body {
     font-family: 'Open Sans', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: gray; /*linear-gradient(135deg, #667eea 0%, #764ba2 100%);*/
     min-height: 100vh;
     color: var(--dark);
 }
@@ -179,7 +179,6 @@ body {
 /* Hero Section */
 .hero-section {
     background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
     padding: 3rem;
     border-radius: 20px;
     margin-bottom: 2rem;
@@ -264,7 +263,9 @@ body {
 }
 
 .stat-card {
-    background: rgba(255,255,255,0.2);
+    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.95));
+    border: 1px solid rgba(255,255,255,0.3);
+    backdrop-filter: blur(10px);
     padding: 1.5rem;
     border-radius: 15px;
     display: flex;
@@ -769,3 +770,4 @@ body {
         justify-content: center;
     }
 }
+

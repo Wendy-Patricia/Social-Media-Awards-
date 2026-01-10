@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="admin">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/views/admin.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
