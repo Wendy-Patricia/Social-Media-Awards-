@@ -1,6 +1,9 @@
 <?php
 // views/user/user-dashboard.php
 require_once '../../config/session.php';
+require_once __DIR__ . '/../../app/Models/User.php';
+require_once __DIR__ . '/../../app/Models/Vote.php';
+require_once __DIR__ . '/../../app/Models/CategoryModel.php';
 
 // Verificar autenticação e tipo de usuário usando requireRole
 requireRole('voter');
@@ -10,14 +13,25 @@ $userId = $_SESSION['user_id'] ?? null;
 $userPseudonyme = $_SESSION['user_pseudonyme'] ?? 'Électeur';
 $userEmail = $_SESSION['user_email'] ?? 'Non défini';
 
+// Instanciar modelos
+$userModel = new User();
+$voteModel = new Vote();
+$categoryModel = new CategoryModel();
+
+// Obter dados reais do banco de dados
+$userData = $userModel->getUserById($userId);
+
+// Estatísticas do usuário
+$votesCount = $voteModel->getUserVotesCount($userId);
+$activeElections = $categoryModel->getActiveCategoriesCount();
+$categories = $categoryModel->getAllCategoriesWithNominations();
+$availableCategories = $categoryModel->getVotingCategoriesForUser($userId);
+
+// Verificar se o usuário já votou em categorias ativas
+$hasVotedInActiveCategories = $voteModel->hasUserVotedInActiveCategories($userId);
+
 // Obter iniciais para o avatar
 $initials = strtoupper(substr($userPseudonyme, 0, 2));
-
-// Dados simulados (serão substituídos por consultas à BD)
-$hasVoted = false;
-$activeElections = 2;
-$votesMade = 0;
-$certificates = 0;
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -30,11 +44,10 @@ $certificates = 0;
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Header personnalisé du dashboard -->
+    <!-- Header -->
     <header class="dashboard-header">
         <div class="header-content">
             <div class="logo-section">
-                
                 <img src="/Social-Media-Awards-/assets/images/logo.png" alt="Logo Social Media Awards" class="logo-image">
                 <h1>Social Media <span class="highlight">Awards</span></h1>
             </div>
@@ -57,553 +70,322 @@ $certificates = 0;
     </header>
 
     <main class="dashboard-container">
+        <!-- Sidebar de Navegação -->
+        <aside class="dashboard-sidebar">
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <i class="fas fa-home"></i>
+                    <span>Tableau de Bord</span>
+                </a>
+                <a href="/Social-Media-Awards-/views/user/Vote.php" class="nav-item">
+                    <i class="fas fa-vote-yea"></i>
+                    <span>Voter Maintenant</span>
+                </a>
+                <a href="/Social-Media-Awards-/categories.php" class="nav-item">
+                    <i class="fas fa-tags"></i>
+                    <span>Catégories</span>
+                </a>
+                <a href="/Social-Media-Awards-/nominees.php" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Candidats</span>
+                </a>
+                <a href="/Social-Media-Awards-/views/user/edit-profile.php" class="nav-item">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Mon Profil</span>
+                </a>
+                <a href="/Social-Media-Awards-/results.php" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Résultats</span>
+                </a>
+            </nav>
+        </aside>
+
         <div class="dashboard-main">
-            <!-- Hero Section - Informações personnelles -->
+            <!-- Hero Section -->
             <section class="hero-section">
                 <div class="hero-content">
-                    <div class="hero-avatar">
-                        <?php echo $initials; ?>
-                    </div>
-                    
                     <div class="hero-text">
                         <h1>Bonjour, <?php echo htmlspecialchars($userPseudonyme); ?>!</h1>
-                        <p>Bienvenue dans votre espace électeur. Gérez vos votes, consultez les candidats et suivez les résultats en temps réel.</p>
-                        
-                        <div class="hero-stats">
-                            <div class="stat-badge">
-                                <i class="fas fa-envelope"></i>
-                                <span><?php echo htmlspecialchars($userEmail); ?></span>
-                            </div>
-                            <div class="stat-badge">
-                                <i class="fas fa-vote-yea"></i>
-                                <span>Statut: Électeur</span>
-                            </div>
-                            <div class="stat-badge">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Membre depuis: <?php echo date('m/Y'); ?></span>
-                            </div>
-                        </div>
-                        
+                        <p>Votre espace personnel pour participer aux Social Media Awards.</p>
                         <div class="hero-actions">
-                            <a href="edit-profile.php" class="btn btn-secondary">
-                                <i class="fas fa-user-edit"></i>
-                                Modifier Profil
+                            <a href="/Social-Media-Awards-/views/user/Vote.php" class="btn btn-primary btn-lg">
+                                <i class="fas fa-vote-yea"></i>
+                                Commencer à Voter
                             </a>
-                            <a href="/Social-Media-Awards-/categories.php" class="btn btn-outline" style="color: var(--white); border-color: var(--white);">
-                                <i class="fas fa-tags"></i>
+                            <a href="/Social-Media-Awards-/categories.php" class="btn btn-outline btn-lg">
+                                <i class="fas fa-search"></i>
                                 Explorer Catégories
                             </a>
                         </div>
                     </div>
+                    <div class="hero-stats">
+                        <div class="stat-card">
+                            <i class="fas fa-vote-yea"></i>
+                            <div class="stat-content">
+                                <h3><?php echo $votesCount; ?></h3>
+                                <p>Votes émis</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-trophy"></i>
+                            <div class="stat-content">
+                                <h3><?php echo $activeElections; ?></h3>
+                                <p>Élections actives</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-medal"></i>
+                            <div class="stat-content">
+                                <h3><?php echo count($availableCategories); ?></h3>
+                                <p>Catégories disponibles</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <!-- Seção de Status do Voto -->
-            <div class="voting-section">
-                <!-- Estado do Voto -->
-                <section class="voting-status-card">
-                    <div class="status-header">
-                        <i class="fas fa-vote-yea"></i>
-                        <h2>État de votre vote</h2>
-                    </div>
-                    
-                    <div class="vote-status-container">
-                        <div class="vote-indicator <?php echo $hasVoted ? 'has-voted' : 'not-voted'; ?>">
-                            <div class="vote-icon <?php echo $hasVoted ? 'has-voted' : 'not-voted'; ?>">
-                                <i class="fas <?php echo $hasVoted ? 'fa-check-circle' : 'fa-clock'; ?>"></i>
-                            </div>
-                            <h3><?php echo $hasVoted ? 'Vote Enregistré!' : 'En attente de vote'; ?></h3>
-                            <p><?php echo $hasVoted ? 'Merci d\'avoir participé à cette élection.' : 'Période de vote en cours. Exprimez-vous!'; ?></p>
-                            
-                            <div class="vote-period">
-                                <i class="fas fa-clock"></i>
-                                <span>Période de vote: 01 Déc - 31 Déc 2025</span>
-                            </div>
-                        </div>
-                        
-                        <div class="vote-stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-card-icon">
-                                    <i class="fas fa-vote-yea"></i>
-                                </div>
-                                <h4>Votes émis</h4>
-                                <div class="number"><?php echo $votesMade; ?></div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-card-icon">
-                                    <i class="fas fa-certificate"></i>
-                                </div>
-                                <h4>Certificats</h4>
-                                <div class="number"><?php echo $certificates; ?></div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-card-icon">
-                                    <i class="fas fa-trophy"></i>
-                                </div>
-                                <h4>Élections actives</h4>
-                                <div class="number"><?php echo $activeElections; ?></div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-card-icon">
-                                    <i class="fas fa-calendar-check"></i>
-                                </div>
-                                <h4>Prochain vote</h4>
-                                <div class="number">01/01</div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Informações Rápidas -->
-                <section class="quick-info-cards">
-                    <div class="quick-info-card">
-                        <i class="fas fa-exclamation-circle" style="color: var(--tertiary);"></i>
-                        <div class="quick-info-content">
-                            <h4>Important à savoir</h4>
-                            <p>Vous pouvez voter une fois par catégorie. Consultez les règles avant de voter.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="quick-info-card">
-                        <i class="fas fa-shield-alt" style="color: var(--principal);"></i>
-                        <div class="quick-info-content">
-                            <h4>Vote sécurisé</h4>
-                            <p>Notre système garantit l'anonymat et l'intégrité de votre vote.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="quick-info-card">
-                        <i class="fas fa-question-circle" style="color: var(--secondary);"></i>
-                        <div class="quick-info-content">
-                            <h4>Besoin d'aide?</h4>
-                            <p>Consultez notre FAQ ou contactez notre support pour toute question.</p>
-                        </div>
-                    </div>
-                    
-                    <a href="/Social-Media-Awards-/nominees.php" class="btn btn-primary btn-block">
-                        <i class="fas fa-users"></i>
-                        Voir tous les candidats
-                    </a>
-                </section>
-            </div>
-
-            <!-- Élections Disponíveis -->
-            <section class="elections-section">
+            <!-- Section de Votação -->
+            <section class="voting-section">
                 <div class="section-header">
-                    <div class="section-title">
-                        <i class="fas fa-calendar-alt"></i>
-                        <h2>Élections Disponibles</h2>
+                    <h2><i class="fas fa-vote-yea"></i> Votre État de Vote</h2>
+                </div>
+                
+                <div class="voting-grid">
+                    <!-- Status de Voto -->
+                    <div class="status-card <?php echo $hasVotedInActiveCategories ? 'voted' : 'not-voted'; ?>">
+                        <div class="status-icon">
+                            <i class="fas <?php echo $hasVotedInActiveCategories ? 'fa-check-circle' : 'fa-clock'; ?>"></i>
+                        </div>
+                        <div class="status-content">
+                            <h3><?php echo $hasVotedInActiveCategories ? 'Participation en cours' : 'Prêt à voter'; ?></h3>
+                            <p><?php echo $hasVotedInActiveCategories ? 
+                                'Vous avez déjà voté dans certaines catégories. Continuez!' : 
+                                'Aucun vote émis. Commencez maintenant!'; ?></p>
+                        </div>
+                        <a href="/Social-Media-Awards-/views/user/Vote.php" class="btn btn-primary">
+                            <?php echo $hasVotedInActiveCategories ? 'Continuer à Voter' : 'Voter Maintenant'; ?>
+                        </a>
                     </div>
-                    <a href="/Social-Media-Awards-/index.php" class="btn btn-outline">
-                        <i class="fas fa-eye"></i>
+
+                    <!-- Progresso do Voto -->
+                    <div class="progress-card">
+                        <h3>Votre Progression</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: <?php echo min(100, ($votesCount / max(1, count($availableCategories))) * 100); ?>%"></div>
+                        </div>
+                        <div class="progress-stats">
+                            <span><?php echo $votesCount; ?> / <?php echo count($availableCategories); ?> catégories</span>
+                            <span><?php echo round(($votesCount / max(1, count($availableCategories))) * 100); ?>%</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Catégories Disponíveis pour Votação -->
+            <section class="categories-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-star"></i> Catégories à Voter</h2>
+                    <a href="/Social-Media-Awards-/categories.php" class="btn btn-outline">
                         Voir toutes
                     </a>
                 </div>
                 
-                <div class="elections-grid">
-                    <!-- Édition 2024 - Active -->
-                    <div class="election-card">
-                        <span class="election-badge badge-active">Active</span>
-                        <div class="election-header">
-                            <h3>Édition 2025</h3>
-                            <span class="election-category">Social Media Awards</span>
+                <div class="categories-grid">
+                    <?php if (!empty($availableCategories)): ?>
+                        <?php foreach ($availableCategories as $category): 
+                            $hasVoted = $voteModel->hasUserVotedInCategory($userId, $category['id_categorie']);
+                        ?>
+                            <div class="category-card <?php echo $hasVoted ? 'voted' : ''; ?>">
+                                <div class="category-header">
+                                    <div class="category-icon">
+                                        <?php 
+                                        $icons = [
+                                            'Photographe' => 'fa-camera',
+                                            'Streamer' => 'fa-gamepad',
+                                            'Musicien' => 'fa-music',
+                                            'Youtuber' => 'fa-youtube',
+                                            'Instagram' => 'fa-instagram',
+                                            'TikTok' => 'fa-tiktok'
+                                        ];
+                                        $icon = $icons[$category['plateforme_cible']] ?? 'fa-tag';
+                                        ?>
+                                        <i class="fas <?php echo $icon; ?>"></i>
+                                    </div>
+                                    <div class="category-info">
+                                        <h4><?php echo htmlspecialchars($category['nom']); ?></h4>
+                                        <span class="platform"><?php echo $category['plateforme_cible']; ?></span>
+                                    </div>
+                                    <?php if ($hasVoted): ?>
+                                        <span class="vote-badge voted"><i class="fas fa-check"></i> Voté</span>
+                                    <?php else: ?>
+                                        <span class="vote-badge available"><i class="fas fa-vote-yea"></i> Disponible</span>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <p class="category-desc"><?php echo htmlspecialchars(substr($category['description'], 0, 100)) . '...'; ?></p>
+                                
+                                <div class="category-stats">
+                                    <div class="stat">
+                                        <i class="fas fa-users"></i>
+                                        <span><?php echo $category['nomination_count'] ?? 0; ?> candidats</span>
+                                    </div>
+                                    <div class="stat">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Fin: <?php echo date('d/m/Y', strtotime($category['date_fin_votes'])); ?></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="category-actions">
+                                    <?php if (!$hasVoted): ?>
+                                        <a href="/Social-Media-Awards-/views/user/Vote.php?category=<?php echo $category['id_categorie']; ?>" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-vote-yea"></i>
+                                            Voter
+                                        </a>
+                                    <?php else: ?>
+                                        <button class="btn btn-disabled btn-sm" disabled>
+                                            <i class="fas fa-check"></i>
+                                            Déjà voté
+                                        </button>
+                                    <?php endif; ?>
+                                    <a href="/Social-Media-Awards-/nominees.php?category=<?php echo $category['id_categorie']; ?>" class="btn btn-outline btn-sm">
+                                        Voir candidats
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <h3>Aucune catégorie disponible</h3>
+                            <p>Il n'y a pas d'élections actives pour le moment.</p>
                         </div>
-                        <div class="election-body">
-                            <p class="election-description">
-                                Votez pour les créateurs les plus influents de l'année dans 12 catégories différentes. 
-                                Les résultats seront dévoilés lors de la cérémonie de remise des prix.
-                            </p>
+                    <?php endif; ?>
+                </div>
+            </section>
+
+            <!-- Élections Actives -->
+            <section class="elections-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-calendar-alt"></i> Élections Actives</h2>
+                </div>
+                
+                <div class="elections-list">
+                    <?php
+                    // Agrupar categorias por edição
+                    $editions = [];
+                    foreach ($categories as $category) {
+                        if (!isset($editions[$category['edition_nom']])) {
+                            $editions[$category['edition_nom']] = [
+                                'nom' => $category['edition_nom'],
+                                'annee' => $category['edition_annee'],
+                                'categories' => [],
+                                'date_fin' => $category['date_fin']
+                            ];
+                        }
+                        $editions[$category['edition_nom']]['categories'][] = $category;
+                    }
+                    ?>
+                    
+                    <?php foreach ($editions as $edition): ?>
+                        <div class="election-card">
+                            <div class="election-header">
+                                <h3><?php echo htmlspecialchars($edition['nom']); ?> <?php echo $edition['annee']; ?></h3>
+                                <span class="election-status active">En cours</span>
+                            </div>
                             
-                            <div class="election-meta">
-                                <div class="meta-item">
+                            <div class="election-body">
+                                <p class="election-desc">
+                                    <?php echo count($edition['categories']); ?> catégories disponibles
+                                </p>
+                                
+                                <div class="election-stats">
+                                    <div class="stat-item">
+                                        <i class="fas fa-hourglass-end"></i>
+                                        <span>Clôture: <?php echo date('d/m/Y', strtotime($edition['date_fin'])); ?></span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <i class="fas fa-users"></i>
+                                        <span><?php echo array_sum(array_column($edition['categories'], 'nomination_count')); ?> candidats</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="election-categories">
+                                    <?php foreach (array_slice($edition['categories'], 0, 3) as $category): ?>
+                                        <span class="category-tag"><?php echo $category['nom']; ?></span>
+                                    <?php endforeach; ?>
+                                    <?php if (count($edition['categories']) > 3): ?>
+                                        <span class="category-tag more">+<?php echo count($edition['categories']) - 3; ?> autres</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            
+                            <div class="election-footer">
+                                <a href="/Social-Media-Awards-/views/user/Vote.php?edition=<?php echo $edition['annee']; ?>" class="btn btn-primary">
+                                    <i class="fas fa-play"></i>
+                                    Participer
+                                </a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+
+            <!-- Derniers Votes -->
+            <section class="recent-votes">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> Vos Derniers Votes</h2>
+                </div>
+                
+                <div class="votes-list">
+                    <?php
+                    $recentVotes = $voteModel->getUserRecentVotes($userId, 3);
+                    if (!empty($recentVotes)):
+                        foreach ($recentVotes as $vote):
+                    ?>
+                        <div class="vote-item">
+                            <div class="vote-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="vote-info">
+                                <h4><?php echo htmlspecialchars($vote['category_nom']); ?></h4>
+                                <p class="vote-detail">
+                                    Vote pour: <strong><?php echo htmlspecialchars($vote['nomination_libelle']); ?></strong>
+                                </p>
+                                <span class="vote-date">
                                     <i class="fas fa-clock"></i>
-                                    <div>
-                                        <div class="label">Clôture</div>
-                                        <div class="value">31/12/2025 23:59</div>
-                                    </div>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="fas fa-tags"></i>
-                                    <div>
-                                        <div class="label">Catégories</div>
-                                        <div class="value">12</div>
-                                    </div>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="fas fa-users"></i>
-                                    <div>
-                                        <div class="label">Nominés</div>
-                                        <div class="value">65+</div>
-                                    </div>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="fas fa-globe"></i>
-                                    <div>
-                                        <div class="label">Portée</div>
-                                        <div class="value">Internationale</div>
-                                    </div>
-                                </div>
+                                    <?php echo date('d/m/Y H:i', strtotime($vote['date_heure_vote'])); ?>
+                                </span>
                             </div>
-                            
-                            <div class="election-stats">
-                                <div class="stat-pill">
-                                    <div class="number">25K</div>
-                                    <div class="label">Votes</div>
-                                </div>
-                                <div class="stat-pill">
-                                    <div class="number">85%</div>
-                                    <div class="label">Participation</div>
-                                </div>
-                                <div class="stat-pill">
-                                    <div class="number">12</div>
-                                    <div class="label">Jours restants</div>
-                                </div>
+                            <div class="vote-actions">
+                                <a href="/Social-Media-Awards-/nominees.php?category=<?php echo $vote['id_categorie']; ?>" class="btn btn-outline btn-sm">
+                                    Voir catégorie
+                                </a>
                             </div>
                         </div>
-                        <div class="election-footer">
-                            <a href="/Social-Media-Awards-/categories.php" class="btn btn-primary">
-                                <i class="fas fa-vote-yea"></i>
+                    <?php
+                        endforeach;
+                    else:
+                    ?>
+                        <div class="empty-state">
+                            <i class="fas fa-vote-yea"></i>
+                            <h3>Aucun vote enregistré</h3>
+                            <p>Commencez à voter pour voir votre historique ici.</p>
+                            <a href="/Social-Media-Awards-/views/user/Vote.php" class="btn btn-primary mt-2">
                                 Voter maintenant
                             </a>
-                            <a href="/Social-Media-Awards-/nominees.php" class="btn btn-outline">
-                                <i class="fas fa-list"></i>
-                                Voir nominés
-                            </a>
                         </div>
-                    </div>
-
-                    <!-- Influenceur de l'Année - À venir -->
-                    <div class="election-card">
-                        <span class="election-badge badge-upcoming">À venir</span>
-                        <div class="election-header">
-                            <h3>Influenceur de l'Année</h3>
-                            <span class="election-category">Trophée spécial</span>
-                        </div>
-                        <div class="election-body">
-                            <p class="election-description">
-                                Découvrez les nominés pour le titre prestigieux d'Influenceur de l'Année 2024. 
-                                Votez pour le créateur qui a le plus marqué les réseaux sociaux.
-                            </p>
-                            
-                            <div class="election-meta">
-                                <div class="meta-item">
-                                    <i class="fas fa-clock"></i>
-                                    <div>
-                                        <div class="label">Début</div>
-                                        <div class="value">01/01/2026 00:00</div>
-                                    </div>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="fas fa-tags"></i>
-                                    <div>
-                                        <div class="label">Catégorie unique</div>
-                                        <div class="value">1</div>
-                                    </div>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="fas fa-users"></i>
-                                    <div>
-                                        <div class="label">Nominés</div>
-                                        <div class="value">15</div>
-                                    </div>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="fas fa-trophy"></i>
-                                    <div>
-                                        <div class="label">Prix</div>
-                                        <div class="value">Trophée Or</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="election-stats">
-                                <div class="stat-pill">
-                                    <div class="number">0</div>
-                                    <div class="label">Votes</div>
-                                </div>
-                                <div class="stat-pill">
-                                    <div class="number">0%</div>
-                                    <div class="label">Participation</div>
-                                </div>
-                                <div class="stat-pill">
-                                    <div class="number">20</div>
-                                    <div class="label">Jours avant</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="election-footer">
-                            <button class="btn btn-disabled" disabled>
-                                <i class="fas fa-bell"></i>
-                                Me notifier
-                            </button>
-                            <a href="/Social-Media-Awards-/nominees.php?category=influenceur" class="btn btn-outline">
-                                <i class="fas fa-eye"></i>
-                                Voir nominés
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Catégories Populaires -->
-            <section class="categories-section">
-                <div class="section-header">
-                    <div class="section-title">
-                        <i class="fas fa-star"></i>
-                        <h2>Catégories Populaires</h2>
-                    </div>
-                    <a href="/Social-Media-Awards-/categories.php" class="btn btn-outline">
-                        <i class="fas fa-arrow-right"></i>
-                        Toutes les catégories
-                    </a>
-                </div>
-                
-                <div class="categories-grid">
-                    <!-- Catégorie 1 -->
-                    <div class="category-card">
-                        <div class="category-header">
-                            <div class="category-icon">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                            <div class="category-title">
-                                <h4>Meilleur Photographe</h4>
-                                <span class="category-platform">Instagram</span>
-                            </div>
-                        </div>
-                        <p class="category-description">
-                            Révélez les talents qui transforment l'ordinaire en extraordinaire 
-                            grâce à leur vision photographique unique.
-                        </p>
-                        <div class="category-stats">
-                            <div class="category-stat">
-                                <div class="number">25</div>
-                                <div class="label">Nominés</div>
-                            </div>
-                            <div class="category-stat">
-                                <div class="number">15K</div>
-                                <div class="label">Votes</div>
-                            </div>
-                        </div>
-                        <a href="/Social-Media-Awards-/nominees.php?category=photographe" class="btn btn-outline btn-block category-action">
-                            <i class="fas fa-users"></i>
-                            Voir nominés
-                        </a>
-                    </div>
-
-                    <!-- Catégorie 2 -->
-                    <div class="category-card">
-                        <div class="category-header">
-                            <div class="category-icon">
-                                <i class="fas fa-gamepad"></i>
-                            </div>
-                            <div class="category-title">
-                                <h4>Meilleur Streamer</h4>
-                                <span class="category-platform">Twitch</span>
-                            </div>
-                        </div>
-                        <p class="category-description">
-                            Découvrez les streamers qui captivent leur audience avec des 
-                            performances exceptionnelles et un contenu engageant.
-                        </p>
-                        <div class="category-stats">
-                            <div class="category-stat">
-                                <div class="number">18</div>
-                                <div class="label">Nominés</div>
-                            </div>
-                            <div class="category-stat">
-                                <div class="number">12K</div>
-                                <div class="label">Votes</div>
-                            </div>
-                        </div>
-                        <a href="/Social-Media-Awards-/nominees.php?category=streamer" class="btn btn-outline btn-block category-action">
-                            <i class="fas fa-users"></i>
-                            Voir nominés
-                        </a>
-                    </div>
-
-                    <!-- Catégorie 3 -->
-                    <div class="category-card">
-                        <div class="category-header">
-                            <div class="category-icon">
-                                <i class="fas fa-music"></i>
-                            </div>
-                            <div class="category-title">
-                                <h4>Meilleur Musicien</h4>
-                                <span class="category-platform">Spotify</span>
-                            </div>
-                        </div>
-                        <p class="category-description">
-                            Célébrez les artistes qui innovent et inspirent à travers 
-                            leur musique et leur présence sur les réseaux sociaux.
-                        </p>
-                        <div class="category-stats">
-                            <div class="category-stat">
-                                <div class="number">22</div>
-                                <div class="label">Nominés</div>
-                            </div>
-                            <div class="category-stat">
-                                <div class="number">18K</div>
-                                <div class="label">Votes</div>
-                            </div>
-                        </div>
-                        <a href="/Social-Media-Awards-/nominees.php?category=musicien" class="btn btn-outline btn-block category-action">
-                            <i class="fas fa-users"></i>
-                            Voir nominés
-                        </a>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Candidats en Vedette -->
-            <section class="candidates-section">
-                <div class="section-header">
-                    <div class="section-title">
-                        <i class="fas fa-crown"></i>
-                        <h2>Candidats en Vedette</h2>
-                    </div>
-                    <a href="/Social-Media-Awards-/nominees.php" class="btn btn-outline">
-                        <i class="fas fa-users"></i>
-                        Tous les candidats
-                    </a>
-                </div>
-                
-                <div class="candidates-grid">
-                    <!-- Candidat 1 -->
-                    <div class="candidate-card">
-                        <div class="candidate-header">
-                            <span class="candidate-badge">Top 3</span>
-                            <div class="candidate-avatar">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                            <h3>@PhotoPro</h3>
-                            <div class="candidate-category">Meilleur Photographe</div>
-                            <span class="candidate-platform platform-instagram">
-                                <i class="fab fa-instagram"></i> Instagram
-                            </span>
-                        </div>
-                        <div class="candidate-body">
-                            <div class="candidate-stats">
-                                <div class="candidate-stat">
-                                    <span class="number">2.5M</span>
-                                    <span class="label">Abonnés</span>
-                                </div>
-                                <div class="candidate-stat">
-                                    <span class="number">145</span>
-                                    <span class="label">Nominations</span>
-                                </div>
-                            </div>
-                            <p class="candidate-description">
-                                Photographe spécialisé en paysages urbains. Transforme 
-                                les villes en œuvres d'art à travers son objectif unique.
-                            </p>
-                        </div>
-                        <div class="candidate-footer">
-                            <a href="#" class="btn btn-primary btn-sm">
-                                <i class="fas fa-eye"></i>
-                                Voir profil
-                            </a>
-                            <a href="#" class="btn btn-outline btn-sm">
-                                <i class="fas fa-vote-yea"></i>
-                                Voter
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Candidat 2 -->
-                    <div class="candidate-card">
-                        <div class="candidate-header">
-                            <span class="candidate-badge">Révélation</span>
-                            <div class="candidate-avatar">
-                                <i class="fas fa-gamepad"></i>
-                            </div>
-                            <h3>@GameMaster</h3>
-                            <div class="candidate-category">Meilleur Streamer</div>
-                            <span class="candidate-platform platform-twitch">
-                                <i class="fab fa-twitch"></i> Twitch
-                            </span>
-                        </div>
-                        <div class="candidate-body">
-                            <div class="candidate-stats">
-                                <div class="candidate-stat">
-                                    <span class="number">1.8M</span>
-                                    <span class="label">Abonnés</span>
-                                </div>
-                                <div class="candidate-stat">
-                                    <span class="number">89</span>
-                                    <span class="label">Nominations</span>
-                                </div>
-                            </div>
-                            <p class="candidate-description">
-                                Streamer passionné de jeux indépendants. Sa communauté 
-                                engagée et bienveillante fait de chaque stream un moment unique.
-                            </p>
-                        </div>
-                        <div class="candidate-footer">
-                            <a href="#" class="btn btn-primary btn-sm">
-                                <i class="fas fa-eye"></i>
-                                Voir profil
-                            </a>
-                            <a href="#" class="btn btn-outline btn-sm">
-                                <i class="fas fa-vote-yea"></i>
-                                Voter
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Candidat 3 -->
-                    <div class="candidate-card">
-                        <div class="candidate-header">
-                            <span class="candidate-badge">Vétéran</span>
-                            <div class="candidate-avatar">
-                                <i class="fas fa-music"></i>
-                            </div>
-                            <h3>@SoundWizard</h3>
-                            <div class="candidate-category">Meilleur Musicien</div>
-                            <span class="candidate-platform platform-spotify">
-                                <i class="fab fa-spotify"></i> Spotify
-                            </span>
-                        </div>
-                        <div class="candidate-body">
-                            <div class="candidate-stats">
-                                <div class="candidate-stat">
-                                    <span class="number">3.2M</span>
-                                    <span class="label">Abonnés</span>
-                                </div>
-                                <div class="candidate-stat">
-                                    <span class="number">203</span>
-                                    <span class="label">Nominations</span>
-                                </div>
-                            </div>
-                            <p class="candidate-description">
-                                Producteur et compositeur innovant. Fusionne musique 
-                                électronique et traditionnelle pour créer des sonorités uniques.
-                            </p>
-                        </div>
-                        <div class="candidate-footer">
-                            <a href="#" class="btn btn-primary btn-sm">
-                                <i class="fas fa-eye"></i>
-                                Voir profil
-                            </a>
-                            <a href="#" class="btn btn-outline btn-sm">
-                                <i class="fas fa-vote-yea"></i>
-                                Voter
-                            </a>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </section>
         </div>
     </main>
 
-    <!-- Footer personnalisé -->
+    <!-- Footer -->
     <footer class="dashboard-footer">
         <div class="footer-content">
             <div class="footer-links">
                 <a href="/Social-Media-Awards-/categories.php">Catégories</a>
-                <a href="/Social-Media-Awards-/nominees.php">Nominés</a>
+                <a href="/Social-Media-Awards-/nominees.php">Candidats</a>
                 <a href="/Social-Media-Awards-/results.php">Résultats</a>
                 <a href="/Social-Media-Awards-/contact.php">Contact</a>
                 <a href="/Social-Media-Awards-/about.php">À propos</a>
