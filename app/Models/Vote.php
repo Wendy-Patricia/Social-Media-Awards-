@@ -458,5 +458,95 @@ public function getUserRecentVotes($userId, $limit = 5) {
         return [];
     }
 }
+
+public function canVoteInCategory($userId, $categoryId) {
+    try {
+        $now = date('Y-m-d H:i:s');
+        
+        $stmt = $this->db->prepare("
+            SELECT 
+                c.id_categorie,
+                c.nom,
+                CASE 
+                    WHEN c.date_debut_votes IS NOT NULL AND c.date_fin_votes IS NOT NULL THEN
+                        :now BETWEEN c.date_debut_votes AND c.date_fin_votes
+                    ELSE
+                        :now BETWEEN e.date_debut AND e.date_fin
+                END as voting_open,
+                
+                IFNULL(cp.statut_a_vote, 0) as has_voted,
+                
+                COUNT(DISTINCT n.id_nomination) as nomination_count,
+                
+                -- DEBUG info
+                c.date_debut_votes as cat_start,
+                c.date_fin_votes as cat_end,
+                e.date_debut as edition_start,
+                e.date_fin as edition_end
+                
+            FROM CATEGORIE c
+            JOIN EDITION e ON c.id_edition = e.id_edition
+            LEFT JOIN CONTROLE_PRESENCE cp ON (
+                cp.id_categorie = c.id_categorie 
+                AND cp.id_compte = :user_id
+            )
+            LEFT JOIN NOMINATION n ON c.id_categorie = n.id_categorie
+            WHERE c.id_categorie = :category_id
+            AND e.est_active = 1
+            GROUP BY c.id_categorie
+        ");
+        
+        $stmt->execute([
+            ':category_id' => $categoryId,
+            ':user_id' => $userId,
+            ':now' => $now
+        ]);
+        
+        $result = $stmt->fetch();
+        
+        if (!$result) {
+            error_log("DEBUG: Categoria $categoryId não encontrada ou edição inativa");
+            return [
+                'can_vote' => false,
+                'reason' => 'Categoria não encontrada ou edição inativa',
+                'debug' => ['category_id' => $categoryId, 'user_id' => $userId]
+            ];
+        }
+        
+        $canVote = ($result['voting_open'] == 1) 
+                 && ($result['has_voted'] == 0)
+                 && ($result['nomination_count'] > 0);
+        
+        error_log("DEBUG canVoteInCategory: " . json_encode([
+            'category_id' => $categoryId,
+            'category_name' => $result['nom'],
+            'voting_open' => $result['voting_open'],
+            'has_voted' => $result['has_voted'],
+            'nomination_count' => $result['nomination_count'],
+            'can_vote' => $canVote,
+            'dates' => [
+                'category' => ['start' => $result['cat_start'], 'end' => $result['cat_end']],
+                'edition' => ['start' => $result['edition_start'], 'end' => $result['edition_end']],
+                'now' => $now
+            ]
+        ]));
+        
+        return [
+            'can_vote' => $canVote,
+            'voting_open' => $result['voting_open'] == 1,
+            'has_voted' => $result['has_voted'] == 1,
+            'nominations_available' => $result['nomination_count'] > 0,
+            'nomination_count' => $result['nomination_count'],
+            'category_name' => $result['nom']
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Erreur vérification vote: " . $e->getMessage());
+        return [
+            'can_vote' => false,
+            'reason' => 'Erro técnico: ' . $e->getMessage()
+        ];
+    }
+}
 }
 ?>

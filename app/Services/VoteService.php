@@ -1,5 +1,5 @@
 <?php
-// app/Services/VoteService.php
+// app/Services/VoteService.php - VERSÃO CORRIGIDA
 
 class VoteService {
     private $voteModel;
@@ -23,14 +23,27 @@ class VoteService {
      */
     public function startVotingProcess($userId, $categoryId) {
         // 1. Verificar se usuário pode votar
-        if (!$this->canUserVote($userId, $categoryId)) {
+        $canVoteResult = $this->canUserVote($userId, $categoryId);
+        
+        if (!$canVoteResult['can_vote']) {
+            $reason = $canVoteResult['reason'] ?? 'Impossible de voter dans cette catégorie';
             return [
                 'success' => false,
-                'message' => 'Vous ne pouvez pas voter dans cette catégorie'
+                'message' => $reason
             ];
         }
 
-        // 2. Gerar token anônimo
+        // 2. Verificar se há nominações
+        $nominations = $this->voteModel->getNominationsForCategory($categoryId);
+        
+        if (empty($nominations)) {
+            return [
+                'success' => false,
+                'message' => 'Aucune nomination disponible pour cette catégorie pour le moment'
+            ];
+        }
+
+        // 3. Gerar token anônimo
         $token = $this->voteModel->generateToken($userId, $categoryId);
         
         if (!$token) {
@@ -40,22 +53,118 @@ class VoteService {
             ];
         }
 
-        // 3. Obter nomeações da categoria
-        $nominations = $this->voteModel->getNominationsForCategory($categoryId);
-        
-        if (empty($nominations)) {
-            return [
-                'success' => false,
-                'message' => 'Aucune nomination disponible pour cette catégorie'
-            ];
-        }
-
         return [
             'success' => true,
             'token' => $token,
             'nominations' => $nominations,
-            'category_id' => $categoryId
+            'category_id' => $categoryId,
+            'nomination_count' => count($nominations)
         ];
+    }
+
+    /**
+     * Obter categorias disponíveis para o usuário
+     * MODIFICADO: Mostra categorias mesmo sem nominações
+     */
+    public function getAvailableCategoriesForUser($userId) {
+        try {
+            $now = date('Y-m-d H:i:s');
+            
+            // Buscar todas as categorias ativas
+            $allCategories = $this->voteModel->getVotingCategories();
+            
+            error_log("DEBUG getAvailableCategoriesForUser - Todas as categorias: " . json_encode($allCategories));
+            
+            $available = [];
+            
+            foreach ($allCategories as $category) {
+                $categoryId = $category['id_categorie'] ?? 0;
+                
+                if ($categoryId <= 0) {
+                    continue;
+                }
+                
+                // Verificar se usuário pode votar (considerando apenas datas e se já votou)
+                $voteCheck = $this->voteModel->canVoteInCategory($userId, $categoryId);
+                
+                error_log("DEBUG Categoria {$categoryId} ({$category['nom']}) - Resultado: " . json_encode($voteCheck));
+                
+                // MODIFICAÇÃO AQUI: Mostrar categoria mesmo sem nominações
+                if ($voteCheck['can_vote'] || (!$voteCheck['has_voted'] && $voteCheck['voting_open'])) {
+                    // Verificar número de nominações
+                    $nominations = $this->voteModel->getNominationsForCategory($categoryId);
+                    $category['nomination_count'] = count($nominations);
+                    $category['has_nominations'] = count($nominations) > 0;
+                    $category['can_vote'] = $voteCheck['can_vote'];
+                    $category['voting_open'] = $voteCheck['voting_open'];
+                    $category['has_voted'] = $voteCheck['has_voted'];
+                    
+                    $available[] = $category;
+                }
+            }
+            
+            error_log("DEBUG getAvailableCategoriesForUser - Disponível para usuário {$userId}: " . count($available));
+            
+            return $available;
+            
+        } catch (Exception $e) {
+            error_log("Erreur getAvailableCategoriesForUser: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Verificar se usuário pode votar
+     */
+    public function canUserVote($userId, $categoryId) {
+        // Usar a função específica do modelo
+        $result = $this->voteModel->canVoteInCategory($userId, $categoryId);
+        
+        error_log("DEBUG canUserVote - User: {$userId}, Category: {$categoryId}, Result: " . json_encode($result));
+        
+        return $result;
+    }
+
+    /**
+     * Obter status de votação do usuário
+     */
+    public function getUserVotingStatus($userId) {
+        $categories = $this->voteModel->getVotingCategories();
+        $history = $this->voteModel->getUserVotingHistory($userId);
+        
+        $status = [];
+        
+        foreach ($categories as $category) {
+            $hasVoted = false;
+            $voteDate = null;
+            
+            foreach ($history as $record) {
+                if (isset($record['category_name']) && $record['category_name'] == $category['nom'] && isset($record['has_voted']) && $record['has_voted']) {
+                    $hasVoted = true;
+                    $voteDate = $record['vote_date'] ?? null;
+                    break;
+                }
+            }
+            
+            // Verificar nominações
+            $nominations = $this->voteModel->getNominationsForCategory($category['id_categorie']);
+            $nominationCount = count($nominations);
+            
+            // Verificar se categoria está ativa
+            $isActive = $this->voteModel->isCategoryActive($category['id_categorie']);
+            
+            $status[] = [
+                'category_id' => $category['id_categorie'],
+                'category_name' => $category['nom'],
+                'has_voted' => $hasVoted,
+                'vote_date' => $voteDate,
+                'is_active' => $isActive,
+                'nomination_count' => $nominationCount,
+                'has_nominations' => $nominationCount > 0
+            ];
+        }
+        
+        return $status;
     }
 
     /**
@@ -91,84 +200,15 @@ class VoteService {
             error_log("Erreur traitement vote: " . $e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Une erreur technique est survenue'
+                'message' => 'Une erreur technique est survenue: ' . $e->getMessage()
             ];
         }
-    }
-
-    /**
-     * Verificar se usuário pode votar
-     */
-    public function canUserVote($userId, $categoryId) {
-        // 1. Verificar se categoria está ativa
-        if (!$this->voteModel->isCategoryActive($categoryId)) {
-            return false;
-        }
-
-        // 2. Verificar se usuário já votou
-        if ($this->voteModel->hasUserVoted($userId, $categoryId)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Obter status de votação do usuário
-     */
-    public function getUserVotingStatus($userId) {
-        $categories = $this->voteModel->getVotingCategories();
-        $history = $this->voteModel->getUserVotingHistory($userId);
-        
-        $status = [];
-        
-        foreach ($categories as $category) {
-            $hasVoted = false;
-            $voteDate = null;
-            
-            foreach ($history as $record) {
-                if ($record['category_name'] == $category['nom'] && $record['has_voted']) {
-                    $hasVoted = true;
-                    $voteDate = $record['vote_date'];
-                    break;
-                }
-            }
-            
-            $status[] = [
-                'category_id' => $category['id_categorie'],
-                'category_name' => $category['nom'],
-                'has_voted' => $hasVoted,
-                'vote_date' => $voteDate,
-                'is_active' => $this->voteModel->isCategoryActive($category['id_categorie']),
-                'nomination_count' => $category['nomination_count']
-            ];
-        }
-        
-        return $status;
-    }
-
-    /**
-     * Obter categorias disponíveis para o usuário
-     */
-    public function getAvailableCategoriesForUser($userId) {
-        $categories = $this->voteModel->getVotingCategories();
-        $available = [];
-        
-        foreach ($categories as $category) {
-            if ($this->canUserVote($userId, $category['id_categorie'])) {
-                $available[] = $category;
-            }
-        }
-        
-        return $available;
     }
 
     /**
      * Helper: obter ID da categoria a partir do token
      */
     private function getCategoryIdFromToken($token) {
-        // Em produção, buscar no banco de dados
-        // Aqui simplificamos para demonstração
         try {
             $stmt = $this->voteModel->getDb()->prepare("
                 SELECT id_categorie FROM TOKEN_ANONYME 
@@ -185,4 +225,3 @@ class VoteService {
         }
     }
 }
-?>
