@@ -3,60 +3,60 @@
  * Social Media Awards
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // ========== INITIALISATION ==========
     console.log('Dashboard électeur initialisé');
-    
+
     // ========== GESTION DES CARTES INTERACTIVES ==========
     const interactiveCards = document.querySelectorAll('.election-card, .candidate-card, .info-card');
-    
+
     interactiveCards.forEach(card => {
         // Animation au survol
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = this.classList.contains('election-card') 
-                ? 'translateY(-8px)' 
+        card.addEventListener('mouseenter', function () {
+            this.style.transform = this.classList.contains('election-card')
+                ? 'translateY(-8px)'
                 : this.classList.contains('candidate-card')
-                ? 'translateY(-5px)'
-                : 'translateX(8px)';
-            
+                    ? 'translateY(-5px)'
+                    : 'translateX(8px)';
+
             this.style.boxShadow = 'var(--shadow-xl)';
             this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         });
-        
-        card.addEventListener('mouseleave', function() {
+
+        card.addEventListener('mouseleave', function () {
             this.style.transform = 'none';
-            this.style.boxShadow = this.classList.contains('election-card') 
-                ? 'var(--shadow-md)' 
+            this.style.boxShadow = this.classList.contains('election-card')
+                ? 'var(--shadow-md)'
                 : 'var(--shadow-sm)';
         });
-        
+
         // Effet de clic
-        card.addEventListener('mousedown', function() {
+        card.addEventListener('mousedown', function () {
             this.style.transform = 'scale(0.98)';
         });
-        
-        card.addEventListener('mouseup', function() {
-            this.style.transform = this.classList.contains('election-card') 
-                ? 'translateY(-8px)' 
+
+        card.addEventListener('mouseup', function () {
+            this.style.transform = this.classList.contains('election-card')
+                ? 'translateY(-8px)'
                 : 'none';
         });
     });
-    
+
     // ========== GESTION DU COMPTE À REBOURS ==========
     function updateCountdown() {
         const countdownElements = document.querySelectorAll('.countdown-timer');
-        
+
         countdownElements.forEach(element => {
             const endDate = new Date(element.dataset.endDate);
             const now = new Date();
             const timeLeft = endDate - now;
-            
+
             if (timeLeft > 0) {
                 const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                
+
                 element.innerHTML = `
                     <div class="countdown-item">
                         <span class="countdown-number">${days}</span>
@@ -81,24 +81,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Initialiser le compte à rebours s'il y a des éléments
     if (document.querySelector('.countdown-timer')) {
         updateCountdown();
         setInterval(updateCountdown, 1000);
     }
-    
+
     // ========== NOTIFICATIONS ET ALERTES ==========
     const voteButton = document.querySelector('.btn-primary[href*="categories.php"]');
-    
+
     if (voteButton) {
-        voteButton.addEventListener('click', function(e) {
+        voteButton.addEventListener('click', function (e) {
             // Vérifier si l'utilisateur a déjà voté (serait une variable PHP)
             const hasVoted = false; // À remplacer par <?php echo $hasVoted ? 'true' : 'false'; ?>
-            
+
             if (!hasVoted) {
                 e.preventDefault();
-                
+
                 // Créer une modal de confirmation
                 const modal = document.createElement('div');
                 modal.className = 'vote-confirmation-modal';
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     align-items: center;
                     z-index: 2000;
                 `;
-                
+
                 modal.innerHTML = `
                     <div style="
                         background: white;
@@ -146,20 +146,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 `;
-                
+
                 document.body.appendChild(modal);
-                
+
                 // Gérer les boutons de la modal
-                modal.querySelector('.cancel-vote').addEventListener('click', function() {
+                modal.querySelector('.cancel-vote').addEventListener('click', function () {
                     document.body.removeChild(modal);
                 });
-                
-                modal.querySelector('.confirm-vote').addEventListener('click', function() {
+
+                modal.querySelector('.confirm-vote').addEventListener('click', function () {
                     window.location.href = voteButton.href;
                 });
-                
+
                 // Fermer la modal en cliquant à l'extérieur
-                modal.addEventListener('click', function(e) {
+                modal.addEventListener('click', function (e) {
                     if (e.target === modal) {
                         document.body.removeChild(modal);
                     }
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // ========== MISE À JOUR EN TEMPS RÉEL DU STATUT ==========
     function updateVoteStatus() {
         // Simuler une vérification de statut (serait une requête AJAX en production)
@@ -177,18 +177,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.hasVoted) {
                     const voteIndicator = document.querySelector('.vote-indicator');
                     const voteIcon = document.querySelector('.vote-icon');
-                    
+
                     if (voteIndicator && !voteIndicator.classList.contains('has-voted')) {
                         voteIndicator.classList.add('has-voted');
                         voteIndicator.classList.remove('not-voted');
-                        
+
                         voteIcon.classList.add('has-voted');
                         voteIcon.classList.remove('not-voted');
                         voteIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
-                        
+
                         document.querySelector('.vote-indicator h3').textContent = 'Vote Enregistré!';
                         document.querySelector('.vote-indicator p').textContent = 'Merci d\'avoir participé à cette élection.';
-                        
+
                         // Afficher une notification
                         showNotification('Vote confirmé!', 'success');
                     }
@@ -196,10 +196,10 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => console.error('Erreur de mise à jour:', error));
     }
-    
+
     // Vérifier le statut toutes les 30 secondes
     // setInterval(updateVoteStatus, 30000);
-    
+
     // ========== SYSTÈME DE NOTIFICATIONS ==========
     function showNotification(message, type = 'info') {
         const notification = document.createElement('div');
@@ -210,9 +210,9 @@ document.addEventListener('DOMContentLoaded', function() {
             right: 20px;
             padding: 1rem 1.5rem;
             border-radius: 8px;
-            background: ${type === 'success' ? 'var(--success)' : 
-                        type === 'warning' ? 'var(--tertiary)' : 
-                        type === 'error' ? 'var(--secondary)' : 
+            background: ${type === 'success' ? 'var(--success)' :
+                type === 'warning' ? 'var(--tertiary)' :
+                    type === 'error' ? 'var(--secondary)' :
                         'var(--principal)'};
             color: white;
             box-shadow: var(--shadow-lg);
@@ -220,19 +220,19 @@ document.addEventListener('DOMContentLoaded', function() {
             animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
             max-width: 300px;
         `;
-        
+
         notification.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 
-                                 type === 'warning' ? 'exclamation-triangle' : 
-                                 type === 'error' ? 'exclamation-circle' : 
-                                 'info-circle'}"></i>
+                <i class="fas fa-${type === 'success' ? 'check-circle' :
+                type === 'warning' ? 'exclamation-triangle' :
+                    type === 'error' ? 'exclamation-circle' :
+                        'info-circle'}"></i>
                 <span>${message}</span>
             </div>
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         // Supprimer après 3 secondes
         setTimeout(() => {
             if (notification.parentNode) {
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 3000);
     }
-    
+
     // Ajouter les animations CSS pour les notifications
     const style = document.createElement('style');
     style.textContent = `
@@ -307,27 +307,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(style);
-    
+
     // ========== GESTION DES FILTRES DE CANDIDATS ==========
     const filterButtons = document.querySelectorAll('.candidate-filter');
-    
+
     filterButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             // Retirer la classe active de tous les boutons
             filterButtons.forEach(btn => btn.classList.remove('active'));
-            
+
             // Ajouter la classe active au bouton cliqué
             this.classList.add('active');
-            
+
             // Filtrer les candidats (simulé)
             const category = this.dataset.category;
             filterCandidates(category);
         });
     });
-    
+
     function filterCandidates(category) {
         const candidates = document.querySelectorAll('.candidate-card');
-        
+
         candidates.forEach(candidate => {
             if (category === 'all' || candidate.dataset.category === category) {
                 candidate.style.display = 'block';
@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // ========== MISE EN SURBRILLANCE DES ÉLÉMENTS IMPORTANTS ==========
     function highlightImportantElements() {
         // Surligner les élections actives
@@ -353,17 +353,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const card = badge.closest('.election-card');
             if (card) {
                 setInterval(() => {
-                    card.style.borderColor = card.style.borderColor === 'var(--principal)' 
-                        ? 'var(--tertiary)' 
+                    card.style.borderColor = card.style.borderColor === 'var(--principal)'
+                        ? 'var(--tertiary)'
                         : 'var(--principal)';
                 }, 2000);
             }
         });
     }
-    
+
     // Démarrer la surbrillance après un délai
     setTimeout(highlightImportantElements, 1000);
-    
+
     // ========== GESTION DU MENU MOBILE ==========
     const mobileMenuButton = document.createElement('button');
     mobileMenuButton.innerHTML = '<i class="fas fa-bars"></i>';
@@ -384,16 +384,16 @@ document.addEventListener('DOMContentLoaded', function() {
         cursor: pointer;
         box-shadow: var(--shadow-lg);
     `;
-    
+
     document.body.appendChild(mobileMenuButton);
-    
+
     // Vérifier la taille de l'écran
     function checkMobileMenu() {
         if (window.innerWidth <= 768) {
             mobileMenuButton.style.display = 'flex';
             mobileMenuButton.style.alignItems = 'center';
             mobileMenuButton.style.justifyContent = 'center';
-            
+
             // Cacher le menu utilisateur par défaut
             const userNav = document.querySelector('.user-nav');
             if (userNav) {
@@ -401,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else {
             mobileMenuButton.style.display = 'none';
-            
+
             // Afficher le menu utilisateur
             const userNav = document.querySelector('.user-nav');
             if (userNav) {
@@ -409,9 +409,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
+
     // Gérer le clic sur le bouton mobile
-    mobileMenuButton.addEventListener('click', function() {
+    mobileMenuButton.addEventListener('click', function () {
         const userNav = document.querySelector('.user-nav');
         if (userNav) {
             if (userNav.style.display === 'flex') {
@@ -431,11 +431,38 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    
+
+    // Adicionar no final do user-dashboard.js
+    document.addEventListener('DOMContentLoaded', function () {
+        // ... código existente ...
+
+        // ========== CONTROLE DA BARRA DE PROGRESSO DINÂMICA ==========
+        const progressFill = document.querySelector('.progress-fill');
+        if (progressFill && progressFill.dataset.width) {
+            const width = Math.min(100, Math.max(0, parseFloat(progressFill.dataset.width)));
+            setTimeout(() => {
+                progressFill.style.width = width + '%';
+            }, 500); // Delay para animação suave
+        }
+
+        // ========== ANIMAÇÃO DE ENTRADA DAS CATEGORIAS ==========
+        const categoryCards = document.querySelectorAll('.category-card');
+        categoryCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+
     // Vérifier au chargement et au redimensionnement
     checkMobileMenu();
     window.addEventListener('resize', checkMobileMenu);
-    
+
     // ========== ANIMATION DE CHARGEMENT ==========
     // Simuler un chargement initial
     const loadingOverlay = document.createElement('div');
@@ -454,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
         z-index: 9999;
         transition: opacity 0.5s ease;
     `;
-    
+
     loadingOverlay.innerHTML = `
         <div class="loading-spinner" style="
             width: 60px;
@@ -468,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <h3 style="color: white; margin-bottom: 10px;">Chargement du dashboard...</h3>
         <p style="color: rgba(255, 255, 255, 0.8);">Préparation de votre espace électeur</p>
     `;
-    
+
     // Ajouter l'animation de spin
     const spinStyle = document.createElement('style');
     spinStyle.textContent = `
@@ -478,10 +505,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(spinStyle);
-    
+
     // Ajouter l'overlay de chargement
     document.body.appendChild(loadingOverlay);
-    
+
     // Retirer l'overlay après 1.5 secondes (simulation)
     setTimeout(() => {
         loadingOverlay.style.opacity = '0';
@@ -491,24 +518,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 500);
     }, 1500);
-    
+
     // ========== SUIVI D'ACTIVITÉ ==========
     let lastActivity = Date.now();
-    
+
     function trackActivity() {
         lastActivity = Date.now();
     }
-    
+
     // Suivre les interactions
     ['mousemove', 'keydown', 'click', 'scroll'].forEach(event => {
         window.addEventListener(event, trackActivity);
     });
-    
+
     // Vérifier l'inactivité
     setInterval(() => {
         const inactiveTime = Date.now() - lastActivity;
         const minutesInactive = Math.floor(inactiveTime / (1000 * 60));
-        
+
         if (minutesInactive >= 5) {
             showNotification('Vous êtes toujours là?', 'warning');
         }

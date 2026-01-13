@@ -43,40 +43,7 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
     <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/user-dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        /* Estilos para evitar erros visuais */
-        .progress-fill {
-            width: <?php echo min(100, max(0, ($votesCount / max(1, count($availableCategories))) * 100)); ?>% !important;
-        }
-
-        .category-card {
-            transition: all 0.3s ease;
-        }
-
-        .category-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #666;
-            background: #f9f9f9;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-
-        .empty-state i {
-            font-size: 3rem;
-            color: #ccc;
-            margin-bottom: 15px;
-        }
-
-        .mt-2 {
-            margin-top: 20px;
-        }
-    </style>
+    
 </head>
 
 <body>

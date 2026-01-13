@@ -1,5 +1,5 @@
 <?php
-// views/user/Vote.php - PÁGINA COMPLETA DE VOTAÇÃO (VERSÃO CORRIGIDA)
+// views/user/Vote.php - VERSÃO ATUALIZADA COM CHARTE GRAPHIQUE
 require_once '../../config/session.php';
 
 // Verificar autenticação
@@ -112,14 +112,14 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Voter - Social Media Awards</title>
     <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/user-dashboard.css">
     <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/vote.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* Estilos adicionais */
+        /* Apenas o estilo necessário para o progresso */
         .progress-fill {
             width: <?php 
                 $votedCount = 0;
@@ -131,70 +131,6 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                 $percentage = $totalAvailable > 0 ? min(100, max(0, ($votedCount / $totalAvailable) * 100)) : 0;
                 echo $percentage;
             ?>% !important;
-        }
-        
-        .category-card .category-icon {
-            background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
-        }
-        
-        .category-card.voted .category-icon {
-            background: linear-gradient(135deg, #32D583 0%, #2bc174 100%);
-        }
-        
-        .nomination-card {
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .nomination-card:hover {
-            border-color: #FF5A79;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(255, 90, 121, 0.2);
-        }
-        
-        .nomination-card.selected {
-            border-color: #FF5A79;
-            background-color: rgba(255, 90, 121, 0.05);
-            box-shadow: 0 10px 30px rgba(255, 90, 121, 0.3);
-        }
-        
-        .btn-disabled {
-            background-color: #e0e0e0 !important;
-            color: #999 !important;
-            cursor: not-allowed !important;
-            opacity: 0.7 !important;
-        }
-        
-        .btn-disabled:hover {
-            transform: none !important;
-            box-shadow: none !important;
-        }
-        
-        .badge.inactive-badge {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-            color: white;
-        }
-        
-        .badge.no-nominations-badge {
-            background: linear-gradient(135deg, #FFD166 0%, #ffc145 100%);
-            color: #2c3e50;
-        }
-        
-        .already-voted-alert {
-            background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 107, 107, 0.08) 100%);
-            border-left: 4px solid #FF6B6B;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .already-voted-alert i {
-            color: #FF6B6B;
-            font-size: 2rem;
         }
     </style>
 </head>
@@ -442,8 +378,8 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                             <svg width="140" height="140" viewBox="0 0 140 140">
                                 <defs>
                                     <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stop-color="#2c3e50" />
-                                        <stop offset="100%" stop-color="#1a252f" />
+                                        <stop offset="0%" stop-color="#4FBDAB" />
+                                        <stop offset="100%" stop-color="#3da895" />
                                     </linearGradient>
                                 </defs>
                                 <circle class="progress-bg" cx="70" cy="70" r="65"></circle>
@@ -880,7 +816,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                     }
                 })
                 .catch(() => console.log('Erreur de vérification de session'));
-        }, 300000); // 5 minutos
+        }, 300000); // 5 minutes
         
         // Animar barras de progresso nos resultados
         const barFills = document.querySelectorAll('.bar-fill');
@@ -900,78 +836,6 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
             closeModal();
         }
     });
-    
-    // Adicionar estilos CSS dinâmicos para toast
-    const dynamicStyles = document.createElement('style');
-    dynamicStyles.textContent = `
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 9999;
-            transform: translateX(100%);
-            opacity: 0;
-            transition: all 0.3s ease;
-            border-left: 4px solid #2c3e50;
-            max-width: 400px;
-        }
-        
-        .toast.show {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        
-        .toast-success { border-left-color: #32D583; }
-        .toast-error { border-left-color: #FF6B6B; }
-        .toast-info { border-left-color: #2c3e50; }
-        
-        .toast i {
-            font-size: 1.2rem;
-        }
-        
-        .toast-success i { color: #32D583; }
-        .toast-error i { color: #FF6B6B; }
-        .toast-info i { color: #2c3e50; }
-        
-        .toast span {
-            color: #2E2E2E;
-            font-weight: 500;
-        }
-        
-        .category-desc {
-            color: #7D7D7D;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            margin: 10px 0 20px 0;
-        }
-        
-        /* Estilo para categoria já votada */
-        .category-card.voted {
-            opacity: 0.9;
-        }
-        
-        .category-card.voted .category-header {
-            background: linear-gradient(135deg, #32D583 0%, #2bc174 100%);
-        }
-        
-        .category-card.voted .btn-success {
-            background: #32D583;
-            cursor: default;
-        }
-        
-        .category-card.voted .btn-success:hover {
-            transform: none;
-            box-shadow: none;
-        }
-    `;
-    document.head.appendChild(dynamicStyles);
     </script>
 </body>
 </html>
