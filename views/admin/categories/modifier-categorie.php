@@ -11,8 +11,6 @@ if ($id <= 0) {
     exit;
 }
 
-require_once __DIR__ . '/../../../app/Controllers/AdminController.php';
-
 
 $category = $categoryController->getCategoryById($id);
 $editions = $editionController->getEditionsList();
@@ -76,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($validationErrors)) {
         $image = $_FILES['image'] ?? null;
         
-        if ($controller->updateCategory($id, $data, $image)) {
+        if ($categoryController->updateCategory($id, $data, $image)) {
             header("Location: gerer-categories.php?success=1");
             exit;
         } else {
