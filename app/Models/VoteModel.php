@@ -123,24 +123,69 @@ class Vote {
      * Obter nomeações para uma categoria
      */
     public function getNominationsForCategory($categoryId) {
-        try {
-            $stmt = $this->db->prepare("
-                SELECT n.*, c.pseudonyme as candidate_name,
-                       (SELECT COUNT(*) FROM VOTE v WHERE v.id_nomination = n.id_nomination) as vote_count
-                FROM NOMINATION n
-                JOIN COMPTE c ON n.id_compte = c.id_compte
-                WHERE n.id_categorie = :id_categorie
-                ORDER BY n.libelle ASC
-            ");
-            
-            $stmt->execute([':id_categorie' => $categoryId]);
-            return $stmt->fetchAll();
-            
-        } catch (Exception $e) {
-            error_log("Erreur récupération nominations: " . $e->getMessage());
-            return [];
+    try {
+        // Primeiro verificar se há nominações na tabela nomination
+        $sql = "SELECT COUNT(*) as count FROM nomination WHERE id_categorie = :category_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':category_id' => $categoryId]);
+        $result = $stmt->fetch();
+        
+        if ($result['count'] == 0) {
+            // Se não houver nominações, criar placeholders
+            return $this->getNominationPlaceholders($categoryId);
         }
+        
+        $stmt = $this->db->prepare("
+            SELECT n.*, c.pseudonyme as candidate_name,
+                   (SELECT COUNT(*) FROM VOTE v WHERE v.id_nomination = n.id_nomination) as vote_count
+            FROM NOMINATION n
+            JOIN COMPTE c ON n.id_compte = c.id_compte
+            WHERE n.id_categorie = :id_categorie
+            ORDER BY n.libelle ASC
+        ");
+        
+        $stmt->execute([':id_categorie' => $categoryId]);
+        $nominations = $stmt->fetchAll();
+        
+        return $nominations;
+        
+    } catch (Exception $e) {
+        error_log("Erreur récupération nominations: " . $e->getMessage());
+        return $this->getNominationPlaceholders($categoryId);
     }
+}
+
+private function getNominationPlaceholders($categoryId) {
+    // Placeholders para teste
+    $placeholders = [
+        [
+            'id_nomination' => 9991,
+            'libelle' => 'Candidat Test A',
+            'candidate_name' => 'Testeur A',
+            'vote_count' => 0,
+            'url_image' => 'assets/images/default-nominee.jpg',
+            'plateforme' => 'Test'
+        ],
+        [
+            'id_nomination' => 9992,
+            'libelle' => 'Candidat Test B',
+            'candidate_name' => 'Testeur B',
+            'vote_count' => 0,
+            'url_image' => 'assets/images/default-nominee.jpg',
+            'plateforme' => 'Test'
+        ],
+        [
+            'id_nomination' => 9993,
+            'libelle' => 'Candidat Test C',
+            'candidate_name' => 'Testeur C',
+            'vote_count' => 0,
+            'url_image' => 'assets/images/default-nominee.jpg',
+            'plateforme' => 'Test'
+        ]
+    ];
+    
+    return $placeholders;
+}
 
     /**
      * Obter certificado de participação
@@ -546,6 +591,45 @@ public function canVoteInCategory($userId, $categoryId) {
             'can_vote' => false,
             'reason' => 'Erro técnico: ' . $e->getMessage()
         ];
+    }
+}
+
+public function getNominationsForCategoryWithImages($categoryId) {
+    try {
+        $stmt = $this->db->prepare("
+            SELECT n.*, c.pseudonyme as candidate_name,
+                   co.photo_profil as candidate_image,
+                   (SELECT COUNT(*) FROM VOTE v WHERE v.id_nomination = n.id_nomination) as vote_count
+            FROM NOMINATION n
+            JOIN COMPTE c ON n.id_compte = c.id_compte
+            LEFT JOIN COMPTE co ON n.id_compte = co.id_compte
+            WHERE n.id_categorie = :id_categorie
+            AND n.date_approbation IS NOT NULL
+            ORDER BY n.libelle ASC
+        ");
+        
+        $stmt->execute([':id_categorie' => $categoryId]);
+        $nominations = $stmt->fetchAll();
+        
+        // Se não houver nominações, criar um placeholder
+        if (empty($nominations)) {
+            return [
+                [
+                    'id_nomination' => 0,
+                    'libelle' => 'Aucune nomination approuvée',
+                    'candidate_name' => 'Administrateur',
+                    'vote_count' => 0,
+                    'url_image' => 'assets/images/default-nominee.jpg',
+                    'plateforme' => 'all'
+                ]
+            ];
+        }
+        
+        return $nominations;
+        
+    } catch (Exception $e) {
+        error_log("Erreur récupération nominations: " . $e->getMessage());
+        return [];
     }
 }
 }

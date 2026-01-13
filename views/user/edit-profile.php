@@ -1,7 +1,7 @@
 <?php
 // views/user/edit-profile.php - VERSÃO ATUALIZADA
 require_once '../../config/session.php';
-require_once '../../app/Models/User.php';
+require_once '../../app/Models/UserModel.php';
 
 // Verificar autenticação
 requireRole('voter');

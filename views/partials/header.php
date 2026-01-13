@@ -32,8 +32,8 @@
 
             <div class="nav-buttons">
                 <?php if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']): ?>
-                    <span>Bem-vindo, <?php echo htmlspecialchars($_SESSION['user_pseudonyme'] ?? 'Utilizador'); ?>!</span>
-                    <a href="/Social-Media-Awards-/logout.php" class="logout-button">Sair</a>
+                    <span>Bien-venue<?php echo htmlspecialchars($_SESSION['user_pseudonyme'] ?? 'Utilizador'); ?>!</span>
+                    <a href="/Social-Media-Awards-/logout.php" class="logout-button">Sortir</a>
                 <?php else: ?>
                     <a href="/Social-Media-Awards-/views/login.php" class="login-button">Connexion</a>
                     <a href="/Social-Media-Awards-/inscription.php" class="signup-button">Inscription</a>

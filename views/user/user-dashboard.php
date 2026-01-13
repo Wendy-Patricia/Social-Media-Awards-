@@ -1,8 +1,8 @@
 <?php
 // views/user/user-dashboard.php
 require_once '../../config/session.php';
-require_once __DIR__ . '/../../app/Models/User.php';
-require_once __DIR__ . '/../../app/Models/Vote.php';
+require_once __DIR__ . '/../../app/Models/UserModel.php';
+require_once __DIR__ . '/../../app/Models/VoteModel.php';
 require_once __DIR__ . '/../../app/Models/CategoryModel.php';
 
 // Verificar autenticação e tipo de usuário usando requireRole
@@ -35,6 +35,7 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
 ?>
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,16 +48,16 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
         .progress-fill {
             width: <?php echo min(100, max(0, ($votesCount / max(1, count($availableCategories))) * 100)); ?>% !important;
         }
-        
+
         .category-card {
             transition: all 0.3s ease;
         }
-        
+
         .category-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
-        
+
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -65,18 +66,19 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
             border-radius: 10px;
             margin: 20px 0;
         }
-        
+
         .empty-state i {
             font-size: 3rem;
             color: #ccc;
             margin-bottom: 15px;
         }
-        
+
         .mt-2 {
             margin-top: 20px;
         }
     </style>
 </head>
+
 <body>
     <!-- Header -->
     <header class="dashboard-header">
@@ -85,7 +87,7 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                 <img src="/Social-Media-Awards-/assets/images/logo.png" alt="Logo Social Media Awards" class="logo-image" onerror="this.style.display='none'">
                 <h1>Social Media <span class="highlight">Awards</span></h1>
             </div>
-            
+
             <nav class="user-nav">
                 <div class="user-info-nav">
                     <div class="avatar-nav"><?php echo htmlspecialchars($initials); ?></div>
@@ -94,7 +96,7 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                         <span class="user-role-nav">Électeur</span>
                     </div>
                 </div>
-                
+
                 <a href="/Social-Media-Awards-/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Déconnexion
@@ -183,7 +185,7 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                 <div class="section-header">
                     <h2><i class="fas fa-vote-yea"></i> Votre État de Vote</h2>
                 </div>
-                
+
                 <div class="voting-grid">
                     <!-- Status de Voto -->
                     <div class="status-card <?php echo $hasVotedInActiveCategories ? 'voted' : 'not-voted'; ?>">
@@ -192,9 +194,9 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                         </div>
                         <div class="status-content">
                             <h3><?php echo $hasVotedInActiveCategories ? 'Participation en cours' : 'Prêt à voter'; ?></h3>
-                            <p><?php echo $hasVotedInActiveCategories ? 
-                                'Vous avez déjà voté dans certaines catégories. Continuez!' : 
-                                'Aucun vote émis. Commencez maintenant!'; ?></p>
+                            <p><?php echo $hasVotedInActiveCategories ?
+                                    'Vous avez déjà voté dans certaines catégories. Continuez!' :
+                                    'Aucun vote émis. Commencez maintenant!'; ?></p>
                         </div>
                         <a href="/Social-Media-Awards-/views/user/Vote.php" class="btn btn-primary">
                             <?php echo $hasVotedInActiveCategories ? 'Continuer à Voter' : 'Voter Maintenant'; ?>
@@ -215,30 +217,44 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                 </div>
             </section>
 
+
             <!-- Catégories Disponíveis pour Votação -->
             <section class="categories-section">
                 <div class="section-header">
                     <h2><i class="fas fa-star"></i> Catégories à Voter</h2>
-                    <a href="/Social-Media-Awards-/categories.php" class="btn btn-outline">
+                    <a href="/Social-Media-Awards-/views/user/Vote.php" class="btn btn-outline">
                         Voir toutes
                     </a>
                 </div>
-                
+
                 <div class="categories-grid">
                     <?php if (!empty($availableCategories)): ?>
-                        <?php foreach ($availableCategories as $category): 
-                            $hasVoted = isset($category['id_categorie']) ? $voteModel->hasUserVotedInCategory($userId, $category['id_categorie']) : false;
+                        <?php foreach ($availableCategories as $category):
+                            // CORREÇÃO: Usar métodos corretos
+                            $hasVoted = $voteModel->hasUserVotedInCategory($userId, $category['id_categorie']);
                             $categoryId = $category['id_categorie'] ?? 0;
                             $categoryName = $category['nom'] ?? 'Catégorie sans nom';
                             $platform = $category['plateforme_cible'] ?? 'Général';
                             $description = $category['description'] ?? '';
                             $nominationCount = $category['nomination_count'] ?? 0;
                             $dateFin = $category['date_fin_votes'] ?? '';
+
+                            // CORREÇÃO: Determinar status corretamente
+                            $canVote = !$hasVoted && $nominationCount > 0;
+                            $isActive = true; // Já são categorias ativas
+
+                            // DEBUG para verificar valores
+                            error_log("Dashboard - Categoria {$categoryId}:");
+                            error_log("  - Nome: {$categoryName}");
+                            error_log("  - HasVoted: " . ($hasVoted ? 'true' : 'false'));
+                            error_log("  - NominationCount: {$nominationCount}");
+                            error_log("  - CanVote: " . ($canVote ? 'true' : 'false'));
+                            error_log("  - IsActive: " . ($isActive ? 'true' : 'false'));
                         ?>
                             <div class="category-card <?php echo $hasVoted ? 'voted' : ''; ?>">
                                 <div class="category-header">
                                     <div class="category-icon">
-                                        <?php 
+                                        <?php
                                         $icons = [
                                             'Photographe' => 'fa-camera',
                                             'Streamer' => 'fa-gamepad',
@@ -247,8 +263,10 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                                             'Instagram' => 'fa-instagram',
                                             'TikTok' => 'fa-tiktok',
                                             'YouTube' => 'fa-youtube',
-                                            'TikTok' => 'fa-tiktok',
-                                            'Instagram' => 'fa-instagram'
+                                            'Twitter' => 'fa-twitter',
+                                            'Facebook' => 'fa-facebook',
+                                            'Twitch' => 'fa-twitch',
+                                            'Spotify' => 'fa-spotify'
                                         ];
                                         $icon = $icons[$platform] ?? 'fa-tag';
                                         ?>
@@ -260,15 +278,19 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                                     </div>
                                     <?php if ($hasVoted): ?>
                                         <span class="vote-badge voted"><i class="fas fa-check"></i> Voté</span>
-                                    <?php else: ?>
+                                    <?php elseif ($canVote): ?>
                                         <span class="vote-badge available"><i class="fas fa-vote-yea"></i> Disponible</span>
+                                    <?php elseif ($nominationCount == 0): ?>
+                                        <span class="vote-badge no-nominations"><i class="fas fa-users-slash"></i> Pas de nominés</span>
+                                    <?php else: ?>
+                                        <span class="vote-badge inactive"><i class="fas fa-info-circle"></i> Indisponible</span>
                                     <?php endif; ?>
                                 </div>
-                                
+
                                 <p class="category-desc">
                                     <?php echo htmlspecialchars(mb_strlen($description) > 100 ? substr($description, 0, 100) . '...' : $description); ?>
                                 </p>
-                                
+
                                 <div class="category-stats">
                                     <div class="stat">
                                         <i class="fas fa-users"></i>
@@ -279,28 +301,33 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                                         <span>Fin: <?php echo $dateFin ? date('d/m/Y', strtotime($dateFin)) : 'Non définie'; ?></span>
                                     </div>
                                 </div>
-                                
+
                                 <div class="category-actions">
-                                    <?php if (!$hasVoted && $categoryId > 0): ?>
-                                        <a href="/Social-Media-Awards-/views/user/Vote.php?category=<?php echo $categoryId; ?>" class="btn btn-primary btn-sm">
+                                    <?php if ($canVote && $categoryId > 0): ?>
+                                        <a href="/Social-Media-Awards-/views/user/Vote.php?category_id=<?php echo $categoryId; ?>" class="btn btn-primary btn-sm">
                                             <i class="fas fa-vote-yea"></i>
-                                            Voter
+                                            Voter maintenant
                                         </a>
                                     <?php elseif ($hasVoted): ?>
-                                        <button class="btn btn-disabled btn-sm" disabled>
+                                        <button class="btn btn-success btn-sm" disabled>
                                             <i class="fas fa-check"></i>
                                             Déjà voté
                                         </button>
+                                    <?php elseif ($nominationCount == 0): ?>
+                                        <button class="btn btn-warning btn-sm" disabled>
+                                            <i class="fas fa-users-slash"></i>
+                                            Pas de nominés
+                                        </button>
                                     <?php else: ?>
                                         <button class="btn btn-disabled btn-sm" disabled>
-                                            <i class="fas fa-times"></i>
+                                            <i class="fas fa-clock"></i>
                                             Indisponible
                                         </button>
                                     <?php endif; ?>
                                     <?php if ($categoryId > 0): ?>
-                                    <a href="/Social-Media-Awards-/nominees.php?category=<?php echo $categoryId; ?>" class="btn btn-outline btn-sm">
-                                        Voir candidats
-                                    </a>
+                                        <a href="/Social-Media-Awards-/nominees.php?category=<?php echo $categoryId; ?>" class="btn btn-outline btn-sm">
+                                            Voir candidats
+                                        </a>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -321,7 +348,7 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                 <div class="section-header">
                     <h2><i class="fas fa-calendar-alt"></i> Élections Actives</h2>
                 </div>
-                
+
                 <div class="elections-list">
                     <?php
                     // Agrupar categorias por edição
@@ -341,7 +368,7 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                         }
                     }
                     ?>
-                    
+
                     <?php if (!empty($editions)): ?>
                         <?php foreach ($editions as $editionKey => $edition): ?>
                             <div class="election-card">
@@ -349,12 +376,12 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                                     <h3><?php echo htmlspecialchars($edition['nom']); ?> <?php echo htmlspecialchars($edition['annee']); ?></h3>
                                     <span class="election-status active">En cours</span>
                                 </div>
-                                
+
                                 <div class="election-body">
                                     <p class="election-desc">
                                         <?php echo htmlspecialchars(count($edition['categories'])); ?> catégories disponibles
                                     </p>
-                                    
+
                                     <div class="election-stats">
                                         <div class="stat-item">
                                             <i class="fas fa-hourglass-end"></i>
@@ -363,18 +390,18 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                                         <div class="stat-item">
                                             <i class="fas fa-users"></i>
                                             <span>
-                                                <?php 
+                                                <?php
                                                 $totalCandidates = 0;
                                                 foreach ($edition['categories'] as $cat) {
                                                     $totalCandidates += $cat['nomination_count'] ?? 0;
                                                 }
                                                 echo htmlspecialchars($totalCandidates);
-                                                ?> 
+                                                ?>
                                                 candidats
                                             </span>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="election-categories">
                                         <?php foreach (array_slice($edition['categories'], 0, 3) as $category): ?>
                                             <span class="category-tag"><?php echo htmlspecialchars($category['nom'] ?? 'Catégorie'); ?></span>
@@ -384,7 +411,7 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                                         <?php endif; ?>
                                     </div>
                                 </div>
-                                
+
                                 <div class="election-footer">
                                     <a href="/Social-Media-Awards-/views/user/Vote.php" class="btn btn-primary">
                                         <i class="fas fa-play"></i>
@@ -408,7 +435,7 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                 <div class="section-header">
                     <h2><i class="fas fa-history"></i> Vos Derniers Votes</h2>
                 </div>
-                
+
                 <div class="votes-list">
                     <?php
                     $recentVotes = $voteModel->getUserRecentVotes($userId, 3);
@@ -419,32 +446,32 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                             $nominationName = $vote['nomination_libelle'] ?? 'Nomination inconnue';
                             $voteDate = $vote['date_heure_vote'] ?? '';
                     ?>
-                        <div class="vote-item">
-                            <div class="vote-icon">
-                                <i class="fas fa-check-circle"></i>
+                            <div class="vote-item">
+                                <div class="vote-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="vote-info">
+                                    <h4><?php echo htmlspecialchars($categoryName); ?></h4>
+                                    <p class="vote-detail">
+                                        Vote pour: <strong><?php echo htmlspecialchars($nominationName); ?></strong>
+                                    </p>
+                                    <span class="vote-date">
+                                        <i class="fas fa-clock"></i>
+                                        <?php echo $voteDate ? date('d/m/Y H:i', strtotime($voteDate)) : 'Date inconnue'; ?>
+                                    </span>
+                                </div>
+                                <?php if ($categoryId > 0): ?>
+                                    <div class="vote-actions">
+                                        <a href="/Social-Media-Awards-/nominees.php?category=<?php echo $categoryId; ?>" class="btn btn-outline btn-sm">
+                                            Voir catégorie
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                            <div class="vote-info">
-                                <h4><?php echo htmlspecialchars($categoryName); ?></h4>
-                                <p class="vote-detail">
-                                    Vote pour: <strong><?php echo htmlspecialchars($nominationName); ?></strong>
-                                </p>
-                                <span class="vote-date">
-                                    <i class="fas fa-clock"></i>
-                                    <?php echo $voteDate ? date('d/m/Y H:i', strtotime($voteDate)) : 'Date inconnue'; ?>
-                                </span>
-                            </div>
-                            <?php if ($categoryId > 0): ?>
-                            <div class="vote-actions">
-                                <a href="/Social-Media-Awards-/nominees.php?category=<?php echo $categoryId; ?>" class="btn btn-outline btn-sm">
-                                    Voir catégorie
-                                </a>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php
+                        <?php
                         endforeach;
                     else:
-                    ?>
+                        ?>
                         <div class="empty-state">
                             <i class="fas fa-vote-yea"></i>
                             <h3>Aucun vote enregistré</h3>
@@ -478,45 +505,46 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
 
     <script src="/Social-Media-Awards-/assets/js/user-dashboard.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Animações para as cartas
-        const cards = document.querySelectorAll('.category-card, .election-card, .vote-item');
-        cards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-            
-            setTimeout(() => {
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-            }, index * 100);
-        });
-        
-        // Efeito hover nas cartas
-        document.querySelectorAll('.category-card:not(.voted) .btn-primary').forEach(btn => {
-            btn.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.05)';
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animações para as cartas
+            const cards = document.querySelectorAll('.category-card, .election-card, .vote-item');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
             });
-            
-            btn.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-            });
-        });
-        
-        // Verificação de sessão
-        setInterval(() => {
-            fetch('/Social-Media-Awards-/views/check_session.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.authenticated) {
-                        window.location.href = '/Social-Media-Awards-/login.php';
-                    }
-                })
-                .catch(() => {
-                    console.log('Erreur de vérification de session');
+
+            // Efeito hover nas cartas
+            document.querySelectorAll('.category-card:not(.voted) .btn-primary').forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
                 });
-        }, 300000); // 5 minutes
-    });
+
+                btn.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+
+            // Verificação de sessão
+            setInterval(() => {
+                fetch('/Social-Media-Awards-/views/check_session.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.authenticated) {
+                            window.location.href = '/Social-Media-Awards-/login.php';
+                        }
+                    })
+                    .catch(() => {
+                        console.log('Erreur de vérification de session');
+                    });
+            }, 300000); // 5 minutes
+        });
     </script>
 </body>
+
 </html>

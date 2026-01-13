@@ -1,7 +1,7 @@
 <?php
 // app/Services/UserService.php - SEM 2FA
 
-require_once __DIR__ . '/../Models/User.php';
+require_once __DIR__ . '/../Models/UserModel.php';
 require_once __DIR__ . '/../../config/session.php';
 
 class UserService {
