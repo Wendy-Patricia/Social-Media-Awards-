@@ -119,28 +119,15 @@ class Vote {
         }
     }
 
-    /**
-     * Obter nomeações para uma categoria
-     */
     public function getNominationsForCategory($categoryId) {
     try {
-        // Primeiro verificar se há nominações na tabela nomination
-        $sql = "SELECT COUNT(*) as count FROM nomination WHERE id_categorie = :category_id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':category_id' => $categoryId]);
-        $result = $stmt->fetch();
-        
-        if ($result['count'] == 0) {
-            // Se não houver nominações, criar placeholders
-            return $this->getNominationPlaceholders($categoryId);
-        }
-        
         $stmt = $this->db->prepare("
             SELECT n.*, c.pseudonyme as candidate_name,
                    (SELECT COUNT(*) FROM VOTE v WHERE v.id_nomination = n.id_nomination) as vote_count
             FROM NOMINATION n
             JOIN COMPTE c ON n.id_compte = c.id_compte
             WHERE n.id_categorie = :id_categorie
+            AND n.date_approbation IS NOT NULL
             ORDER BY n.libelle ASC
         ");
         
@@ -151,40 +138,13 @@ class Vote {
         
     } catch (Exception $e) {
         error_log("Erreur récupération nominations: " . $e->getMessage());
-        return $this->getNominationPlaceholders($categoryId);
+        return []; // Retorna array vazio, NÃO placeholders
     }
 }
 
+// Se quiser manter o método mas corrigi-lo:
 private function getNominationPlaceholders($categoryId) {
-    // Placeholders para teste
-    $placeholders = [
-        [
-            'id_nomination' => 9991,
-            'libelle' => 'Candidat Test A',
-            'candidate_name' => 'Testeur A',
-            'vote_count' => 0,
-            'url_image' => 'assets/images/default-nominee.jpg',
-            'plateforme' => 'Test'
-        ],
-        [
-            'id_nomination' => 9992,
-            'libelle' => 'Candidat Test B',
-            'candidate_name' => 'Testeur B',
-            'vote_count' => 0,
-            'url_image' => 'assets/images/default-nominee.jpg',
-            'plateforme' => 'Test'
-        ],
-        [
-            'id_nomination' => 9993,
-            'libelle' => 'Candidat Test C',
-            'candidate_name' => 'Testeur C',
-            'vote_count' => 0,
-            'url_image' => 'assets/images/default-nominee.jpg',
-            'plateforme' => 'Test'
-        ]
-    ];
-    
-    return $placeholders;
+    return []; // Retorna array vazio, não placeholders
 }
 
     /**
