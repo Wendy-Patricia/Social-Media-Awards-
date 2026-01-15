@@ -18,8 +18,12 @@ $userModel = new User();
 $voteModel = new Vote();
 $categoryModel = new CategoryModel();
 
-// Obter dados reais do banco de dados
+// Obter dados reais do banco de dados INCLUINDO A FOTO
 $userData = $userModel->getUserById($userId);
+
+// Definir diretório da foto
+$upload_dir = 'C:/wamp64/www/Social-Media-Awards-/assets/images/profiles/';
+$web_path = '/Social-Media-Awards-/assets/images/profiles/';
 
 // Estatísticas do usuário
 $votesCount = $voteModel->getUserVotesCount($userId);
@@ -30,8 +34,12 @@ $availableCategories = $categoryModel->getVotingCategoriesForUser($userId) ?? []
 // Verificar se o usuário já votou em categorias ativas
 $hasVotedInActiveCategories = $voteModel->hasUserVotedInActiveCategories($userId) ?? false;
 
-// Obter iniciais para o avatar
+// Obter iniciais para o avatar (fallback)
 $initials = strtoupper(substr($userPseudonyme, 0, 2));
+
+// Verificar se tem foto de perfil
+$userPhoto = $userData['photo_profil'] ?? null;
+$hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -43,7 +51,28 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
     <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/user-dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
+    <style>
+        .avatar-nav.has-photo {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .avatar-img-nav {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .avatar-nav-text {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
@@ -57,7 +86,15 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
 
             <nav class="user-nav">
                 <div class="user-info-nav">
-                    <div class="avatar-nav"><?php echo htmlspecialchars($initials); ?></div>
+                    <div class="avatar-nav <?php echo $hasPhoto ? 'has-photo' : ''; ?>">
+                        <?php if ($hasPhoto): ?>
+                            <img src="<?php echo $web_path . htmlspecialchars($userPhoto); ?>"
+                                alt="<?php echo htmlspecialchars($userPseudonyme); ?>"
+                                class="avatar-img-nav">
+                        <?php else: ?>
+                            <span class="avatar-nav-text"><?php echo htmlspecialchars($initials); ?></span>
+                        <?php endif; ?>
+                    </div>
                     <div class="user-details-nav">
                         <span class="user-name-nav"><?php echo htmlspecialchars($userPseudonyme); ?></span>
                         <span class="user-role-nav">Électeur</span>
@@ -71,6 +108,8 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
             </nav>
         </div>
     </header>
+
+    <!-- Resto do código permanece igual... -->
 
     <main class="dashboard-container">
         <!-- Sidebar de Navegação -->
@@ -147,41 +186,31 @@ $initials = strtoupper(substr($userPseudonyme, 0, 2));
                 </div>
             </section>
 
-            <!-- Section de Votação -->
-            <section class="voting-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-vote-yea"></i> Votre État de Vote</h2>
-                </div>
 
-                <div class="voting-grid">
-                    <!-- Status de Voto -->
-                    <div class="status-card <?php echo $hasVotedInActiveCategories ? 'voted' : 'not-voted'; ?>">
-                        <div class="status-icon">
-                            <i class="fas <?php echo $hasVotedInActiveCategories ? 'fa-check-circle' : 'fa-clock'; ?>"></i>
-                        </div>
-                        <div class="status-content">
-                            <h3><?php echo $hasVotedInActiveCategories ? 'Participation en cours' : 'Prêt à voter'; ?></h3>
-                            <p><?php echo $hasVotedInActiveCategories ?
-                                    'Vous avez déjà voté dans certaines catégories. Continuez!' :
-                                    'Aucun vote émis. Commencez maintenant!'; ?></p>
-                        </div>
-                        <a href="/Social-Media-Awards-/views/user/Vote.php" class="btn btn-primary">
-                            <?php echo $hasVotedInActiveCategories ? 'Continuer à Voter' : 'Voter Maintenant'; ?>
-                        </a>
+                <!-- Section de Votação -->
+                <section class="voting-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-vote-yea"></i> Votre État de Vote</h2>
                     </div>
 
-                    <!-- Progresso do Voto -->
-                    <div class="progress-card">
-                        <h3>Votre Progression</h3>
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
-                        <div class="progress-stats">
-                            <span><?php echo htmlspecialchars($votesCount); ?> / <?php echo htmlspecialchars(count($availableCategories)); ?> catégories</span>
-                            <span><?php echo round(($votesCount / max(1, count($availableCategories))) * 100); ?>%</span>
+                    <div class="voting-grid">
+                        <!-- Status de Voto -->
+                        <div class="status-card <?php echo $hasVotedInActiveCategories ? 'voted' : 'not-voted'; ?>">
+                            <div class="status-icon">
+                                <i class="fas <?php echo $hasVotedInActiveCategories ? 'fa-check-circle' : 'fa-clock'; ?>"></i>
+                            </div>
+                            <div class="status-content">
+                                <h3><?php echo $hasVotedInActiveCategories ? 'Participation en cours' : 'Prêt à voter'; ?></h3>
+                                <p><?php echo $hasVotedInActiveCategories ?
+                                        'Vous avez déjà voté dans certaines catégories. Continuez!' :
+                                        'Aucun vote émis. Commencez maintenant!'; ?></p>
+                            </div>
+                            <a href="/Social-Media-Awards-/views/user/Vote.php" class="btn btn-primary">
+                                <?php echo $hasVotedInActiveCategories ? 'Continuer à Voter' : 'Voter Maintenant'; ?>
+                            </a>
                         </div>
                     </div>
-                </div>
+                </section>
             </section>
 
 

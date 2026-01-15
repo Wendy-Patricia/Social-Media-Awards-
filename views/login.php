@@ -15,7 +15,7 @@ if (isAuthenticated()) {
     $redirect = match(getUserType()) {
         'admin' => '../views/admin/dashboard.php',
         'candidate' => '../views/candidate/candidate-dashboard.php',
-        'voter' => '../views/user/Vote.php', // Électeur → page de vote directe
+        'voter' => '../views/use/user-dashboard.php', 
         default => '../index.php'
     };
     
@@ -48,7 +48,7 @@ if (isset($result['success']) && $result['success']) {
         $redirect = match($_SESSION['user_role'] ?? '') {
             'admin' => '../views/admin/dashboard.php',
             'candidate' => '../views/candidate/candidate-dashboard.php',
-            'voter' => '../views/user/Vote.php', // Électeur → vote direct
+            'voter' => '../views/user/user-dashboard.php', 
             default => '../index.php'
         };
         header("Location: $redirect");
@@ -121,15 +121,6 @@ $error = $result['error'] ?? '';
                            required>
                 </div>
                 
-                <!-- OPTIONS DE CONNEXION -->
-                <div class="form-options">
-                    <label class="checkbox">
-                        <input type="checkbox" name="remember"> Se souvenir de moi
-                    </label>
-                    <a href="/Social-Media-Awards-/forgot-password.php" class="forgot-password">
-                        Mot de passe oublié ?
-                    </a>
-                </div>
                 
                 <!-- BOUTON DE SOUMISSION -->
                 <button type="submit" class="btn btn-primary btn-block">

@@ -1,3 +1,4 @@
+
 /* results.css - Estilo específico para a página de resultados */
 
 :root {
@@ -41,54 +42,58 @@
     box-sizing: border-box;
 }
 
+html, body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Open Sans', sans-serif;
     background: var(--light-gray);
     color: var(--dark);
     line-height: 1.6;
-    padding-top: 0; /* Remove padding top para o hero começar logo após o header */
-    margin: 0; /* Remove margens do body */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-.container {
-    max-width: 100%; /* Remove limite de largura */
-    margin: 0; /* Remove margens laterais */
-    padding: 0; /* Remove padding lateral */
+/* CONTAINER PRINCIPAL - Ajustado para corresponder ao footer */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }
 
-/* SECTION HERO - Ocupa TODA largura sem espaços e começa no header */
-.results-hero {
-    background: var(--principal);
-    color: var(--white);
-    padding: 60px 0 40px; /* Reduzi ainda mais o padding top */
-    text-align: center;
-    width: 100vw; /* 100% da viewport width */
-    position: relative;
-    margin: 0; /* Remove todas as margens */
-    left: 0;
-    right: 0;
-    box-sizing: border-box;
-}
-
-/* Container FULL WIDTH para garantir que não há margens */
-.full-width-container {
-    width: 100vw;
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw;
-    margin-right: -50vw;
-}
-
-.results-hero .hero-content {
+/* CONTAINER GLOBAL - MESMA LARGURA DO FOOTER */
+.global-container {
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
 }
 
+/* SECTION HERO - AGORA COM MESMA LARGURA DO FOOTER */
+.results-hero {
+    background: var(--principal);
+    color: var(--white);
+    padding: 50px 0;
+    text-align: center;
+    width: 100%;
+    position: relative;
+}
+
+.results-hero .global-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .results-hero h1 {
     font-family: 'Montserrat', sans-serif;
-    font-size: 3.5rem;
+    font-size: 3rem;
     margin-bottom: 1rem;
     font-weight: 700;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
@@ -99,17 +104,23 @@ body {
     opacity: 0.9;
     margin-bottom: 2rem;
     max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
+/* Edition selector - Centralizado com largura controlada */
 .edition-selector {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 3rem;
+    gap: 2rem;
     flex-wrap: wrap;
     margin-top: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 100%;
+    max-width: 800px;
 }
 
 #editionSelect {
@@ -123,6 +134,9 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    min-width: 280px;
+    width: 100%;
+    max-width: 400px;
 }
 
 #editionSelect:hover {
@@ -137,34 +151,58 @@ body {
 
 .vote-stats {
     display: flex;
-    gap: 2rem;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .vote-stats .stat {
     text-align: center;
+    padding: 0.8rem 1.2rem;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    min-width: 140px;
 }
 
 .vote-stats .stat-number {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 700;
     margin-bottom: 0.3rem;
     color: var(--white);
 }
 
 .vote-stats .stat-label {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* SECTION WINNERS - Container ajustado */
-.winners-overview {
-    padding: 4rem 20px;
+/* MENSAGENS DE VOTO */
+.vote-in-progress, .vote-not-started {
+    margin-top: 2rem;
+    width: 100%;
+    max-width: 800px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    padding: 2rem;
+}
+
+/* SECTION CATEGORY RESULTS */
+.category-results {
+    padding: 4rem 0;
     background: var(--white);
-    max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
 }
 
-.winners-overview h2 {
+.category-results .global-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.category-results h2 {
     font-family: 'Montserrat', sans-serif;
     font-size: 2.5rem;
     text-align: center;
@@ -174,7 +212,7 @@ body {
     padding-bottom: 1rem;
 }
 
-.winners-overview h2::after {
+.category-results h2::after {
     content: '';
     position: absolute;
     bottom: 0;
@@ -184,190 +222,6 @@ body {
     height: 4px;
     background: var(--principal);
     border-radius: 2px;
-}
-
-.winners-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    width: 100%;
-}
-
-.grand-winner {
-    background: var(--principal);
-    border-radius: 20px;
-    padding: 2.5rem;
-    color: var(--white);
-    text-align: center;
-    position: relative;
-    box-shadow: var(--shadow-xl);
-}
-
-.winner-crown {
-    position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--white);
-    color: var(--principal);
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    border: 4px solid var(--principal-dark);
-}
-
-.winner-image {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    overflow: hidden;
-    margin: 0 auto 1.5rem;
-    border: 5px solid rgba(255, 255, 255, 0.3);
-    background: var(--white);
-}
-
-.winner-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.grand-winner h3 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-}
-
-.winner-category {
-    font-size: 1.1rem;
-    opacity: 0.9;
-    margin-bottom: 1.5rem;
-}
-
-.winner-stats {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
-}
-
-.winner-stats .stat {
-    text-align: center;
-}
-
-.winner-stats .stat-number {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--white);
-}
-
-.winner-stats .stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-}
-
-.platform-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    margin-top: 1rem;
-}
-
-.top-winners {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.top-winner {
-    background: var(--white);
-    border-radius: 15px;
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    box-shadow: var(--shadow-md);
-    border-left: 4px solid var(--principal);
-    transition: transform 0.3s ease;
-}
-
-.top-winner:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-}
-
-.winner-rank {
-    background: var(--principal);
-    color: var(--white);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-}
-
-.top-winner .winner-image {
-    width: 70px;
-    height: 70px;
-    margin: 0;
-    border: 3px solid var(--light-gray);
-}
-
-.top-winner .winner-info {
-    flex: 1;
-}
-
-.top-winner h4 {
-    font-size: 1.2rem;
-    margin-bottom: 0.3rem;
-    color: var(--dark);
-}
-
-.top-winner p {
-    color: var(--gray);
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-.top-winner .votes {
-    color: var(--principal);
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.no-results {
-    text-align: center;
-    padding: 3rem;
-    background: var(--light-gray);
-    border-radius: 15px;
-    border: 2px dashed var(--gray);
-}
-
-/* SECTION CATEGORY RESULTS */
-.category-results {
-    padding: 4rem 20px;
-    background: var(--light-gray);
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.category-results h2 {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 2.5rem;
-    text-align: center;
-    margin-bottom: 3rem;
-    color: var(--dark);
 }
 
 .results-tabs {
@@ -401,6 +255,7 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 2rem;
+    width: 100%;
 }
 
 .result-card {
@@ -463,17 +318,17 @@ body {
     background: #e9ecef;
 }
 
-.winner-item.first {
-    background: rgba(79, 185, 171, 0.1);
-    border-left: 3px solid var(--principal);
+.winner-item.gold {
+    background: rgba(255, 215, 0, 0.1);
+    border-left: 3px solid #FFD700;
 }
 
-.winner-item.second {
+.winner-item.silver {
     background: rgba(192, 192, 192, 0.1);
     border-left: 3px solid #C0C0C0;
 }
 
-.winner-item.third {
+.winner-item.bronze {
     background: rgba(205, 127, 50, 0.1);
     border-left: 3px solid #CD7F32;
 }
@@ -534,21 +389,27 @@ body {
     font-size: 1.1rem;
 }
 
-.no-categories {
+.no-winners, .no-categories {
     text-align: center;
-    padding: 3rem;
-    background: var(--white);
-    border-radius: 15px;
-    border: 2px dashed var(--light-gray);
-    grid-column: 1 / -1;
+    padding: 2rem;
+    background: var(--light-gray);
+    border-radius: 10px;
+    border: 2px dashed var(--gray);
+    color: var(--gray);
+    width: 100%;
 }
 
-/* STATISTICS SECTION - COM NOVA COR ROSA */
+/* SECTION STATISTIQUES */
 .statistics-section {
-    padding: 4rem 20px;
-    background: var(--white);
-    max-width: 1200px;
-    margin: 0 auto;
+    padding: 4rem 0;
+    background: var(--light-gray);
+    width: 100%;
+}
+
+.statistics-section .global-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .statistics-section h2 {
@@ -557,6 +418,20 @@ body {
     text-align: center;
     margin-bottom: 3rem;
     color: var(--dark);
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.statistics-section h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 4px;
+    background: var(--stat-card-color);
+    border-radius: 2px;
 }
 
 .stats-grid {
@@ -567,12 +442,12 @@ body {
 }
 
 .stat-card {
-    background: var(--stat-card-color); /* ROSA (#FF5A79) */
-    color: var(--white); /* Texto branco para melhor contraste com rosa */
+    background: var(--stat-card-color);
+    color: var(--white);
     padding: 2rem;
     border-radius: 15px;
     text-align: center;
-    box-shadow: 0 5px 20px rgba(255, 90, 121, 0.2); /* Sombra rosa */
+    box-shadow: 0 5px 20px rgba(255, 90, 121, 0.2);
     transition: all 0.3s ease;
     border: 2px solid rgba(255, 90, 121, 0.3);
 }
@@ -581,7 +456,7 @@ body {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(255, 90, 121, 0.3);
     border-color: var(--stat-card-color);
-    background: #FF4A6E; /* Rosa um pouco mais escuro no hover */
+    background: #FF4A6E;
 }
 
 .stat-icon {
@@ -605,79 +480,243 @@ body {
     color: rgba(255, 255, 255, 0.9);
 }
 
+/* CORREÇÕES PARA CORES CONFORME STATUS */
+body.vote-active .results-hero {
+    background: linear-gradient(135deg, #4FB9AB, #3da895);
+}
+
+body.vote-not-started-page .results-hero {
+    background: linear-gradient(135deg, #FF9F00, #FFC107);
+}
+
+body.vote-ended .category-results {
+    background: var(--white);
+    margin-top: 0;
+    padding-top: 0;
+}
+
+ /* Style pour le message de vote en cours */
+        .vote-in-progress {
+            background: linear-gradient(135deg, #4FB9AB, #3da895);
+            color: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 2rem;
+            box-shadow: 0 8px 25px rgba(79, 185, 171, 0.3);
+            width: 100%;
+        }
+        
+        .vote-in-progress i {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .vote-in-progress h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .vote-in-progress .countdown {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+        }
+        
+        /* Style pour votes pas encore commencés */
+        .vote-not-started {
+            background: linear-gradient(135deg, #FF9F00, #FFC107);
+            color: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 2rem;
+            box-shadow: 0 8px 25px rgba(255, 159, 0, 0.3);
+            width: 100%;
+        }
+        
+        .vote-not-started i {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .vote-not-started h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Indicador de carregamento */
+        .loading-indicator {
+            display: none;
+            padding: 1rem;
+            text-align: center;
+            color: var(--white);
+        }
+        
+        .loading-indicator.active {
+            display: block;
+        }
+        
+        /* Melhorar a aparência das estatísticas */
+        .vote-stats {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .vote-stats .stat {
+            text-align: center;
+            padding: 0.8rem 1.2rem;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            min-width: 120px;
+        }
+        
+        .vote-stats .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            color: var(--white);
+        }
+        
+        .vote-stats .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Garantir que as sections ocupem 100% da largura */
+        .results-hero, .category-results, .statistics-section {
+            width: 100%;
+        }
+        
+        /* Container principal para corresponder ao footer */
+        .global-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Cacher les sections si vote en cours */
+        .vote-active .category-results,
+        .vote-not-started-page .category-results {
+            display: none;
+        }
+
+/* FOOTER - Garantir que ocupa toda a largura */
+footer {
+    width: 100%;
+    margin-top: auto;
+}
+
 /* RESPONSIVIDADE */
 @media (max-width: 768px) {
+    .global-container {
+        padding: 0 15px;
+    }
+    
     .results-hero {
-        padding: 50px 0 30px; /* Ainda menos padding no topo */
+        padding: 40px 0;
     }
     
     .results-hero h1 {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
     }
     
     .edition-selector {
         flex-direction: column;
-        gap: 2rem;
+        gap: 1.5rem;
+        padding: 1.2rem;
+        max-width: 100%;
     }
     
-    .winners-grid {
-        grid-template-columns: 1fr;
+    #editionSelect {
+        min-width: 100%;
+        max-width: 100%;
     }
     
-    .winner-image {
-        width: 150px;
-        height: 150px;
+    .vote-stats {
+        flex-direction: row;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .vote-stats .stat {
+        min-width: 120px;
+        padding: 0.6rem 1rem;
+    }
+    
+    .vote-stats .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .category-results,
+    .statistics-section {
+        padding: 3rem 0;
+    }
+    
+    .category-results h2,
+    .statistics-section h2 {
+        font-size: 2rem;
     }
     
     .results-grid {
         grid-template-columns: 1fr;
     }
     
-    .category-results h2,
-    .statistics-section h2,
-    .winners-overview h2 {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1.5rem;
+    }
+    
+    .stat-number {
         font-size: 2rem;
     }
     
-    .winners-overview,
-    .category-results,
-    .statistics-section {
-        padding: 3rem 15px;
+    .tab-btn {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.9rem;
     }
 }
 
 @media (max-width: 480px) {
-    .results-hero {
-        padding: 40px 0 20px; /* Mínimo de padding */
+    .results-hero h1 {
+        font-size: 1.8rem;
     }
     
-    .results-hero h1 {
-        font-size: 2rem;
+    .results-hero p {
+        font-size: 1rem;
     }
     
     .vote-stats {
         flex-direction: column;
         gap: 1rem;
+        width: 100%;
     }
     
-    .top-winner {
-        flex-direction: column;
-        text-align: center;
+    .vote-stats .stat {
+        width: 100%;
     }
     
-    .top-winner .winner-info {
-        text-align: center;
+    .edition-selector {
+        padding: 1rem;
     }
     
-    .category-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+    .results-grid {
+        grid-template-columns: 1fr;
     }
     
-    .category-stats {
-        flex-direction: column;
-        gap: 1rem;
+    .tab-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
     }
     
     .stats-grid {
@@ -685,7 +724,17 @@ body {
     }
     
     .stat-card {
-        padding: 1.5rem;
+        padding: 1.2rem;
+    }
+    
+    .category-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .platform-tag {
+        align-self: flex-start;
     }
 }
 
@@ -701,7 +750,7 @@ body {
     }
 }
 
-.result-card, .stat-card, .top-winner {
+.result-card, .stat-card, .winner-item {
     animation: fadeInUp 0.6s ease-out;
 }
 

@@ -373,11 +373,10 @@ body {
 }
 
 .voting-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    display: block;
     margin-bottom: 3rem;
 }
+
 
 .status-card {
     background: var(--neutral-white);

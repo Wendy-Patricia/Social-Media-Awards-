@@ -2,35 +2,38 @@
 // app/Models/Vote.php
 require_once __DIR__ . '/../../config/database.php';
 
-class Vote {
+class Vote
+{
     private $db;
 
-    public function __construct() {
+    public function __construct()
+    {
         $database = Database::getInstance();
         $this->db = $database->getConnection();
     }
 
-    public function getDb() {
+    public function getDb()
+    {
         return $this->db;
     }
 
     /**
      * Gerar token anônimo para um usuário em uma categoria
      */
-    public function generateToken($userId, $categoryId) {
+    public function generateToken($userId, $categoryId)
+    {
         try {
             $stmt = $this->db->prepare("CALL gerar_token_anonimo(:id_compte, :id_categorie, @token_value)");
             $stmt->execute([
                 ':id_compte' => $userId,
                 ':id_categorie' => $categoryId
             ]);
-            
+
             // Obter o token gerado
             $stmt = $this->db->query("SELECT @token_value as token_value");
             $result = $stmt->fetch();
-            
+
             return $result ? $result['token_value'] : null;
-            
         } catch (Exception $e) {
             error_log("Erreur génération token: " . $e->getMessage());
             return null;
@@ -40,7 +43,8 @@ class Vote {
     /**
      * Registrar um voto
      */
-    public function castVote($token, $encryptedVote, $nominationId) {
+    public function castVote($token, $encryptedVote, $nominationId)
+    {
         try {
             $stmt = $this->db->prepare("CALL processar_voto(:token, :vote_chiffre, :id_nomination, @id_vote)");
             $stmt->execute([
@@ -48,13 +52,12 @@ class Vote {
                 ':vote_chiffre' => $encryptedVote,
                 ':id_nomination' => $nominationId
             ]);
-            
+
             // Obter ID do voto registrado
             $stmt = $this->db->query("SELECT @id_vote as id_vote");
             $result = $stmt->fetch();
-            
+
             return $result ? $result['id_vote'] : null;
-            
         } catch (Exception $e) {
             error_log("Erreur enregistrement vote: " . $e->getMessage());
             return false;
@@ -64,7 +67,8 @@ class Vote {
     /**
      * Verificar se usuário já votou em uma categoria
      */
-    public function hasUserVoted($userId, $categoryId) {
+    public function hasUserVoted($userId, $categoryId)
+    {
         try {
             $stmt = $this->db->prepare("
                 SELECT statut_a_vote 
@@ -76,10 +80,9 @@ class Vote {
                 ':id_compte' => $userId,
                 ':id_categorie' => $categoryId
             ]);
-            
+
             $result = $stmt->fetch();
             return $result && $result['statut_a_vote'] == 1;
-            
         } catch (Exception $e) {
             error_log("Erreur vérification vote: " . $e->getMessage());
             return false;
@@ -89,10 +92,11 @@ class Vote {
     /**
      * Obter categorias disponíveis para votação
      */
-    public function getVotingCategories() {
+    public function getVotingCategories()
+    {
         try {
             $now = date('Y-m-d H:i:s');
-            
+
             $stmt = $this->db->prepare("
                 SELECT c.*, e.annee as edition_year,
                        COUNT(DISTINCT n.id_nomination) as nomination_count
@@ -109,19 +113,19 @@ class Vote {
                 GROUP BY c.id_categorie
                 ORDER BY c.nom ASC
             ");
-            
+
             $stmt->execute([':now' => $now]);
             return $stmt->fetchAll();
-            
         } catch (Exception $e) {
             error_log("Erreur récupération catégories: " . $e->getMessage());
             return [];
         }
     }
 
-    public function getNominationsForCategory($categoryId) {
-    try {
-        $stmt = $this->db->prepare("
+    public function getNominationsForCategory($categoryId)
+    {
+        try {
+            $stmt = $this->db->prepare("
             SELECT n.*, c.pseudonyme as candidate_name,
                    (SELECT COUNT(*) FROM VOTE v WHERE v.id_nomination = n.id_nomination) as vote_count
             FROM NOMINATION n
@@ -130,27 +134,28 @@ class Vote {
             AND n.date_approbation IS NOT NULL
             ORDER BY n.libelle ASC
         ");
-        
-        $stmt->execute([':id_categorie' => $categoryId]);
-        $nominations = $stmt->fetchAll();
-        
-        return $nominations;
-        
-    } catch (Exception $e) {
-        error_log("Erreur récupération nominations: " . $e->getMessage());
-        return []; // Retorna array vazio, NÃO placeholders
-    }
-}
 
-// Se quiser manter o método mas corrigi-lo:
-private function getNominationPlaceholders($categoryId) {
-    return []; // Retorna array vazio, não placeholders
-}
+            $stmt->execute([':id_categorie' => $categoryId]);
+            $nominations = $stmt->fetchAll();
+
+            return $nominations;
+        } catch (Exception $e) {
+            error_log("Erreur récupération nominations: " . $e->getMessage());
+            return []; // Retorna array vazio, NÃO placeholders
+        }
+    }
+
+    // Se quiser manter o método mas corrigi-lo:
+    private function getNominationPlaceholders($categoryId)
+    {
+        return []; // Retorna array vazio, não placeholders
+    }
 
     /**
      * Obter certificado de participação
      */
-    public function getParticipationCertificate($userId, $categoryId) {
+    public function getParticipationCertificate($userId, $categoryId)
+    {
         try {
             $stmt = $this->db->prepare("
                 SELECT * FROM CERTIFICAT_PARTICIPATION
@@ -159,14 +164,13 @@ private function getNominationPlaceholders($categoryId) {
                 ORDER BY date_emission DESC
                 LIMIT 1
             ");
-            
+
             $stmt->execute([
                 ':id_compte' => $userId,
                 ':id_categorie' => $categoryId
             ]);
-            
+
             return $stmt->fetch();
-            
         } catch (Exception $e) {
             error_log("Erreur récupération certificat: " . $e->getMessage());
             return null;
@@ -176,7 +180,8 @@ private function getNominationPlaceholders($categoryId) {
     /**
      * Obter histórico de votos do usuário (apenas informações anônimas)
      */
-    public function getUserVotingHistory($userId) {
+    public function getUserVotingHistory($userId)
+    {
         try {
             $stmt = $this->db->prepare("
                 SELECT 
@@ -188,10 +193,9 @@ private function getNominationPlaceholders($categoryId) {
                 WHERE cp.id_compte = :id_compte
                 ORDER BY cp.date_controle DESC
             ");
-            
+
             $stmt->execute([':id_compte' => $userId]);
             return $stmt->fetchAll();
-            
         } catch (Exception $e) {
             error_log("Erreur historique votes: " . $e->getMessage());
             return [];
@@ -201,10 +205,11 @@ private function getNominationPlaceholders($categoryId) {
     /**
      * Verificar se categoria está ativa para votação
      */
-    public function isCategoryActive($categoryId) {
+    public function isCategoryActive($categoryId)
+    {
         try {
             $now = date('Y-m-d H:i:s');
-            
+
             $stmt = $this->db->prepare("
                 SELECT 
                     CASE 
@@ -218,15 +223,14 @@ private function getNominationPlaceholders($categoryId) {
                 WHERE c.id_categorie = :id_categorie
                 AND e.est_active = 1
             ");
-            
+
             $stmt->execute([
                 ':id_categorie' => $categoryId,
                 ':now' => $now
             ]);
-            
+
             $result = $stmt->fetch();
             return $result && $result['is_active'] == 1;
-            
         } catch (Exception $e) {
             error_log("Erreur vérification catégorie: " . $e->getMessage());
             return false;
@@ -236,7 +240,8 @@ private function getNominationPlaceholders($categoryId) {
     /**
      * Criptografar voto (simulação - em produção usar método mais seguro)
      */
-    public function encryptVote($nominationId, $userId) {
+    public function encryptVote($nominationId, $userId)
+    {
         // Em produção, usar criptografia assimétrica
         // Aqui usamos uma simulação para demonstração
         $data = [
@@ -244,25 +249,25 @@ private function getNominationPlaceholders($categoryId) {
             'timestamp' => time(),
             'user_hash' => hash('sha256', $userId . 'salt_' . time())
         ];
-        
+
         return base64_encode(json_encode($data));
     }
 
     /**
      * Obter ID da categoria de uma nomeação
      */
-    public function getCategoryIdFromNomination($nominationId) {
+    public function getCategoryIdFromNomination($nominationId)
+    {
         try {
             $stmt = $this->db->prepare("
                 SELECT id_categorie FROM NOMINATION 
                 WHERE id_nomination = :id_nomination
             ");
-            
+
             $stmt->execute([':id_nomination' => $nominationId]);
             $result = $stmt->fetch();
-            
+
             return $result ? $result['id_categorie'] : null;
-            
         } catch (Exception $e) {
             error_log("Erreur récupération catégorie: " . $e->getMessage());
             return null;
@@ -272,7 +277,8 @@ private function getNominationPlaceholders($categoryId) {
     /**
      * Obter informações de uma categoria
      */
-    public function getCategoryInfo($categoryId) {
+    public function getCategoryInfo($categoryId)
+    {
         try {
             $stmt = $this->db->prepare("
                 SELECT c.*, e.annee, e.nom as edition_nom
@@ -280,10 +286,9 @@ private function getNominationPlaceholders($categoryId) {
                 JOIN EDITION e ON c.id_edition = e.id_edition
                 WHERE c.id_categorie = :id_categorie
             ");
-            
+
             $stmt->execute([':id_categorie' => $categoryId]);
             return $stmt->fetch();
-            
         } catch (Exception $e) {
             error_log("Erreur récupération info catégorie: " . $e->getMessage());
             return null;
@@ -293,7 +298,8 @@ private function getNominationPlaceholders($categoryId) {
     /**
      * Verificar se token é válido
      */
-    public function validateToken($token, $userId, $categoryId) {
+    public function validateToken($token, $userId, $categoryId)
+    {
         try {
             $stmt = $this->db->prepare("
                 SELECT id_token FROM TOKEN_ANONYME 
@@ -303,15 +309,14 @@ private function getNominationPlaceholders($categoryId) {
                 AND est_utilise = FALSE 
                 AND date_expiration > NOW()
             ");
-            
+
             $stmt->execute([
                 ':token' => $token,
                 ':user_id' => $userId,
                 ':category_id' => $categoryId
             ]);
-            
+
             return $stmt->fetch() !== false;
-            
         } catch (Exception $e) {
             error_log("Erreur validation token: " . $e->getMessage());
             return false;
@@ -321,25 +326,26 @@ private function getNominationPlaceholders($categoryId) {
     /**
      * Obter estatísticas de votação
      */
-    public function getVotingStatistics($userId = null) {
+    public function getVotingStatistics($userId = null)
+    {
         try {
             $stats = [];
-            
+
             // Total de categorias
             $stmt = $this->db->query("SELECT COUNT(*) as total FROM CATEGORIE");
             $result = $stmt->fetch();
             $stats['total_categories'] = $result['total'] ?? 0;
-            
+
             // Total de nomeações
             $stmt = $this->db->query("SELECT COUNT(*) as total FROM NOMINATION");
             $result = $stmt->fetch();
             $stats['total_nominations'] = $result['total'] ?? 0;
-            
+
             // Total de votos
             $stmt = $this->db->query("SELECT COUNT(*) as total FROM VOTE");
             $result = $stmt->fetch();
             $stats['total_votes'] = $result['total'] ?? 0;
-            
+
             // Estatísticas do usuário se fornecido
             if ($userId) {
                 // Votos do usuário
@@ -351,7 +357,7 @@ private function getNominationPlaceholders($categoryId) {
                 $stmt->execute([':user_id' => $userId]);
                 $result = $stmt->fetch();
                 $stats['user_voted_categories'] = $result['voted_categories'] ?? 0;
-                
+
                 // Certificados do usuário
                 $stmt = $this->db->prepare("
                     SELECT COUNT(*) as certificates
@@ -362,36 +368,37 @@ private function getNominationPlaceholders($categoryId) {
                 $result = $stmt->fetch();
                 $stats['user_certificates'] = $result['certificates'] ?? 0;
             }
-            
+
             return $stats;
-            
         } catch (Exception $e) {
             error_log("Erreur statistiques vote: " . $e->getMessage());
             return [];
         }
     }
-    public function getUserVotesCount($userId) {
-    try {
-        $stmt = $this->db->prepare("
+    public function getUserVotesCount($userId)
+    {
+        try {
+            $stmt = $this->db->prepare("
             SELECT COUNT(DISTINCT v.id_vote) as count
             FROM VOTE v
             JOIN TOKEN_ANONYME ta ON v.id_token = ta.id_token
             WHERE ta.id_compte = :id_compte
         ");
-        
-        $stmt->execute([':id_compte' => $userId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        return $result['count'] ?? 0;
-    } catch (PDOException $e) {
-        error_log("Erreur getUserVotesCount: " . $e->getMessage());
-        return 0;
-    }
-}
 
-public function hasUserVotedInCategory($userId, $categoryId) {
-    try {
-        $stmt = $this->db->prepare("
+            $stmt->execute([':id_compte' => $userId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $result['count'] ?? 0;
+        } catch (PDOException $e) {
+            error_log("Erreur getUserVotesCount: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function hasUserVotedInCategory($userId, $categoryId)
+    {
+        try {
+            $stmt = $this->db->prepare("
             SELECT COUNT(*) as count
             FROM VOTE v
             JOIN TOKEN_ANONYME ta ON v.id_token = ta.id_token
@@ -399,23 +406,24 @@ public function hasUserVotedInCategory($userId, $categoryId) {
             WHERE ta.id_compte = :id_compte 
             AND n.id_categorie = :id_categorie
         ");
-        
-        $stmt->execute([
-            ':id_compte' => $userId,
-            ':id_categorie' => $categoryId
-        ]);
-        
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return ($result['count'] ?? 0) > 0;
-    } catch (PDOException $e) {
-        error_log("Erreur hasUserVotedInCategory: " . $e->getMessage());
-        return false;
-    }
-}
 
-public function hasUserVotedInActiveCategories($userId) {
-    try {
-        $stmt = $this->db->prepare("
+            $stmt->execute([
+                ':id_compte' => $userId,
+                ':id_categorie' => $categoryId
+            ]);
+
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return ($result['count'] ?? 0) > 0;
+        } catch (PDOException $e) {
+            error_log("Erreur hasUserVotedInCategory: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function hasUserVotedInActiveCategories($userId)
+    {
+        try {
+            $stmt = $this->db->prepare("
             SELECT COUNT(*) as count
             FROM VOTE v
             JOIN TOKEN_ANONYME ta ON v.id_token = ta.id_token
@@ -424,20 +432,21 @@ public function hasUserVotedInActiveCategories($userId) {
             WHERE ta.id_compte = :id_compte 
             AND c.date_fin_votes > NOW()
         ");
-        
-        $stmt->execute([':id_compte' => $userId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        return ($result['count'] ?? 0) > 0;
-    } catch (PDOException $e) {
-        error_log("Erreur hasUserVotedInActiveCategories: " . $e->getMessage());
-        return false;
-    }
-}
 
-public function getUserRecentVotes($userId, $limit = 5) {
-    try {
-        $stmt = $this->db->prepare("
+            $stmt->execute([':id_compte' => $userId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return ($result['count'] ?? 0) > 0;
+        } catch (PDOException $e) {
+            error_log("Erreur hasUserVotedInActiveCategories: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getUserRecentVotes($userId, $limit = 5)
+    {
+        try {
+            $stmt = $this->db->prepare("
             SELECT 
                 v.id_vote,
                 v.date_heure_vote,
@@ -452,23 +461,24 @@ public function getUserRecentVotes($userId, $limit = 5) {
             ORDER BY v.date_heure_vote DESC
             LIMIT :limit
         ");
-        
-        $stmt->bindValue(':id_compte', $userId, PDO::PARAM_INT);
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("Erreur getUserRecentVotes: " . $e->getMessage());
-        return [];
-    }
-}
 
-public function canVoteInCategory($userId, $categoryId) {
-    try {
-        $now = date('Y-m-d H:i:s');
-        
-        $stmt = $this->db->prepare("
+            $stmt->bindValue(':id_compte', $userId, PDO::PARAM_INT);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Erreur getUserRecentVotes: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function canVoteInCategory($userId, $categoryId)
+    {
+        try {
+            $now = date('Y-m-d H:i:s');
+
+            $stmt = $this->db->prepare("
             SELECT 
                 c.id_categorie,
                 c.nom,
@@ -500,63 +510,83 @@ public function canVoteInCategory($userId, $categoryId) {
             AND e.est_active = 1
             GROUP BY c.id_categorie
         ");
-        
-        $stmt->execute([
-            ':category_id' => $categoryId,
-            ':user_id' => $userId,
-            ':now' => $now
-        ]);
-        
-        $result = $stmt->fetch();
-        
-        if (!$result) {
-            error_log("DEBUG: Categoria $categoryId não encontrada ou edição inativa");
+
+            $stmt->execute([
+                ':category_id' => $categoryId,
+                ':user_id' => $userId,
+                ':now' => $now
+            ]);
+
+            $result = $stmt->fetch();
+
+            if (!$result) {
+                error_log("DEBUG: Categoria $categoryId não encontrada ou edição inativa");
+                return [
+                    'can_vote' => false,
+                    'reason' => 'Categoria não encontrada ou edição inativa',
+                    'debug' => ['category_id' => $categoryId, 'user_id' => $userId]
+                ];
+            }
+
+            $canVote = ($result['voting_open'] == 1)
+                && ($result['has_voted'] == 0)
+                && ($result['nomination_count'] > 0);
+
+            error_log("DEBUG canVoteInCategory: " . json_encode([
+                'category_id' => $categoryId,
+                'category_name' => $result['nom'],
+                'voting_open' => $result['voting_open'],
+                'has_voted' => $result['has_voted'],
+                'nomination_count' => $result['nomination_count'],
+                'can_vote' => $canVote,
+                'dates' => [
+                    'category' => ['start' => $result['cat_start'], 'end' => $result['cat_end']],
+                    'edition' => ['start' => $result['edition_start'], 'end' => $result['edition_end']],
+                    'now' => $now
+                ]
+            ]));
+
+            return [
+                'can_vote' => $canVote,
+                'voting_open' => $result['voting_open'] == 1,
+                'has_voted' => $result['has_voted'] == 1,
+                'nominations_available' => $result['nomination_count'] > 0,
+                'nomination_count' => $result['nomination_count'],
+                'category_name' => $result['nom']
+            ];
+        } catch (Exception $e) {
+            error_log("Erreur vérification vote: " . $e->getMessage());
             return [
                 'can_vote' => false,
-                'reason' => 'Categoria não encontrada ou edição inativa',
-                'debug' => ['category_id' => $categoryId, 'user_id' => $userId]
+                'reason' => 'Erro técnico: ' . $e->getMessage()
             ];
         }
-        
-        $canVote = ($result['voting_open'] == 1) 
-                 && ($result['has_voted'] == 0)
-                 && ($result['nomination_count'] > 0);
-        
-        error_log("DEBUG canVoteInCategory: " . json_encode([
-            'category_id' => $categoryId,
-            'category_name' => $result['nom'],
-            'voting_open' => $result['voting_open'],
-            'has_voted' => $result['has_voted'],
-            'nomination_count' => $result['nomination_count'],
-            'can_vote' => $canVote,
-            'dates' => [
-                'category' => ['start' => $result['cat_start'], 'end' => $result['cat_end']],
-                'edition' => ['start' => $result['edition_start'], 'end' => $result['edition_end']],
-                'now' => $now
-            ]
-        ]));
-        
-        return [
-            'can_vote' => $canVote,
-            'voting_open' => $result['voting_open'] == 1,
-            'has_voted' => $result['has_voted'] == 1,
-            'nominations_available' => $result['nomination_count'] > 0,
-            'nomination_count' => $result['nomination_count'],
-            'category_name' => $result['nom']
-        ];
-        
-    } catch (Exception $e) {
-        error_log("Erreur vérification vote: " . $e->getMessage());
-        return [
-            'can_vote' => false,
-            'reason' => 'Erro técnico: ' . $e->getMessage()
-        ];
     }
-}
+    /**
+     * Conta quantas categorias o usuário já votou
+     * @param int $userId ID do eleitor
+     * @return int Número de categorias votadas
+     */
+    public function getCategoriesVotedCount($userId)
+    {
+        try {
+            $sql = "SELECT COUNT(DISTINCT id_categorie) as count 
+                    FROM votes 
+                    WHERE id_electeur = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$userId]);
+            $result = $stmt->fetch();
+            return $result ? $result['count'] : 0;
+        } catch (Exception $e) {
+            error_log("Erro ao contar categorias votadas: " . $e->getMessage());
+            return 0;
+        }
+    }
 
-public function getNominationsForCategoryWithImages($categoryId) {
-    try {
-        $stmt = $this->db->prepare("
+    public function getNominationsForCategoryWithImages($categoryId)
+    {
+        try {
+            $stmt = $this->db->prepare("
             SELECT n.*, c.pseudonyme as candidate_name,
                    co.photo_profil as candidate_image,
                    (SELECT COUNT(*) FROM VOTE v WHERE v.id_nomination = n.id_nomination) as vote_count
@@ -567,30 +597,28 @@ public function getNominationsForCategoryWithImages($categoryId) {
             AND n.date_approbation IS NOT NULL
             ORDER BY n.libelle ASC
         ");
-        
-        $stmt->execute([':id_categorie' => $categoryId]);
-        $nominations = $stmt->fetchAll();
-        
-        // Se não houver nominações, criar um placeholder
-        if (empty($nominations)) {
-            return [
-                [
-                    'id_nomination' => 0,
-                    'libelle' => 'Aucune nomination approuvée',
-                    'candidate_name' => 'Administrateur',
-                    'vote_count' => 0,
-                    'url_image' => 'assets/images/default-nominee.jpg',
-                    'plateforme' => 'all'
-                ]
-            ];
+
+            $stmt->execute([':id_categorie' => $categoryId]);
+            $nominations = $stmt->fetchAll();
+
+            // Se não houver nominações, criar um placeholder
+            if (empty($nominations)) {
+                return [
+                    [
+                        'id_nomination' => 0,
+                        'libelle' => 'Aucune nomination approuvée',
+                        'candidate_name' => 'Administrateur',
+                        'vote_count' => 0,
+                        'url_image' => 'assets/images/default-nominee.jpg',
+                        'plateforme' => 'all'
+                    ]
+                ];
+            }
+
+            return $nominations;
+        } catch (Exception $e) {
+            error_log("Erreur récupération nominations: " . $e->getMessage());
+            return [];
         }
-        
-        return $nominations;
-        
-    } catch (Exception $e) {
-        error_log("Erreur récupération nominations: " . $e->getMessage());
-        return [];
     }
 }
-}
-?>

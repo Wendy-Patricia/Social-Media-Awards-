@@ -1,5 +1,5 @@
 <?php
-// views/user/edit-profile.php - VERSÃO ATUALIZADA
+// views/user/edit-profile.php - VERSÃO ATUALIZADA COM UPLOAD DE FOTOS
 require_once '../../config/session.php';
 require_once '../../app/Models/UserModel.php';
 
@@ -30,6 +30,17 @@ if (!$userData) {
 // Inicializar mensagens de erro/sucesso
 $errors = [];
 $success = '';
+
+// Definir diretório de upload
+$upload_dir = 'C:/wamp64/www/Social-Media-Awards-/assets/images/profiles/';
+$web_path = '/Social-Media-Awards-/assets/images/profiles/';
+
+// Criar diretório se não existir
+if (!file_exists($upload_dir)) {
+    if (!mkdir($upload_dir, 0755, true)) {
+        $errors['general'] = 'Erreur de configuration: Impossible de créer le dossier de téléchargement';
+    }
+}
 
 // Processar o formulário quando enviado
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -65,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['pays'] = 'Le pays est requis';
     }
     
-    // Gerenciar upload de foto (simplificado por enquanto)
+    // Gerenciar upload de foto
     $photo_profil = $userData['photo_profil'] ?? null;
     if (isset($_FILES['photo_profil']) && $_FILES['photo_profil']['error'] === UPLOAD_ERR_OK) {
         // Validar o arquivo
@@ -75,15 +86,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (in_array($file_type, $allowed_types)) {
             // Verificar tamanho (max 5MB)
             if ($_FILES['photo_profil']['size'] <= 5 * 1024 * 1024) {
-                // Aqui você salvaria o arquivo em um diretório
-                // Por enquanto, apenas armazenamos o nome
-                $photo_profil = $_FILES['photo_profil']['name'];
+                // Gerar nome único para o arquivo
+                $file_extension = strtolower(pathinfo($_FILES['photo_profil']['name'], PATHINFO_EXTENSION));
+                $new_filename = 'profile_' . $userId . '_' . time() . '.' . $file_extension;
+                $upload_path = $upload_dir . $new_filename;
+                
+                // Validar extensão real do arquivo
+                $valid_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+                if (!in_array($file_extension, $valid_extensions)) {
+                    $errors['photo_profil'] = 'Extension de fichier non autorisée (JPG, PNG, GIF seulement)';
+                } else {
+                    // Mover o arquivo para o diretório
+                    if (move_uploaded_file($_FILES['photo_profil']['tmp_name'], $upload_path)) {
+                        // Se já existia uma foto antiga, remover
+                        if ($userData['photo_profil'] && file_exists($upload_dir . $userData['photo_profil'])) {
+                            unlink($upload_dir . $userData['photo_profil']);
+                        }
+                        
+                        $photo_profil = $new_filename; // Salvar apenas o nome do arquivo
+                    } else {
+                        $errors['photo_profil'] = 'Erreur lors du téléchargement de l\'image';
+                    }
+                }
             } else {
                 $errors['photo_profil'] = 'L\'image est trop volumineuse (max 5MB)';
             }
         } else {
             $errors['photo_profil'] = 'Type de fichier non autorisé (JPEG, PNG, GIF seulement)';
         }
+    } elseif ($_FILES['photo_profil']['error'] !== UPLOAD_ERR_NO_FILE) {
+        // Se houve erro no upload (exceto "nenhum arquivo")
+        $upload_errors = [
+            UPLOAD_ERR_INI_SIZE => 'Le fichier dépasse la taille maximale autorisée par le serveur',
+            UPLOAD_ERR_FORM_SIZE => 'Le fichier dépasse la taille maximale autorisée par le formulaire',
+            UPLOAD_ERR_PARTIAL => 'Le téléchargement a été interrompu',
+            UPLOAD_ERR_NO_TMP_DIR => 'Dossier temporaire manquant',
+            UPLOAD_ERR_CANT_WRITE => 'Erreur d\'écriture sur le disque',
+            UPLOAD_ERR_EXTENSION => 'Une extension PHP a arrêté le téléchargement'
+        ];
+        
+        $error_code = $_FILES['photo_profil']['error'];
+        $errors['photo_profil'] = $upload_errors[$error_code] ?? 'Erreur inconnue lors du téléchargement';
     }
     
     // Se não há erros, atualizar os dados
@@ -135,6 +178,88 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
     <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/edit-profile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .avatar-large.has-photo {
+            background: none !important;
+            border: none;
+            position: relative;
+        }
+        
+        .avatar-large.has-photo .avatar-initials {
+            display: none;
+        }
+        
+        .avatar-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--principal);
+            display: block;
+        }
+        
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--principal);
+        }
+        
+        .file-upload {
+            position: relative;
+            border: 2px dashed var(--gray-light);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--light);
+        }
+        
+        .file-upload:hover {
+            border-color: var(--principal);
+            background: rgba(79, 189, 171, 0.05);
+        }
+        
+        .file-upload input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .current-photo {
+            margin-top: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+        
+        .current-photo img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--principal);
+        }
+        
+        .remove-photo {
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: var(--space-sm);
+        }
+        
+        .remove-photo:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <!-- Header personnalisé -->
@@ -147,7 +272,18 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
             
             <nav class="user-nav">
                 <div class="user-info-nav">
-                    <div class="avatar-nav"><?php echo $initials; ?></div>
+                    <div class="avatar-nav">
+                        <?php 
+                        $currentPhoto = $userData['photo_profil'] ?? null;
+                        if ($currentPhoto && file_exists($upload_dir . $currentPhoto)): 
+                        ?>
+                            <img src="<?php echo $web_path . htmlspecialchars($currentPhoto); ?>" 
+                                 alt="<?php echo htmlspecialchars($userData['pseudonyme']); ?>" 
+                                 style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        <?php else: ?>
+                            <?php echo $initials; ?>
+                        <?php endif; ?>
+                    </div>
                     <div class="user-details-nav">
                         <span class="user-name-nav"><?php echo htmlspecialchars($userData['pseudonyme']); ?></span>
                         <span class="user-role-nav">Électeur</span>
@@ -179,8 +315,19 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
                 <aside class="profile-sidebar">
                     <div class="sidebar-card">
                         <div class="sidebar-avatar">
-                            <div class="avatar-large" id="avatarContainer">
-                                <?php echo $initials; ?>
+                            <div class="avatar-large <?php echo ($userData['photo_profil'] ?? null) ? 'has-photo' : ''; ?>" id="avatarContainer">
+                                <?php if ($userData['photo_profil'] ?? null): 
+                                    $photoPath = $upload_dir . $userData['photo_profil'];
+                                    if (file_exists($photoPath)): ?>
+                                        <img src="<?php echo $web_path . htmlspecialchars($userData['photo_profil']); ?>" 
+                                             alt="<?php echo htmlspecialchars($userData['pseudonyme']); ?>" 
+                                             class="avatar-img">
+                                    <?php else: ?>
+                                        <div class="avatar-initials"><?php echo $initials; ?></div>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <div class="avatar-initials"><?php echo $initials; ?></div>
+                                <?php endif; ?>
                                 <div class="avatar-edit">
                                     <i class="fas fa-camera"></i>
                                 </div>
@@ -197,14 +344,6 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
                             <a href="#securite" class="menu-item">
                                 <i class="fas fa-shield-alt"></i>
                                 Sécurité du compte
-                            </a>
-                            <a href="#preferences" class="menu-item">
-                                <i class="fas fa-cog"></i>
-                                Préférences
-                            </a>
-                            <a href="#notifications" class="menu-item">
-                                <i class="fas fa-bell"></i>
-                                Notifications
                             </a>
                         </nav>
                     </div>
@@ -326,7 +465,7 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
                                 </label>
                                 <select id="pays" 
                                         name="pays" 
-                                        class="form-control <?php echo isset($errors['pays']) ? 'error' : ''; ?>"
+                                        class="form-control <?php echo isset($errors['pays']) ? 'error' : ''; ?>" 
                                         required>
                                     <option value="">Sélectionnez votre pays</option>
                                     <option value="France" <?php echo ($userData['pays'] ?? '') == 'France' ? 'selected' : ''; ?>>France</option>
@@ -379,8 +518,9 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
                                         <?php echo htmlspecialchars($errors['photo_profil']); ?>
                                     </div>
                                 <?php endif; ?>
+                                
                                 <div class="file-upload">
-                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--principal); margin-bottom: var(--space-sm);"></i>
                                     <h4 style="color: var(--dark); margin-bottom: var(--space-xs);">Changer de photo</h4>
                                     <p style="color: var(--gray); margin-bottom: var(--space-md);">
                                         Cliquez pour télécharger ou glissez-déposez une image
@@ -390,12 +530,28 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
                                     </small>
                                     <input type="file" id="photo_profil" name="photo_profil" accept="image/*">
                                 </div>
-                                <?php if ($userData['photo_profil']): ?>
-                                    <small class="form-text" style="margin-top: var(--space-sm);">
-                                        <i class="fas fa-image"></i>
-                                        Photo actuelle: <?php echo htmlspecialchars($userData['photo_profil']); ?>
-                                    </small>
+                                
+                                <?php if ($userData['photo_profil'] && file_exists($upload_dir . $userData['photo_profil'])): ?>
+                                    <div class="current-photo">
+                                        <img src="<?php echo $web_path . htmlspecialchars($userData['photo_profil']); ?>" 
+                                             alt="Photo actuelle">
+                                        <div>
+                                            <strong>Photo actuelle:</strong> <?php echo htmlspecialchars($userData['photo_profil']); ?>
+                                            <br>
+                                            <span class="remove-photo" onclick="removePhoto()">
+                                                <i class="fas fa-trash"></i> Supprimer cette photo
+                                            </span>
+                                        </div>
+                                    </div>
                                 <?php endif; ?>
+                                
+                                <div id="photoPreview" style="margin-top: var(--space-md); display: none;">
+                                    <strong>Nouvelle photo sélectionnée:</strong>
+                                    <div style="margin-top: var(--space-sm);">
+                                        <img id="previewImage" src="" alt="Preview" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid var(--principal);">
+                                        <div style="margin-top: var(--space-xs); font-size: 0.9rem; color: var(--gray);" id="fileInfo"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -436,10 +592,6 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
                                 <a href="change-password.php" class="btn btn-outline">
                                     <i class="fas fa-key"></i>
                                     Changer le mot de passe
-                                </a>
-                                <a href="security-logs.php" class="btn btn-outline">
-                                    <i class="fas fa-history"></i>
-                                    Voir l'activité
                                 </a>
                             </div>
                         </div>
@@ -487,8 +639,8 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
         </div>
     </footer>
 
-    <!-- Modal pour changer la photo de profil -->
-    <div class="avatar-modal" id="avatarModal">
+    <!-- Modal pour changer la photo de profil (opcional) -->
+    <div class="avatar-modal" id="avatarModal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fas fa-camera"></i> Changer la photo de profil</h3>
@@ -548,6 +700,8 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
         
         const randomColor = colors[Math.floor(Math.random() * colors.length)];
         document.querySelector('.avatar-large').style.background = randomColor;
+        document.querySelector('.avatar-large').classList.remove('has-photo');
+        document.querySelector('.avatar-large').innerHTML = '<div class="avatar-initials"><?php echo $initials; ?></div><div class="avatar-edit"><i class="fas fa-camera"></i></div>';
         
         // Afficher un message
         alert('Avatar généré avec succès! Cliquez sur "Enregistrer" pour confirmer.');
@@ -562,6 +716,11 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
     // Gestion du téléchargement de fichier
     document.getElementById('photo_profil').addEventListener('change', function(e) {
         const file = e.target.files[0];
+        const photoPreview = document.getElementById('photoPreview');
+        const previewImage = document.getElementById('previewImage');
+        const fileInfo = document.getElementById('fileInfo');
+        const avatarContainer = document.getElementById('avatarContainer');
+        
         if (file) {
             // Valider tamanho (5MB max)
             if (file.size > 5 * 1024 * 1024) {
@@ -578,18 +737,41 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
                 return;
             }
             
-            // Prévisualização (opcional)
+            // Prévisualização
             const reader = new FileReader();
             reader.onload = function(event) {
-                // Aqui você poderia mostrar uma pré-visualização
-                // Por enquanto, apenas um alerta
-                alert('Image sélectionnée: ' + file.name + '\nTaille: ' + Math.round(file.size / 1024) + 'KB');
+                // Mostrar preview
+                previewImage.src = event.target.result;
+                fileInfo.textContent = file.name + ' (' + Math.round(file.size / 1024) + 'KB)';
+                photoPreview.style.display = 'block';
+                
+                // Atualizar avatar na sidebar
+                avatarContainer.innerHTML = '<img src="' + event.target.result + '" class="avatar-preview"><div class="avatar-edit"><i class="fas fa-camera"></i></div>';
+                avatarContainer.classList.add('has-photo');
             };
             reader.readAsDataURL(file);
+        } else {
+            photoPreview.style.display = 'none';
         }
     });
     
-    // Confirmação de exclusão de conta
+    // Function para remover foto
+    function removePhoto() {
+        if (confirm('Êtes-vous sûr de vouloir supprimer votre photo de profil?')) {
+            // Adicionar campo hidden para indicar remoção da foto
+            const form = document.getElementById('editProfileForm');
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'remove_photo';
+            input.value = '1';
+            form.appendChild(input);
+            
+            // Submeter formulário
+            form.submit();
+        }
+    }
+    
+    // Confirmação de exclusão de compte
     function confirmDelete() {
         if (confirm('Êtes-vous sûr de vouloir supprimer votre compte?\n\nCette action est irréversible et supprimera toutes vos données.')) {
             window.location.href = 'delete-account.php';
@@ -682,6 +864,47 @@ $initials = strtoupper(substr($userData['pseudonyme'], 0, 2));
     document.getElementById('avatarModal').addEventListener('click', function(e) {
         if (e.target === this) {
             closeAvatarModal();
+        }
+    });
+    
+    // Drag and drop para upload de arquivo
+    const fileUpload = document.querySelector('.file-upload');
+    const fileInput = document.getElementById('photo_profil');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        fileUpload.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        fileUpload.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        fileUpload.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight(e) {
+        fileUpload.style.borderColor = 'var(--principal)';
+        fileUpload.style.backgroundColor = 'rgba(79, 189, 171, 0.1)';
+    }
+    
+    function unhighlight(e) {
+        fileUpload.style.borderColor = 'var(--gray-light)';
+        fileUpload.style.backgroundColor = 'var(--light)';
+    }
+    
+    fileUpload.addEventListener('drop', function(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            fileInput.files = files;
+            fileInput.dispatchEvent(new Event('change'));
         }
     });
     </script>

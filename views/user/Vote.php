@@ -316,10 +316,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                                     <div class="number"><?php echo $status && $status['has_voted'] ? '1' : '0'; ?></div>
                                                     <div class="label">Votes</div>
                                                 </div>
-                                                <div class="stat">
-                                                    <div class="number"><?php echo $canVote ? '✓' : '✗'; ?></div>
-                                                    <div class="label"><?php echo $canVote ? 'Oui' : 'Non'; ?></div>
-                                                </div>
+                                               
                                             </div>
 
                                             <div class="category-actions">

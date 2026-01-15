@@ -403,7 +403,7 @@ class ResultsService
         return $emojis[$position] ?? '🏅';
     }
     
-    /**
+     /**
      * Calcule les statistiques globales pour une édition
      * @param int $editionId ID de l'édition
      * @return array Tableau de statistiques
@@ -421,8 +421,11 @@ class ResultsService
                                 (COUNT(DISTINCT cp.id_compte) * 100.0) / 
                                 NULLIF(
                                     (SELECT COUNT(DISTINCT id_compte) 
-                                     FROM inscription_election 
-                                     WHERE id_edition = :edition_id AND statut = 'validé'), 
+                                     FROM controle_presence 
+                                     WHERE statut_a_vote = 1 
+                                       AND id_categorie IN (
+                                         SELECT id_categorie FROM categorie WHERE id_edition = :edition_id
+                                       )), 
                                     0
                                 ), 
                                 1
@@ -439,6 +442,38 @@ class ResultsService
             $stmt->execute([':edition_id' => $editionId]);
             
             $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // DEBUG: Log dos dados para verificar
+            error_log("DEBUG - Estatísticas para edição $editionId: " . print_r($stats, true));
+            
+            // Se ainda for 0, tentar cálculo alternativo
+            if (($stats['participation_rate'] ?? 0) == 0 && ($stats['total_voters'] ?? 0) > 0) {
+                // Cálculo alternativo: (total de votantes / total de contas registadas) * 100
+                $sqlAlternative = "SELECT 
+                                    COUNT(DISTINCT cp.id_compte) as total_voters,
+                                    (SELECT COUNT(DISTINCT id_compte) 
+                                     FROM controle_presence 
+                                     WHERE id_categorie IN (
+                                       SELECT id_categorie FROM categorie WHERE id_edition = :edition_id
+                                     )) as total_accounts
+                                   FROM controle_presence cp
+                                   WHERE cp.statut_a_vote = 1 
+                                     AND cp.id_categorie IN (
+                                       SELECT id_categorie FROM categorie WHERE id_edition = :edition_id2
+                                     )";
+                
+                $stmt2 = $this->pdo->prepare($sqlAlternative);
+                $stmt2->execute([
+                    ':edition_id' => $editionId,
+                    ':edition_id2' => $editionId
+                ]);
+                $altStats = $stmt2->fetch(PDO::FETCH_ASSOC);
+                
+                if (($altStats['total_accounts'] ?? 0) > 0) {
+                    $participationRate = round(($altStats['total_voters'] / $altStats['total_accounts']) * 100, 1);
+                    $stats['participation_rate'] = $participationRate;
+                }
+            }
             
             // Valeurs par défaut si nulles
             return [
@@ -587,4 +622,109 @@ class ResultsService
             return [];
         }
     }
+    // Adicione estes métodos ao seu ResultsService.php existente
+
+/**
+ * Vérifie si l'édition est active (votes en cours)
+ * @param int $editionId ID de l'édition
+ * @return array Informations sur le statut de l'édition
+ */
+public function getEditionStatus(int $editionId): array
+{
+    try {
+        $sql = "SELECT 
+                    e.id_edition,
+                    e.annee,
+                    e.nom,
+                    e.est_active,
+                    e.date_debut,
+                    e.date_fin,
+                    e.date_debut_candidatures,
+                    e.date_fin_candidatures,
+                    NOW() as now_date
+                FROM edition e
+                WHERE e.id_edition = :edition_id";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':edition_id' => $editionId]);
+        $edition = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$edition) {
+            return [
+                'active' => false,
+                'message' => 'Édition non trouvée',
+                'dates' => null
+            ];
+        }
+
+        // Usar strtotime em vez de DateTime para evitar problemas de namespace
+        $now = strtotime($edition['now_date']);
+        $dateDebut = strtotime($edition['date_debut']);
+        $dateFin = strtotime($edition['date_fin']);
+
+        // Édition active si: est_active = 1 ET maintenant entre date_debut et date_fin
+        $isActive = ($edition['est_active'] == 1 && 
+                    $now >= $dateDebut && 
+                    $now <= $dateFin);
+
+        // Vérifier si les votes sont terminés
+        $votesFinished = ($now > $dateFin);
+        
+        // Vérifier si c'est avant le début des votes
+        $votesNotStarted = ($now < $dateDebut);
+
+        return [
+            'active' => $isActive,
+            'votes_finished' => $votesFinished,
+            'votes_not_started' => $votesNotStarted,
+            'status' => $edition['est_active'] ? 'active' : 'inactive',
+            'date_debut' => $edition['date_debut'],
+            'date_fin' => $edition['date_fin'],
+            'date_debut_candidatures' => $edition['date_debut_candidatures'],
+            'date_fin_candidatures' => $edition['date_fin_candidatures'],
+            'nom' => $edition['nom'],
+            'annee' => $edition['annee'],
+            'message' => $isActive ? 'Votes en cours' : ($votesFinished ? 'Votes terminés' : ($votesNotStarted ? 'Votes pas encore commencés' : 'Édition inactive'))
+        ];
+        
+    } catch (PDOException $e) {
+        error_log("Erreur récupération statut édition: " . $e->getMessage());
+        return [
+            'active' => false,
+            'votes_finished' => false,
+            'votes_not_started' => false,
+            'message' => 'Erreur système'
+        ];
+    }
+}
+
+/**
+ * Récupère uniquement les éditions terminées (pour les résultats)
+ * @return array Liste des éditions terminées
+ */
+public function getFinishedEditions(): array
+{
+    try {
+        $sql = "SELECT id_edition, annee, nom 
+                FROM edition 
+                WHERE (date_fin < NOW() OR est_active = 0)
+                ORDER BY annee DESC";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        
+        $editions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Si aucune édition terminée, retourner toutes les éditions
+        if (empty($editions)) {
+            return $this->getAvailableEditions();
+        }
+        
+        return $editions;
+        
+    } catch (PDOException $e) {
+        error_log("Erreur récupération éditions terminées: " . $e->getMessage());
+        return $this->getAvailableEditions();
+    }
+}
 }

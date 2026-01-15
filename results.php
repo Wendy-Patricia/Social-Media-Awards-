@@ -1,3 +1,4 @@
+
 <?php
 // FICHIER : results.php  
 // DESCRIPTION : Page affichant les résultats dynamiques des Social Media Awards
@@ -26,26 +27,78 @@ try {
 
 // RÉCUPÉRATION DES DONNÉES DYNAMIQUES
 try {
-    // Récupérer l'édition la plus récente
+    // Récupérer la dernière édition terminée par défaut
     $latestEdition = $resultsService->getLatestEdition();
     $editionId = $latestEdition['id_edition'] ?? 1;
     $editionYear = $latestEdition['annee'] ?? date('Y');
     
-    // Récupérer les grands gagnants
-    $grandWinners = $resultsService->getGrandWinners($editionId);
+    // Vérifier le paramètre GET pour l'édition
+    if (isset($_GET['edition']) && is_numeric($_GET['edition'])) {
+        $requestedEditionId = (int)$_GET['edition'];
+        $availableEditions = $resultsService->getFinishedEditions();
+        
+        // Vérifier si l'édition demandée est valide et terminée
+        $isValid = false;
+        foreach ($availableEditions as $edition) {
+            if ($edition['id_edition'] == $requestedEditionId) {
+                $isValid = true;
+                $editionId = $requestedEditionId;
+                // Récupérer les infos complètes de cette édition
+                $sql = "SELECT * FROM edition WHERE id_edition = :editionId";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([':editionId' => $editionId]);
+                $latestEdition = $stmt->fetch(PDO::FETCH_ASSOC);
+                $editionYear = $latestEdition['annee'];
+                break;
+            }
+        }
+        
+        if (!$isValid) {
+            // Si l'édition demandée n'est pas valide, utiliser la dernière terminée
+            $latestEdition = $resultsService->getLatestEdition();
+            $editionId = $latestEdition['id_edition'];
+            $editionYear = $latestEdition['annee'];
+        }
+    }
     
-    // Récupérer les résultats par catégorie
-    $categoryResults = $resultsService->getResultsByCategory($editionId);
+    // Vérifier si l'édition est active (votes en cours)
+    $editionStatus = $resultsService->getEditionStatus($editionId);
+    $isEditionActive = $editionStatus['active'];
+    $votesFinished = $editionStatus['votes_finished'];
     
-    // Récupérer les statistiques globales
-    $globalStats = $resultsService->getGlobalStatistics($editionId);
+    // Si l'édition est active ou si les votes ne sont pas encore commencés, 
+    // on ne montre PAS les résultats
+    if ($isEditionActive || !$votesFinished) {
+        $grandWinners = [];
+        $categoryResults = [];
+        $globalStats = [
+            'total_votes' => 0,
+            'total_categories' => 0,
+            'total_nominations' => 0,
+            'participation_rate' => 0,
+            'total_voters' => 0
+        ];
+        
+        $votePeriodMessage = $isEditionActive 
+            ? "Les votes sont en cours jusqu'au " . date('d/m/Y à H:i', strtotime($editionStatus['date_fin']))
+            : "Les votes ne sont pas encore commencés";
+        
+    } else {
+        // Édition terminée, on récupère tous les résultats
+        $grandWinners = $resultsService->getGrandWinners($editionId);
+        $categoryResults = $resultsService->getResultsByCategory($editionId);
+        $globalStats = $resultsService->getGlobalStatistics($editionId);
+        $votePeriodMessage = "Période de vote terminée";
+    }
     
-    // Récupérer la liste des éditions disponibles
-    $availableEditions = $resultsService->getAvailableEditions();
+    // Récupérer uniquement les éditions terminées (pour les résultats)
+    $availableEditions = $resultsService->getFinishedEditions();
     
 } catch (Exception $e) {
     error_log("Erreur lors de la récupération des résultats : " . $e->getMessage());
     // Valeurs par défaut en cas d'erreur
+    $isEditionActive = false;
+    $votesFinished = true;
     $latestEdition = ['annee' => date('Y'), 'nom' => 'Social Media Awards'];
     $grandWinners = [];
     $categoryResults = [];
@@ -53,9 +106,11 @@ try {
         'total_votes' => 0,
         'total_categories' => 0,
         'total_nominations' => 0,
-        'participation_rate' => 0
+        'participation_rate' => 0,
+        'total_voters' => 0
     ];
     $availableEditions = [];
+    $votePeriodMessage = "Statut indéterminé";
 }
 ?>
 
@@ -68,84 +123,72 @@ try {
     <link rel="stylesheet" href="assets/css/footer.css">
     <link rel="stylesheet" href="assets/css/results.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>Résultats - Social Media Awards <?php echo htmlspecialchars($editionYear); ?></title>
+    <title>
+        <?php if ($isEditionActive): ?>Votes en cours
+        <?php elseif (!$votesFinished): ?>Votes à venir
+        <?php else: ?>Résultats <?php echo htmlspecialchars($editionYear); ?>
+        <?php endif; ?> - Social Media Awards
+    </title>
     
-    <!-- Styles additionnels pour améliorations visuelles -->
-    <style>
-        /* Animation pour les cartes de résultats */
-        .result-card {
-            animation: fadeInUp 0.6s ease-out;
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Indicateur de chargement */
-        .loading-indicator {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            color: var(--principal);
-        }
-        
-        .loading-indicator.active {
-            display: block;
-        }
-        
-        /* Amélioration de la hiérarchie visuelle */
-        .winner-item {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .winner-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        /* Badge pour nouvelles catégories */
-        .new-badge {
-            background: var(--secondary-pink);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-    </style>
+
 </head>
-<body>
+<body class="<?php 
+    echo $isEditionActive ? 'vote-active' : '';
+    echo (!$votesFinished && !$isEditionActive) ? 'vote-not-started-page' : 'vote-ended';
+?>">
     <?php require_once 'views/partials/header.php'; ?>
 
     <div class="main-content">
         <!-- SECTION HERO DES RÉSULTATS -->
         <section class="results-hero">
-            <div class="container">
-                <h1>Résultats <?php echo htmlspecialchars($editionYear); ?></h1>
-                <p>Découvrez les gagnants de cette édition des Social Media Awards</p>
+            <div class="global-container">
+                <h1>
+                    <?php if ($isEditionActive): ?>
+                        <i class="fas fa-vote-yea"></i> Votes en cours
+                    <?php elseif (!$votesFinished && !$isEditionActive): ?>
+                        <i class="fas fa-clock"></i> Votes à venir
+                    <?php else: ?>
+                        <i class="fas fa-trophy"></i> Résultats <?php echo htmlspecialchars($editionYear); ?>
+                    <?php endif; ?>
+                </h1>
+                
+                <p>
+                    <?php if ($isEditionActive): ?>
+                        Les votes sont ouverts. Revenez après le <?php echo date('d/m/Y', strtotime($editionStatus['date_fin'])); ?> pour découvrir les résultats.
+                    <?php elseif (!$votesFinished && !$isEditionActive): ?>
+                        Les votes commenceront le <?php echo date('d/m/Y', strtotime($editionStatus['date_debut'])); ?>.
+                    <?php else: ?>
+                        Découvrez les gagnants de cette édition des Social Media Awards
+                    <?php endif; ?>
+                </p>
                 
                 <div class="edition-selector">
                     <select id="editionSelect" aria-label="Sélectionner une édition">
-                        <?php foreach ($availableEditions as $edition): ?>
-                        <option value="<?php echo htmlspecialchars($edition['id_edition']); ?>" 
-                                <?php echo ($edition['id_edition'] == $editionId) ? 'selected' : ''; ?>>
-                            Édition <?php echo htmlspecialchars($edition['annee']); ?> - <?php echo htmlspecialchars($edition['nom']); ?>
-                        </option>
-                        <?php endforeach; ?>
-                        <?php if (empty($availableEditions)): ?>
-                        <option value="1" selected>Édition <?php echo htmlspecialchars($editionYear); ?></option>
+                        <?php if (!empty($availableEditions)): ?>
+                            <?php foreach ($availableEditions as $edition): ?>
+                                <?php 
+                                $editionStat = $resultsService->getEditionStatus($edition['id_edition']);
+                                $isActiveEdition = $editionStat['active'];
+                                $isFinished = $editionStat['votes_finished'];
+                                ?>
+                            <option value="<?php echo htmlspecialchars($edition['id_edition']); ?>" 
+                                    <?php echo ($edition['id_edition'] == $editionId) ? 'selected' : ''; ?>
+                                    data-active="<?php echo $isActiveEdition ? '1' : '0'; ?>"
+                                    data-finished="<?php echo $isFinished ? '1' : '0'; ?>">
+                                Édition <?php echo htmlspecialchars($edition['annee']); ?> - 
+                                <?php echo htmlspecialchars($edition['nom']); ?>
+                                <?php if ($isActiveEdition): ?> (Votes en cours)<?php endif; ?>
+                                <?php if (!$isFinished && !$isActiveEdition): ?> (À venir)<?php endif; ?>
+                            </option>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <option value="<?php echo htmlspecialchars($editionId); ?>" selected>
+                                Édition <?php echo htmlspecialchars($editionYear); ?>
+                            </option>
                         <?php endif; ?>
                     </select>
                     
+                    <?php if (!$isEditionActive && $votesFinished): ?>
                     <div class="vote-stats">
                         <div class="stat">
                             <div class="stat-number"><?php echo number_format($globalStats['total_votes']); ?></div>
@@ -156,98 +199,36 @@ try {
                             <div class="stat-label">Participation</div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Indicateur de chargement -->
-                <div class="loading-indicator" id="loadingIndicator">
-                    <i class="fas fa-spinner fa-spin"></i> Chargement des données...
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION GRANDS GAGNANTS -->
-        <section class="winners-overview">
-            <div class="container">
-                <h2>Les Grands Gagnants</h2>
-                
-                <?php if (!empty($grandWinners)): ?>
-                <div class="winners-grid">
-                    <!-- Grand Gagnant (1er) -->
-                    <?php if (isset($grandWinners[0])): ?>
-                    <div class="grand-winner">
-                        <div class="winner-crown">
-                            <i class="fas fa-crown"></i>
-                        </div>
-                        <div class="winner-image">
-                            <img src="<?php echo htmlspecialchars($grandWinners[0]['image']); ?>" 
-                                 alt="<?php echo htmlspecialchars($grandWinners[0]['nom_nomination']); ?>"
-                                 onerror="this.src='assets/images/default-winner.jpg'">
-                        </div>
-                        <div class="winner-info">
-                            <h3><?php echo htmlspecialchars($grandWinners[0]['nom_nomination']); ?></h3>
-                            <p class="winner-category"><?php echo htmlspecialchars($grandWinners[0]['categorie']); ?></p>
-                            <div class="winner-stats">
-                                <div class="stat">
-                                    <div class="stat-number"><?php echo number_format($grandWinners[0]['total_votes']); ?></div>
-                                    <div class="stat-label">Votes</div>
-                                </div>
-                                <div class="stat">
-                                    <div class="stat-number">
-                                        <?php 
-                                        // Calculer le pourcentage si nous avons le total des votes
-                                        $percentage = $globalStats['total_votes'] > 0 
-                                            ? round(($grandWinners[0]['total_votes'] / $globalStats['total_votes']) * 100, 1)
-                                            : 0;
-                                        echo $percentage;
-                                        ?>%
-                                    </div>
-                                    <div class="stat-label">Part des votes</div>
-                                </div>
-                            </div>
-                            <?php if (!empty($grandWinners[0]['plateforme'])): ?>
-                            <div class="platform-badge <?php echo htmlspecialchars($grandWinners[0]['plateforme']); ?>">
-                                <i class="fab fa-<?php echo htmlspecialchars($grandWinners[0]['plateforme']); ?>"></i>
-                                <?php echo ucfirst(htmlspecialchars($grandWinners[0]['plateforme'])); ?>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
                     <?php endif; ?>
-
-                    <!-- Top des gagnants (2ème et 3ème) -->
-                    <div class="top-winners">
-                        <?php for ($i = 1; $i <= 2; $i++): ?>
-                            <?php if (isset($grandWinners[$i])): ?>
-                            <div class="top-winner">
-                                <div class="winner-rank"><?php echo $i + 1; ?></div>
-                                <div class="winner-image">
-                                    <img src="<?php echo htmlspecialchars($grandWinners[$i]['image']); ?>" 
-                                         alt="<?php echo htmlspecialchars($grandWinners[$i]['nom_nomination']); ?>"
-                                         onerror="this.src='assets/images/default-winner.jpg'">
-                                </div>
-                                <div class="winner-info">
-                                    <h4><?php echo htmlspecialchars($grandWinners[$i]['nom_nomination']); ?></h4>
-                                    <p><?php echo htmlspecialchars($grandWinners[$i]['categorie']); ?></p>
-                                    <div class="votes"><?php echo number_format($grandWinners[$i]['total_votes']); ?> votes</div>
-                                </div>
-                            </div>
-                            <?php endif; ?>
-                        <?php endfor; ?>
+                </div>
+                
+                <!-- Message si vote en cours -->
+                <?php if ($isEditionActive): ?>
+                <div class="vote-in-progress" id="voteInProgress">
+                    <i class="fas fa-hourglass-half"></i>
+                    <h2>Les votes sont en cours !</h2>
+                    <p>Les résultats seront disponibles après la période de vote.</p>
+                    <div class="countdown" id="countdownTimer">
+                        Fin des votes le <?php echo date('d/m/Y à H:i', strtotime($editionStatus['date_fin'])); ?>
                     </div>
                 </div>
-                <?php else: ?>
-                <div class="no-results">
-                    <i class="fas fa-trophy" style="font-size: 4rem; color: #ddd; margin-bottom: 20px;"></i>
-                    <h3 style="color: var(--gray);">En attente des premiers votes</h3>
-                    <p>Les résultats seront disponibles après la période de vote.</p>
+                <?php elseif (!$votesFinished && !$isEditionActive): ?>
+                <div class="vote-not-started" id="voteNotStarted">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h2>Les votes n'ont pas encore commencé</h2>
+                    <p>Les votes débuteront le <?php echo date('d/m/Y à H:i', strtotime($editionStatus['date_debut'])); ?></p>
+                    <p>Revenez à cette date pour participer !</p>
                 </div>
                 <?php endif; ?>
+                
+                
             </div>
         </section>
 
-        <!-- SECTION RÉSULTATS PAR CATÉGORIE -->
+        <!-- SECTION RÉSULTATS PAR CATÉGORIE (seulement si vote terminé) -->
+        <?php if (!$isEditionActive && $votesFinished): ?>
         <section class="category-results">
-            <div class="container">
+            <div class="global-container">
                 <h2>Résultats par Catégorie</h2>
                 
                 <!-- Filtres par plateforme -->
@@ -308,18 +289,103 @@ try {
                 <?php else: ?>
                 <div class="no-categories">
                     <i class="fas fa-folder-open" style="font-size: 3rem; color: #ddd; margin-bottom: 15px;"></i>
-                    <h3 style="color: var(--gray);">Catégories en préparation</h3>
-                    <p>Les catégories de cette édition seront bientôt disponibles.</p>
+                    <h3 style="color: var(--gray);">Aucune catégorie avec résultats</h3>
+                    <p>Aucun vote n'a été enregistré pour les catégories de cette édition.</p>
                 </div>
                 <?php endif; ?>
             </div>
         </section>
+        <?php endif; ?>
 
-        <!-- SECTION STATISTIQUES GLOBALES -->
+        <!-- SECTION STATISTIQUES GLOBALES (toujours visible, mais avec données différentes) -->
         <section class="statistics-section">
-            <div class="container">
-                <h2>Statistiques Globales</h2>
+            <div class="global-container">
+                <h2>Statistiques</h2>
                 <div class="stats-grid">
+                    <?php if ($isEditionActive): ?>
+                    <!-- Statistiques pendant le vote -->
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-vote-yea"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Votes ouverts</div>
+                            <div class="stat-label">Jusqu'au <?php echo date('d/m/Y', strtotime($editionStatus['date_fin'])); ?></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">En cours</div>
+                            <div class="stat-label">Période de vote active</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Participez !</div>
+                            <div class="stat-label">Votez pour vos favoris</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Édition <?php echo htmlspecialchars($editionYear); ?></div>
+                            <div class="stat-label">Social Media Awards</div>
+                        </div>
+                    </div>
+                    <?php elseif (!$votesFinished && !$isEditionActive): ?>
+                    <!-- Statistiques avant le vote -->
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">À venir</div>
+                            <div class="stat-label">Début le <?php echo date('d/m/Y', strtotime($editionStatus['date_debut'])); ?></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-hourglass-start"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Préparez-vous</div>
+                            <div class="stat-label">Votes bientôt ouverts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Édition <?php echo htmlspecialchars($editionYear); ?></div>
+                            <div class="stat-label">Social Media Awards</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">Informations</div>
+                            <div class="stat-label">Consultez les catégories</div>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <!-- Statistiques après le vote -->
                     <div class="stat-card">
                         <div class="stat-icon">
                             <i class="fas fa-users"></i>
@@ -359,6 +425,7 @@ try {
                             <div class="stat-label">Taux de Participation</div>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </section>
@@ -366,50 +433,89 @@ try {
 
     <?php include 'views/partials/footer.php'; ?>
     
-    <!-- JavaScript amélioré -->
+    <!-- JavaScript -->
     <script src="assets/js/results.js"></script>
     
-    <!-- Script pour le changement d'édition -->
+    <!-- Script pour gérer l'affichage selon le statut -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const editionSelect = document.getElementById('editionSelect');
-        const loadingIndicator = document.getElementById('loadingIndicator');
         
+        // Adapter le JavaScript pour gérer les différentes éditions
         if (editionSelect) {
             editionSelect.addEventListener('change', function() {
-                const editionId = this.value;
+                const selectedOption = this.options[this.selectedIndex];
+                const isActive = selectedOption.getAttribute('data-active') === '1';
+                const isFinished = selectedOption.getAttribute('data-finished') === '1';
                 
-                // Afficher l'indicateur de chargement
-                loadingIndicator.classList.add('active');
-                
-                // Rediriger vers la même page avec le paramètre d'édition
-                // (Dans une version future, cela pourrait être une requête AJAX)
-                window.location.href = `results.php?edition=${editionId}`;
+                // Afficher un message selon le statut
+                if (isActive) {
+                    if (confirm("Cette édition est encore en cours de vote. Voulez-vous quand même voir la page?")) {
+                        window.location.href = `results.php?edition=${this.value}`;
+                    } else {
+                        // Revenir à l'option précédente
+                        this.value = '<?php echo $editionId; ?>';
+                    }
+                } else if (!isFinished && !isActive) {
+                    if (confirm("Les votes de cette édition n'ont pas encore commencé. Voulez-vous quand même voir la page?")) {
+                        window.location.href = `results.php?edition=${this.value}`;
+                    } else {
+                        this.value = '<?php echo $editionId; ?>';
+                    }
+                } else {
+                    window.location.href = `results.php?edition=${this.value}`;
+                }
             });
         }
         
-        // Animation pour les cartes au défilement
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver(function(entries) {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
+        // Compteur à rebours si vote en cours
+        <?php if ($isEditionActive && isset($editionStatus['date_fin'])): ?>
+        function updateCountdown() {
+            const endDate = new Date("<?php echo $editionStatus['date_fin']; ?>".replace(' ', 'T'));
+            const now = new Date();
+            const distance = endDate - now;
+            
+            if (distance < 0) {
+                // Le vote est terminé, recharger la page
+                window.location.reload();
+                return;
+            }
+            
+            // Calculer jours, heures, minutes, secondes
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // Mettre à jour l'affichage
+            const countdownElement = document.getElementById('countdownTimer');
+            if (countdownElement) {
+                if (days > 0) {
+                    countdownElement.innerHTML = 
+                        `Fin dans : ${days}j ${hours}h ${minutes}m ${seconds}s`;
+                } else {
+                    countdownElement.innerHTML = 
+                        `Fin dans : ${hours}h ${minutes}m ${seconds}s`;
                 }
+            }
+        }
+        
+        // Mettre à jour toutes les secondes
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+        <?php endif; ?>
+        
+        // Désactiver les filtres si vote en cours
+        const isVoteActive = document.body.classList.contains('vote-active');
+        const isVoteNotStarted = document.body.classList.contains('vote-not-started-page');
+        
+        if (isVoteActive || isVoteNotStarted) {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(button => {
+                button.style.pointerEvents = 'none';
+                button.style.opacity = '0.5';
             });
-        }, observerOptions);
-
-        // Observer les cartes de résultats
-        document.querySelectorAll('.result-card, .stat-card, .top-winner').forEach(card => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(30px)';
-            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(card);
-        });
+        }
     });
     </script>
 </body>
