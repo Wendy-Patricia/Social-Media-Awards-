@@ -14,7 +14,7 @@ if (isAuthenticated()) {
     $redirect = match(getUserType()) {
         'admin' => '../views/admin/dashboard.php',
         'candidate' => '../views/candidate/candidate-dashboard.php',
-        'voter' => '../views/user/user-dashboard.php', // CORRIGIDO AQUI
+        'voter' => '../views/user/user-dashboard.php',
         default => '../index.php'
     };
     
