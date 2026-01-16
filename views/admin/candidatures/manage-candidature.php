@@ -5,10 +5,9 @@ require_once __DIR__ . '/../../../config/permissions.php';
 requireAdmin();
 require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 
-require_once __DIR__ . '/../../../app/Controllers/AdminController.php';
 
-$controller = new App\Controllers\AdminController();
-$candidatures = $controller->getAllCandidatures();
+
+$candidatures = $candidatureController->getAllCandidatures();
 
 $stats = [
     'total' => count($candidatures),
@@ -28,7 +27,7 @@ foreach ($candidatures as $c) {
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     if ($id > 0) {
-        $controller->deleteCandidature($id);
+        $candidatureController->deleteCandidature($id);
         header("Location: manage-candidatures.php?success=1");
         exit;
     }
@@ -126,7 +125,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                 <select id="categoryFilter">
                     <option value="">Toutes catégories</option>
                     <?php
-                    $categories = $controller->getAllCategories();
+                    $categories = $categoryController->getAllCategories();
                     foreach ($categories as $cat): ?>
                     <option value="<?= htmlspecialchars($cat['nom']) ?>"><?= htmlspecialchars($cat['nom']) ?></option>
                     <?php endforeach; ?>

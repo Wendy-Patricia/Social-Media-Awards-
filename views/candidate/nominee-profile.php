@@ -4,7 +4,7 @@ session_start();
 
 // Verificar se o usuário está logado como candidato
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'candidate') {
-    header('Location: /Social-Media-Awards/views/login.php');
+    header('Location: /Social-Media-Awards-/views/login.php');
     exit;
 }
 
@@ -60,8 +60,19 @@ if (!$nomination) {
     exit;
 }
 
+// CORREÇÃO: Verificar se as chaves existem antes de usar
+$nomination['url_instagram'] = $nomination['url_instagram'] ?? null;
+$nomination['url_tiktok'] = $nomination['url_tiktok'] ?? null;
+$nomination['url_youtube'] = $nomination['url_youtube'] ?? null;
+$nomination['url_twitter'] = $nomination['url_twitter'] ?? null;
+$nomination['bio'] = $nomination['bio'] ?? 'Candidat aux Social Media Awards';
+$nomination['photo_profil'] = $nomination['photo_profil'] ?? null;
+$nomination['url_image'] = $nomination['url_image'] ?? null;
+
 // Gerar URL pública
-$publicProfileUrl = "https://" . $_SERVER['HTTP_HOST'] . "/Social-Media-Awards/nominee.php?id=" . $nomination['id_nomination'];
+$baseUrl = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$baseUrl .= "://" . $_SERVER['HTTP_HOST'];
+$publicProfileUrl = $baseUrl . "/Social-Media-Awards-/nominee.php?id=" . $nomination['id_nomination'];
 
 // Obter estatísticas básicas (sem detalhes)
 $votingStatus = $candidatService->getVotingStatus($nomination);
@@ -86,17 +97,134 @@ $canEditProfile = $candidatService->canEditProfile($userId);
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="/Social-Media-Awards/assets/css/candidat.css">
+    <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/candidat.css">
     
     <style>
-    .profile-header {
-        background: linear-gradient(135deg, var(--principal), var(--principal-dark));
+    /* Estilos para o perfil do nominee */
+    .navbar-dark {
+        background: linear-gradient(135deg, #4FBDAB, #45a999) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .navbar-brand {
+        font-weight: 700;
+        font-size: 1.5rem;
+    }
+    
+    .navbar-nav .nav-link {
+        color: white !important;
+        transition: all 0.3s ease;
+    }
+    
+    .navbar-nav .nav-link:hover {
+        color: #FFD700 !important;
+        transform: translateY(-2px);
+    }
+    
+    .navbar-text {
+        color: white !important;
+        font-weight: 500;
+    }
+    
+    /* Sidebar */
+    .sidebar-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-card {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .sidebar-title {
+        color: #4FBDAB;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .nav-candidat {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .nav-candidat li {
+        margin-bottom: 8px;
+    }
+    
+    .nav-candidat .nav-link {
+        color: #333;
+        padding: 10px 15px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .nav-candidat .nav-link:hover {
+        background: linear-gradient(135deg, rgba(79, 189, 171, 0.1), rgba(79, 189, 171, 0.05));
+        color: #4FBDAB;
+        transform: translateX(5px);
+    }
+    
+    .nav-candidat .nav-link.active {
+        background: linear-gradient(135deg, #4FBDAB, #45a999);
         color: white;
-        border-radius: var(--border-radius-xl);
-        padding: var(--spacing-xl);
-        margin-bottom: var(--spacing-xl);
+        font-weight: 600;
+    }
+    
+    .status-badge-card {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        padding: 20px;
+        border: 2px solid #4FBDAB;
+    }
+    
+    .nominee-badge {
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        color: #333;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 700;
+        display: inline-block;
+    }
+    
+    /* Conteúdo principal */
+    .page-header {
+        margin-bottom: 30px;
+    }
+    
+    .page-title {
+        color: #4FBDAB;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .page-subtitle {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+    
+    /* Profile header */
+    .profile-header {
+        background: linear-gradient(135deg, #4FBDAB, #45a999);
+        color: white;
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 40px;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 8px 16px rgba(79, 189, 171, 0.2);
     }
     
     .profile-header::before {
@@ -111,18 +239,21 @@ $canEditProfile = $candidatService->canEditProfile($userId);
     }
     
     .profile-avatar {
-        width: 120px;
-        height: 120px;
+        width: 140px;
+        height: 140px;
         border-radius: 50%;
-        border: 4px solid white;
-        box-shadow: var(--shadow-lg);
+        border: 5px solid white;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
         object-fit: cover;
+        background: white;
     }
     
     .social-links {
         display: flex;
-        gap: var(--spacing-sm);
-        margin-top: var(--spacing-md);
+        gap: 12px;
+        margin-top: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
     }
     
     .social-link {
@@ -135,10 +266,12 @@ $canEditProfile = $candidatService->canEditProfile($userId);
         color: white;
         text-decoration: none;
         transition: all 0.3s ease;
+        font-size: 1.2rem;
     }
     
     .social-link:hover {
-        transform: translateY(-3px);
+        transform: translateY(-5px) scale(1.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
     
     .social-instagram { background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D); }
@@ -147,34 +280,229 @@ $canEditProfile = $candidatService->canEditProfile($userId);
     .social-twitter { background: #1DA1F2; }
     .social-facebook { background: #1877F2; }
     
-    .nomination-card-public {
-        border-left: 6px solid var(--tertiary);
+    /* Cartões */
+    .main-card {
+        background: white;
+        border-radius: 15px;
         border: none;
-        box-shadow: var(--shadow-xl);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+    
+    .main-card .card-header {
+        background: linear-gradient(135deg, #4FBDAB, #45a999);
+        color: white;
+        padding: 20px;
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .main-card .card-body {
+        padding: 30px;
+    }
+    
+    .nomination-card-public {
+        border-left: 6px solid #4FBDAB;
     }
     
     .copy-link-container {
         background: linear-gradient(135deg, rgba(79, 189, 171, 0.1), rgba(79, 189, 171, 0.05));
-        border-radius: var(--border-radius-lg);
-        padding: var(--spacing-md);
-        border: 2px solid var(--principal-light);
+        border-radius: 12px;
+        padding: 20px;
+        border: 2px solid rgba(79, 189, 171, 0.3);
     }
     
     .url-display {
         background: white;
-        border-radius: var(--border-radius-md);
-        padding: var(--spacing-sm) var(--spacing-md);
-        font-family: monospace;
-        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-family: 'Courier New', monospace;
+        border: 1px solid #dee2e6;
         overflow: hidden;
         text-overflow: ellipsis;
+        font-size: 0.9rem;
     }
     
     .nominee-rules {
         background: linear-gradient(135deg, rgba(255, 213, 128, 0.1), rgba(255, 213, 128, 0.05));
-        border-left: 4px solid var(--warning);
-        border-radius: var(--border-radius-md);
-        padding: var(--spacing-lg);
+        border-left: 4px solid #FFC107;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .nominee-rules h6 {
+        color: #856404;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .nominee-rules ul {
+        padding-left: 20px;
+        margin-bottom: 0;
+    }
+    
+    .nominee-rules li {
+        margin-bottom: 8px;
+        color: #333;
+    }
+    
+    /* Botões */
+    .btn-primary {
+        background: linear-gradient(135deg, #4FBDAB, #45a999);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #45a999, #3a8f7f);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(79, 189, 171, 0.3);
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #28a745, #218838);
+        border: none;
+    }
+    
+    .btn-info {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        border: none;
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #ffc107, #e0a800);
+        border: none;
+        color: #212529;
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid #4FBDAB;
+        color: #4FBDAB;
+        background: transparent;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #4FBDAB;
+        color: white;
+    }
+    
+    /* Badges */
+    .badge-warning {
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        color: #333;
+        font-weight: 600;
+        padding: 8px 16px;
+        font-size: 1rem;
+    }
+    
+    .badge-success {
+        background: linear-gradient(135deg, #28a745, #218838);
+    }
+    
+    .badge-secondary {
+        background: linear-gradient(135deg, #6c757d, #545b62);
+    }
+    
+    /* Alerts */
+    .alert-success {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+        border: 1px solid rgba(40, 167, 69, 0.3);
+        color: #155724;
+    }
+    
+    .alert-danger {
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+        border: 1px solid rgba(220, 53, 69, 0.3);
+        color: #721c24;
+    }
+    
+    .alert-warning {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        color: #856404;
+    }
+    
+    /* Footer */
+    .footer {
+        background: linear-gradient(135deg, #343a40, #212529);
+        color: white;
+        padding: 40px 0 20px;
+        margin-top: 40px;
+    }
+    
+    .footer-content {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+    }
+    
+    .footer h5 {
+        color: #4FBDAB;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .footer-links li {
+        margin-bottom: 10px;
+    }
+    
+    .footer-links a {
+        color: #adb5bd;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .footer-links a:hover {
+        color: #4FBDAB;
+    }
+    
+    .footer-bottom {
+        text-align: center;
+        padding-top: 20px;
+        border-top: 1px solid #495057;
+        color: #adb5bd;
+    }
+    
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .profile-header {
+            padding: 20px;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+        }
+        
+        .main-card .card-body {
+            padding: 20px;
+        }
+        
+        .footer-content {
+            flex-direction: column;
+            gap: 20px;
+        }
+    }
+    
+    /* Animações */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .profile-header, .main-card {
+        animation: fadeIn 0.6s ease-out;
     }
     </style>
 </head>
@@ -182,7 +510,7 @@ $canEditProfile = $candidatService->canEditProfile($userId);
     <!-- Header -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="/Social-Media-Awards/index.php">
+            <a class="navbar-brand" href="/Social-Media-Awards-/index.php">
                 <i class="fas fa-trophy me-2"></i>Social Media Awards
             </a>
             
@@ -193,7 +521,7 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                 <span class="navbar-text me-3">
                     <i class="fas fa-user me-1"></i> <?= htmlspecialchars($_SESSION['user_pseudonyme'] ?? 'Nominé') ?>
                 </span>
-                <a class="nav-link" href="/Social-Media-Awards/logout.php">
+                <a class="nav-link" href="/Social-Media-Awards-/logout.php">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>
             </div>
@@ -231,9 +559,9 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link" href="status-votes.php">
+                                    <a class="nav-link" href="results.php">
                                         <i class="fas fa-chart-line"></i>
-                                        <span>Statut des votes</span>
+                                        <span>Resultat</span>
                                     </a>
                                 </li>
                                 <li>
@@ -243,7 +571,7 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link" href="/Social-Media-Awards/logout.php">
+                                    <a class="nav-link" href="/Social-Media-Awards-/logout.php">
                                         <i class="fas fa-sign-out-alt"></i>
                                         <span>Déconnexion</span>
                                     </a>
@@ -283,6 +611,7 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                 <!-- Alertas -->
                 <?php if (isset($_SESSION['success'])): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
                     <?= $_SESSION['success'] ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -290,6 +619,7 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                 
                 <?php if (isset($_SESSION['error'])): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
                     <?= $_SESSION['error'] ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -300,7 +630,7 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                     <div class="row align-items-center">
                         <div class="col-md-3 text-center">
                             <?php if ($nomination['photo_profil']): ?>
-                            <img src="/Social-Media-Awards/public/<?= htmlspecialchars($nomination['photo_profil']) ?>" 
+                            <img src="/Social-Media-Awards-/public/<?= htmlspecialchars($nomination['photo_profil']) ?>" 
                                  class="profile-avatar mb-3">
                             <?php else: ?>
                             <div class="profile-avatar mb-3 d-flex align-items-center justify-content-center bg-white text-primary">
@@ -343,7 +673,7 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h2 class="mb-2"><?= htmlspecialchars($nomination['pseudonyme'] ?? 'Nominé') ?></h2>
-                                    <p class="mb-4"><?= htmlspecialchars($nomination['bio'] ?? 'Candidat aux Social Media Awards') ?></p>
+                                    <p class="mb-4"><?= htmlspecialchars($nomination['bio']) ?></p>
                                 </div>
                                 
                                 <div class="text-end">
@@ -356,7 +686,7 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                             <!-- Status da votação -->
                             <div class="row mt-4">
                                 <div class="col-md-6">
-                                    <div class="alert <?= $statusClass == 'status-active' ? 'alert-success' : 'alert-secondary' ?>">
+                                    <div class="alert <?= $votingStatus == 'in_progress' ? 'alert-success' : ($votingStatus == 'ended' ? 'alert-secondary' : 'alert-warning') ?>">
                                         <h6 class="mb-1">
                                             <i class="fas fa-vote-yea me-2"></i>
                                             <?= $votingStatus == 'in_progress' ? 'Votes en cours' : 
@@ -366,6 +696,8 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                                         <small class="d-block">Encouragez votre communauté à voter !</small>
                                         <?php elseif ($votingStatus == 'ended'): ?>
                                         <small class="d-block">Résultats bientôt disponibles</small>
+                                        <?php else: ?>
+                                        <small class="d-block">Les votes commenceront bientôt</small>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -420,7 +752,18 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                                     <div class="col-md-6">
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
-                                                <i class="fab fa-<?= strtolower($nomination['plateforme']) ?> text-success"></i>
+                                                <?php 
+                                                $platformIcon = match(strtolower($nomination['plateforme'])) {
+                                                    'tiktok' => 'fab fa-tiktok',
+                                                    'instagram' => 'fab fa-instagram',
+                                                    'youtube' => 'fab fa-youtube',
+                                                    'x' => 'fab fa-x-twitter',
+                                                    'facebook' => 'fab fa-facebook',
+                                                    'twitch' => 'fab fa-twitch',
+                                                    default => 'fas fa-globe'
+                                                };
+                                                ?>
+                                                <i class="<?= $platformIcon ?> text-success"></i>
                                             </div>
                                             <div>
                                                 <small class="text-muted d-block">Plateforme</small>
@@ -452,9 +795,10 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                                 <?php if ($nomination['url_image']): ?>
                                 <div class="mt-4">
                                     <h6><i class="fas fa-image me-2"></i>Image de présentation</h6>
-                                    <img src="/Social-Media-Awards/public/<?= htmlspecialchars($nomination['url_image']) ?>" 
+                                    <img src="/Social-Media-Awards-/public/<?= htmlspecialchars($nomination['url_image']) ?>" 
                                          class="img-fluid rounded mt-2" 
-                                         alt="<?= htmlspecialchars($nomination['libelle']) ?>">
+                                         alt="<?= htmlspecialchars($nomination['libelle']) ?>"
+                                         style="max-height: 300px; object-fit: cover;">
                                 </div>
                                 <?php endif; ?>
                             </div>
@@ -510,7 +854,7 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                                 <p class="small text-muted">
                                     Vous pouvez modifier votre profil tant que les votes ne sont pas commencés.
                                 </p>
-                                <a href="edit-profile.php" class="btn btn-primary w-100">
+                                <a href="perfil-candidat.php" class="btn btn-primary w-100">
                                     <i class="fas fa-pencil-alt me-2"></i> Modifier le profil
                                 </a>
                             </div>
@@ -554,8 +898,6 @@ $canEditProfile = $candidatService->canEditProfile($userId);
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Scripts personalizados -->
-    <script src="/Social-Media-Awards/assets/js/candidat.js"></script>
     
     <script>
     function copyProfileUrl() {

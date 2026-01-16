@@ -164,10 +164,6 @@ $platforms = ['TikTok', 'Instagram', 'YouTube', 'Facebook', 'X', 'Twitch', 'Spot
                                                 </td>
                                                 <td>
                                                     <div class="action-buttons">
-                                                        <a href="edit-nomination.php?id=<?php echo $n['id_nomination']; ?>"
-                                                            class="btn-icon btn-edit" title="Modifier">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
                                                         <a href="view-nomination.php?id=<?php echo $n['id_nomination']; ?>"
                                                             class="btn-icon btn-view" title="Voir">
                                                             <i class="fas fa-eye"></i>

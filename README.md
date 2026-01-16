@@ -3,26 +3,79 @@ Le site Social Media Awards (SMA) permet de voter pour les créateurs de contenu
 
 # Structure du projet :
 
-Social-Media-Awards/
-│
-├── index.php              # Page d'accueil
-├── contact.php            # Page de contact
-├── header.php             # En-tête du site
-├── footer.php             # Pied de page
-│
-├── admin/                 # Gestion administrative du site # (fichiers administratifs)
-│
-├── candidate/             # Gestion des candidats    (fichiers liés aux candidats)
-│
-├── config/                # Paramètres et configuration (connexion BD, constantes, etc.)
-│
-├── database/              # Scripts SQL et gestion de la base de données            
-│
+SOCIAL-MEDIA-AWARDS/
+├── app/
+│   ├── Controllers/
+│   │   ├── AdminController.php
+│   │   ├── NominationController.php
+│   │   └── UserController.php
+│   ├── Interfaces/
+│   │   ├── CategoryServiceInterface.php
+│   │   └── UserServiceInterface.php
+│   ├── Models/
+│   │   ├── Category.php
+│   │   ├── Edtion.php
+│   │   ├── Candidature.php
+│   │   ├── Nomination.php
+│   │   └── User.php
+│   ├── Services/
+│   │   ├── CategoryService.php
+│   │   ├──EditionService.php
+│   │   ├──CandidatureService.php
+│   │   ├──NominationService.php
+│   │   └── UserService.php
+│   └── autoload.php
 ├── assets/
-│   ├── css/               # Styles CSS globaux         
-│   │
-│   ├── js/                # Scripts JavaScript
-│   │
-│   └── images/            # Images et icônes
-│
-└── README.md              # Documentation du projet
+│   ├── css/
+│   ├── images/
+│   └── js/
+├── config/
+│   ├── database.php
+│   ├── permissions.php
+│   └── session.php
+├── database/
+├── views/
+│   ├── admin/
+│   │   └── candidatures/
+│   │       ├── manage-candidatures.php
+│   │       └── view-candidatures.php
+│   │   ├── categories/
+│   │       ├── ajouter-categorie.php
+│   │       ├── gerer-categories.php
+│   │       └── modifier-categorie.php
+│   │   ├── editions/
+│   │       ├── ajouter-edition.php
+│   │       ├── gerer-edition.php
+│   │       └── modifier-edition.php
+│   │   ├── nominations/
+│   │       ├── edit-nomination.php
+│   │       └── manage-nominations.php
+│   │   └── dashboard.php
+│   ├── candidate/
+│   │   ├── candidate-dashboard.php
+│   │   ├── candidate-status.php
+│   │   ├── edit-profile.php
+│   │   └── submit-application.php
+│   ├── partials/
+│   │   ├── admin-header.php
+│   │   ├── admin-sidebar.php
+│   │   ├── footer.php
+│   │   └── header.php
+│   ├── user/
+│   │   ├── change-password.php
+│   │   ├── edit-profile.php
+│   │   └── user-dashboard.php
+│   ├── login.php
+├──  about.php
+├──  categories.php
+├── check_dashboards.php
+├──  clear_session.php
+├── contact.php
+├── create_new_user.php
+├──  index.php
+├── inscription.php
+├── login-test.php
+├──  logout.php
+├── nominees.php
+├──  results.php
+└──  README.md

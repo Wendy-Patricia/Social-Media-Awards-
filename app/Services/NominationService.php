@@ -54,6 +54,12 @@ class NominationService
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    /**
+     * Crée une nomination à partir d'une candidature validée
+     * @param int $id_candidature ID de la candidature à nominer
+     * @param int $id_admin ID de l'administrateur qui valide
+     * @return bool Succès de l'opération
+     */
     public function createFromCandidature(int $id_candidature, int $id_admin): bool
     {
         $candidature = $this->getCandidatureById($id_candidature);
@@ -174,5 +180,18 @@ class NominationService
             return 'uploads/nominations/' . $filename;
         }
         return null;
+    }
+
+    /**
+     * Verifica se uma candidatura já foi transformada em nomeação
+     */
+    public function nominationExistsForCandidature(int $candidatureId): bool
+    {
+        $sql = "SELECT COUNT(*) as count FROM nomination WHERE id_candidature = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':id' => $candidatureId]);
+        $result = $stmt->fetch();
+
+        return $result['count'] > 0;
     }
 }

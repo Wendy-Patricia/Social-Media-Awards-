@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Category;
@@ -35,7 +36,7 @@ class CategoryService
         $stmt = $this->pdo->query($sql);
         $categories = [];
         while ($row = $stmt->fetch()) {
-            $categories[] = $row; 
+            $categories[] = $row;
         }
         return $categories;
     }
@@ -143,5 +144,35 @@ class CategoryService
         return null;
     }
 
-    
+public function getAllCategoriesByEdition(int $editionId): array
+{
+    try {
+        $sql = "SELECT 
+                    id_categorie, 
+                    nom, 
+                    description, 
+                    image, 
+                    plateforme_cible,
+                    date_debut_votes,
+                    date_fin_votes,
+                    limite_nomines
+                FROM categorie 
+                WHERE id_edition = :id_edition 
+                ORDER BY nom ASC";
+        
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':id_edition' => $editionId]);
+        
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Debug
+        error_log("Categorias para edição $editionId: " . count($result));
+        
+        return $result ?: [];
+        
+    } catch (PDOException $e) {
+        error_log("Erreur récupération catégories: " . $e->getMessage());
+        return [];
+    }
+}
 }

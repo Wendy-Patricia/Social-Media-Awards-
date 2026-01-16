@@ -38,4 +38,4 @@ $nominationService  = new NominationService($pdo);
 $categoryController    = new AdminCategoryController($categoryService);
 $editionController     = new AdminEditionController($pdo, $editionService);
 $candidatureController = new AdminCandidatureController($candidatureService);
-$nominationController  = new NominationController($pdo);
+$nominationController  = new NominationController($pdo, $nominationService); 

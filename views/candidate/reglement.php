@@ -1,687 +1,616 @@
 <?php
-// views/candidate/reglement.php
 session_start();
 
-// Verificar se o usuário está logado como candidato
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'candidate') {
-    header('Location: /Social-Media-Awards/views/login.php');
-    exit;
-}
-
-// Incluir configurações
+// Não requer login para ver o regulamento
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/session.php';
 require_once __DIR__ . '/../../app/autoload.php';
 
-use App\Services\CandidatService;
-use App\Services\CategoryService;
 use App\Services\EditionService;
 
-// Inicializar conexão
 $pdo = Database::getInstance()->getConnection();
-
-// Inicializar serviços
-$candidatService = new CandidatService($pdo);
-$categoryService = new CategoryService($pdo);
 $editionService = new EditionService($pdo);
 
-// Verificar status
-$userId = $_SESSION['user_id'];
-$isNominee = $candidatService->isNominee($userId);
+// Obter edição ativa
+$activeEdition = null;
+$editions = $editionService->getAllEditions();
+foreach ($editions as $edition) {
+    if ((int)$edition['est_active'] === 1) {
+        $activeEdition = $edition;
+        break;
+    }
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Règlement - Social Media Awards</title>
-    
+    <title>Règlement Officiel - Social Media Awards</title>
+
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="/Social-Media-Awards/assets/css/candidat.css">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-    .reglement-section {
-        background: white;
-        border-radius: var(--border-radius-xl);
-        padding: var(--spacing-xl);
-        margin-bottom: var(--spacing-lg);
-        border: none;
-        box-shadow: var(--shadow-lg);
-    }
-    
-    .reglement-section h3 {
-        color: var(--principal-dark);
-        border-bottom: 3px solid var(--principal-light);
-        padding-bottom: var(--spacing-sm);
-        margin-bottom: var(--spacing-lg);
-    }
-    
-    .reglement-item {
-        margin-bottom: var(--spacing-lg);
-        padding-left: var(--spacing-lg);
-        position: relative;
-    }
-    
-    .reglement-item::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 10px;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--principal);
-    }
-    
-    .penalite-card {
-        background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), rgba(220, 53, 69, 0.02));
-        border-radius: var(--border-radius-lg);
-        padding: var(--spacing-lg);
-        border-left: 4px solid var(--danger);
-        margin: var(--spacing-md) 0;
-    }
-    
-    .accordion-reglement .accordion-button {
-        background: linear-gradient(135deg, rgba(79, 189, 171, 0.1), rgba(79, 189, 171, 0.05));
-        font-weight: 600;
-    }
-    
-    .accordion-reglement .accordion-button:not(.collapsed) {
-        background: linear-gradient(135deg, var(--principal), var(--principal-dark));
-        color: white;
-    }
-    
-    .acceptation-container {
-        background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
-        border-radius: var(--border-radius-lg);
-        padding: var(--spacing-xl);
-        border: 2px solid var(--success);
-        text-align: center;
-    }
-    
-    .badge-regle {
-        display: inline-block;
-        background: var(--principal);
-        color: white;
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-right: var(--spacing-xs);
-        margin-bottom: var(--spacing-xs);
-    }
-    
-    .badge-interdiction {
-        background: var(--danger);
-    }
-    
-    .badge-obligation {
-        background: var(--success);
-    }
-    
-    .badge-conseil {
-        background: var(--info);
-    }
+        .reglement-article {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        .reglement-article:hover {
+            background-color: #f8f9fa;
+            border-left-color: #4FBDAB;
+            transform: translateX(5px);
+        }
+
+        .article-number {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #4FBDAB, #45a999);
+            color: white;
+            border-radius: 6px;
+            text-align: center;
+            line-height: 36px;
+            font-weight: bold;
+            margin-right: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #4FBDAB, #45a999);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 3px solid white;
+        }
+
+        .prize-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4FBDAB, #45a999);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-icon {
+            font-size: 2.5rem;
+            color: #4FBDAB;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .page-title {
+            background: linear-gradient(135deg, #45a999, #4FBDAB);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .reglement-article {
+                page-break-inside: avoid;
+                border-left: 1px solid #ddd !important;
+            }
+        }
     </style>
 </head>
-<body class="bg-light">
-    <!-- Header -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/Social-Media-Awards/index.php">
-                <i class="fas fa-trophy me-2"></i>Social Media Awards
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #4FBDAB, #45a999);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="candidate-dashboard.php">
+                <i class="fas fa-trophy"></i>
+                Social Media Awards
             </a>
-            
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="candidate-dashboard.php">
-                    <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                </a>
-                <span class="navbar-text me-3">
-                    <i class="fas fa-user me-1"></i> <?= htmlspecialchars($_SESSION['user_pseudonyme'] ?? ($isNominee ? 'Nominé' : 'Candidat')) ?>
-                </span>
-                <a class="nav-link" href="/Social-Media-Awards/logout.php">
-                    <i class="fas fa-sign-out-alt"></i> Déconnexion
-                </a>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="candidate-dashboard.php" class="nav-link text-white">
+                        <i class="fas fa-home"></i> Tableau de bord
+                    </a>
+                <?php else: ?>
+                    <a href="/Social-Media-Awards/views/login.php" class="nav-link text-white">
+                        <i class="fas fa-sign-in-alt"></i> Connexion
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </nav>
-    
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3">
-                <div class="sidebar-container">
-                    <?php include __DIR__ . '/../partials/sidebar-candidat.php'; ?>
+
+    <!-- Main Content -->
+    <main class="py-4">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h1 class="page-title fw-bold">
+                                <i class="fas fa-gavel"></i> Règlement Officiel
+                            </h1>
+                            <p class="text-muted">Social Media Awards - Édition <?= $activeEdition ? htmlspecialchars($activeEdition['annee']) : date('Y') ?></p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button onclick="window.print()" class="btn btn-outline-primary no-print">
+                                <i class="fas fa-print"></i> Imprimer
+                            </button>
+                            <?php if (isset($_SESSION['user_id'])): ?>
+                                <a href="#accept-reglement" class="btn btn-primary no-print">
+                                    <i class="fas fa-check-circle"></i> Accepter
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Edition Info -->
+                    <?php if ($activeEdition): ?>
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-info-circle"></i> Informations de l'Édition <?= htmlspecialchars($activeEdition['annee']) ?>
+                            </h5>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Nom :</strong> <?= htmlspecialchars($activeEdition['nom']) ?></p>
+                                    <p class="mb-1"><strong>Thème :</strong> <?= htmlspecialchars($activeEdition['theme'] ?? 'Innovation Digitale') ?></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Période de candidatures :</strong> du
+                                        <?= date('d/m/Y', strtotime($activeEdition['date_debut_candidatures'])) ?> au
+                                        <?= date('d/m/Y', strtotime($activeEdition['date_fin_candidatures'])) ?>
+                                    </p>
+                                    <p class="mb-0"><strong>Période de vote :</strong> du
+                                        <?= date('d/m/Y', strtotime($activeEdition['date_debut'])) ?> au
+                                        <?= date('d/m/Y', strtotime($activeEdition['date_fin'])) ?>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
-            
-            <!-- Conteúdo principal -->
-            <div class="col-md-9">
-                <!-- Cabeçalho -->
-                <div class="page-header mb-4">
-                    <h1 class="page-title">
-                        <i class="fas fa-file-contract me-2"></i>Règlement Officiel
-                    </h1>
-                    <p class="page-subtitle">Règles et conditions de participation</p>
+
+            <!-- Reglement Content -->
+            <div class="card shadow-lg mb-5">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-book text-primary"></i> Règlement Général des Social Media Awards
+                    </h5>
                 </div>
-                
-                <!-- Aviso importante -->
-                <div class="alert alert-warning">
-                    <div class="d-flex align-items-start">
-                        <i class="fas fa-exclamation-triangle fa-2x me-3 mt-1"></i>
-                        <div>
-                            <h5 class="mb-2">Important : Lisez attentivement</h5>
-                            <p class="mb-0">
-                                En participant aux Social Media Awards, vous acceptez l'intégralité de ce règlement.
-                                <?php if ($isNominee): ?>
-                                <strong class="text-danger">En tant que nominé, certaines règles supplémentaires s'appliquent.</strong>
-                                <?php endif; ?>
-                            </p>
+                <div class="card-body">
+
+                    <!-- Article 1: Objet -->
+                    <div class="reglement-article">
+                        <h3 class="mb-4">
+                            <span class="article-number">1</span> Objet du Concours
+                        </h3>
+                        <div class="ps-4">
+                            <p>Le présent règlement définit les conditions de participation aux Social Media Awards, organisé par <strong>[Nom de l'Organisateur]</strong>, société immatriculée au RCS de [Ville] sous le numéro [Numéro RCS].</p>
+                            <p class="mb-0">Le Concours récompense les créateurs de contenus, les marques et les professionnels des médias sociaux pour la qualité et l'impact de leurs productions.</p>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Sumário -->
-                <div class="main-card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-list me-2"></i>
-                            Sommaire
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <ul class="list-unstyled">
-                                    <li class="mb-2">
-                                        <a href="#section1" class="text-decoration-none">
-                                            <i class="fas fa-arrow-right me-2 text-primary"></i>
-                                            1. Éligibilité
-                                        </a>
-                                    </li>
-                                    <li class="mb-2">
-                                        <a href="#section2" class="text-decoration-none">
-                                            <i class="fas fa-arrow-right me-2 text-primary"></i>
-                                            2. Candidatures
-                                        </a>
-                                    </li>
-                                    <li class="mb-2">
-                                        <a href="#section3" class="text-decoration-none">
-                                            <i class="fas fa-arrow-right me-2 text-primary"></i>
-                                            3. Votes
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="col-md-4">
-                                <ul class="list-unstyled">
-                                    <li class="mb-2">
-                                        <a href="#section4" class="text-decoration-none">
-                                            <i class="fas fa-arrow-right me-2 text-primary"></i>
-                                            4. Promotion
-                                        </a>
-                                    </li>
-                                    <li class="mb-2">
-                                        <a href="#section5" class="text-decoration-none">
-                                            <i class="fas fa-arrow-right me-2 text-primary"></i>
-                                            5. Interdictions
-                                        </a>
-                                    </li>
-                                    <li class="mb-2">
-                                        <a href="#section6" class="text-decoration-none">
-                                            <i class="fas fa-arrow-right me-2 text-primary"></i>
-                                            6. Sanctions
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="col-md-4">
-                                <ul class="list-unstyled">
-                                    <li class="mb-2">
-                                        <a href="#section7" class="text-decoration-none">
-                                            <i class="fas fa-arrow-right me-2 text-primary"></i>
-                                            7. Résultats
-                                        </a>
-                                    </li>
-                                    <li class="mb-2">
-                                        <a href="#section8" class="text-decoration-none">
-                                            <i class="fas fa-arrow-right me-2 text-primary"></i>
-                                            8. Contact
-                                        </a>
-                                    </li>
+
+                    <!-- Article 2: Conditions de Participation -->
+                    <div class="reglement-article">
+                        <h3 class="mb-4">
+                            <span class="article-number">2</span> Conditions de Participation
+                        </h3>
+                        <div class="ps-4">
+                            <p>Pour participer, les candidats doivent :</p>
+                            <ol class="mb-4">
+                                <li>Être une personne physique majeure ou une personne morale légalement constituée</li>
+                                <li>Résider dans un pays autorisé à participer</li>
+                                <li>Posséder un compte valide sur au moins une plateforme sociale éligible</li>
+                                <li>Accepter sans réserve le présent règlement</li>
+                                <li>Avoir obtenu toutes les autorisations nécessaires pour les contenus soumis</li>
+                            </ol>
+
+                            <div class="alert alert-warning">
+                                <h6 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Restrictions :</h6>
+                                <ul class="mb-0">
+                                    <li>Contenus discriminatoires, diffamatoires ou illégaux interdits</li>
+                                    <li>Pas de promotion de produits/services illégaux</li>
+                                    <li>Toute fraude entraîne l'exclusion immédiate</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Seção 1: Éligibilité -->
-                <div id="section1" class="reglement-section">
-                    <h3>
-                        <i class="fas fa-user-check me-2"></i>
-                        1. Conditions d'éligibilité
-                    </h3>
-                    
-                    <div class="reglement-item">
-                        <h5>Âge minimum</h5>
-                        <p>Les participants doivent avoir au moins 13 ans au moment de l'inscription.</p>
-                        <span class="badge-regle badge-obligation">Obligatoire</span>
+
+                    <!-- Article 3: Catégories -->
+                    <div class="reglement-article">
+                        <h3 class="mb-4">
+                            <span class="article-number">3</span> Catégories du Concours
+                        </h3>
+                        <div class="ps-4">
+                            <p>Le Concours comprend les catégories suivantes :</p>
+
+                            <div class="table-responsive mt-3">
+                                <table class="table table-bordered">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Catégorie</th>
+                                            <th>Description</th>
+                                            <th>Plateforme(s)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Meilleur Créateur de Contenu</strong></td>
+                                            <td>Qualité et originalité des contenus</td>
+                                            <td>YouTube, TikTok, Instagram</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Meilleure Marque</strong></td>
+                                            <td>Meilleure présence sociale</td>
+                                            <td>Toutes plateformes</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Meilleur Influenceur Mode</strong></td>
+                                            <td>Influenceurs mode & lifestyle</td>
+                                            <td>Instagram, TikTok</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Meilleur Podcast</strong></td>
+                                            <td>Podcasts les plus populaires</td>
+                                            <td>Spotify, Apple Podcasts</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Meilleur Streamer Gaming</strong></td>
+                                            <td>Streamers de jeux vidéo</td>
+                                            <td>Twitch, YouTube Gaming</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Contenu original</h5>
-                        <p>Tout contenu soumis doit être original et détenu par le candidat.</p>
-                        <span class="badge-regle badge-obligation">Obligatoire</span>
+
+                    <!-- Article 4: Modalités de Candidature -->
+                    <div class="reglement-article">
+                        <h3 class="mb-4">
+                            <span class="article-number">4</span> Modalités de Candidature
+                        </h3>
+                        <div class="ps-4">
+                            <p class="mb-4">Processus de candidature en 4 étapes :</p>
+
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="d-flex gap-3 mb-4">
+                                        <div class="step-number">1</div>
+                                        <div>
+                                            <h6>Création de compte</h6>
+                                            <p class="text-muted mb-0">Compte avec informations exactes</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="d-flex gap-3 mb-4">
+                                        <div class="step-number">2</div>
+                                        <div>
+                                            <h6>Soumission</h6>
+                                            <p class="text-muted mb-0">Formulaire en ligne complet</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="d-flex gap-3 mb-4">
+                                        <div class="step-number">3</div>
+                                        <div>
+                                            <h6>Documents</h6>
+                                            <p class="text-muted mb-0">Contenu, image, argumentaire</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="d-flex gap-3 mb-4">
+                                        <div class="step-number">4</div>
+                                        <div>
+                                            <h6>Validation</h6>
+                                            <p class="text-muted mb-0">Acceptation du règlement</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mt-3">
+                                <h6 class="alert-heading"><i class="fas fa-clock"></i> Dates limites :</h6>
+                                <p class="mb-0">
+                                    Date limite de soumission : <strong><?= $activeEdition ? date('d/m/Y à H:i', strtotime($activeEdition['date_fin_candidatures'])) : 'À déterminer' ?></strong><br>
+                                    Aucune candidature acceptée après cette date
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Droit à l'image</h5>
-                        <p>Le candidat doit détenir les droits nécessaires pour soumettre le contenu.</p>
-                        <span class="badge-regle badge-obligation">Obligatoire</span>
-                    </div>
-                    
-                    <?php if ($isNominee): ?>
-                    <div class="alert alert-info mt-4">
-                        <h6><i class="fas fa-info-circle me-2"></i>Information pour les nominés</h6>
-                        <p class="mb-0">En tant que nominé, vous devez maintenir votre éligibilité pendant toute la durée des votes.</p>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                
-                <!-- Seção 2: Candidatures -->
-                <div id="section2" class="reglement-section">
-                    <h3>
-                        <i class="fas fa-paper-plane me-2"></i>
-                        2. Soumission des candidatures
-                    </h3>
-                    
-                    <div class="reglement-item">
-                        <h5>Délais de soumission</h5>
-                        <p>Les candidatures doivent être soumises avant la date limite indiquée pour chaque catégorie.</p>
-                        <span class="badge-regle badge-obligation">Obligatoire</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Contenu approprié</h5>
-                        <p>Le contenu ne doit pas contenir de matériel offensant, discriminatoire ou illégal.</p>
-                        <span class="badge-regle badge-interdiction">Interdit</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Modifications</h5>
-                        <p>Les candidatures peuvent être modifiées tant qu'elles sont en attente de validation.</p>
-                        <span class="badge-regle badge-conseil">Conseil</span>
-                    </div>
-                </div>
-                
-                <!-- Seção 3: Votes (especial para nomeados) -->
-                <div id="section3" class="reglement-section">
-                    <h3>
-                        <i class="fas fa-vote-yea me-2"></i>
-                        3. Système de votes
-                    </h3>
-                    
-                    <?php if ($isNominee): ?>
-                    <div class="alert alert-success">
-                        <h6><i class="fas fa-star me-2"></i>Règles spécifiques pour les nominés</h6>
-                        <p class="mb-0">En tant que nominé, vous êtes directement concerné par cette section.</p>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <div class="reglement-item">
-                        <h5>Période de votes</h5>
-                        <p>Les votes sont ouverts pendant une période définie pour chaque catégorie.</p>
-                        <span class="badge-regle badge-obligation">Obligatoire</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Anonymat des votes</h5>
-                        <p>Les votes sont anonymes. Les nominés ne peuvent pas voir les résultats en temps réel.</p>
-                        <span class="badge-regle badge-interdiction">Interdit</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Un vote par personne</h5>
-                        <p>Chaque électeur ne peut voter qu'une seule fois par catégorie.</p>
-                        <span class="badge-regle badge-obligation">Obligatoire</span>
-                    </div>
-                    
-                    <div class="accordion accordion-reglement mt-4" id="accordionVotes">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" 
-                                        data-bs-toggle="collapse" data-bs-target="#collapseVotes1">
-                                    Pourquoi ne puis-je pas voir mon nombre de votes ?
-                                </button>
-                            </h2>
-                            <div id="collapseVotes1" class="accordion-collapse collapse" 
-                                 data-bs-parent="#accordionVotes">
-                                <div class="accordion-body">
-                                    Pour garantir l'équité et éviter toute pression ou manipulation, les résultats ne sont pas visibles avant la fin officielle des votes.
+
+                    <!-- Article 5: Processus de Sélection -->
+                    <div class="reglement-article">
+                        <h3 class="mb-4">
+                            <span class="article-number">5</span> Processus de Sélection
+                        </h3>
+                        <div class="ps-4">
+                            <h5 class="mb-3">Phase 1 : Présélection</h5>
+                            <p>Vérification par un comité :</p>
+                            <ul class="mb-4">
+                                <li>Conformité au règlement</li>
+                                <li>Complétude du dossier</li>
+                                <li>Adéquation avec la catégorie</li>
+                                <li>Critères d'éligibilité</li>
+                            </ul>
+
+                            <h5 class="mb-3">Phase 2 : Vote</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary">
+                                                <i class="fas fa-users"></i> Vote du Public (50%)
+                                            </h6>
+                                            <p class="card-text">
+                                                Ouvert à tous les internautes<br>
+                                                <small class="text-muted">1 vote par personne et par catégorie</small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary">
+                                                <i class="fas fa-user-tie"></i> Vote du Jury (50%)
+                                            </h6>
+                                            <p class="card-text">
+                                                Professionnels selon critères précis<br>
+                                                <small class="text-muted">Originalité, qualité, impact, innovation</small>
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Seção 4: Promotion (CRÍTICO para nomeados) -->
-                <div id="section4" class="reglement-section">
-                    <h3>
-                        <i class="fas fa-share-alt me-2"></i>
-                        4. Promotion des nominations
-                    </h3>
-                    
-                    <?php if ($isNominee): ?>
-                    <div class="alert alert-warning">
-                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Attention : Règles strictes</h6>
-                        <p class="mb-0">Le non-respect de ces règles peut entraîner une disqualification immédiate.</p>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <div class="reglement-item">
-                        <h5>Promotion autorisée</h5>
-                        <p>Les nominés sont encouragés à promouvoir leur nomination via leurs réseaux sociaux.</p>
-                        <span class="badge-regle badge-conseil">Conseillé</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Utilisation du kit officiel</h5>
-                        <p>Utilisez les outils de promotion fournis sur votre dashboard nominé.</p>
-                        <span class="badge-regle badge-conseil">Conseillé</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Hashtags officiels</h5>
-                        <p>Utilisez les hashtags officiels #SocialMediaAwards2025 et #VotezPourMoi.</p>
-                        <span class="badge-regle badge-conseil">Conseillé</span>
-                    </div>
-                    
-                    <!-- FAQ Promotion -->
-                    <div class="accordion accordion-reglement mt-4" id="accordionPromotion">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" 
-                                        data-bs-toggle="collapse" data-bs-target="#collapsePromo1">
-                                    Comment promouvoir ma nomination efficacement ?
-                                </button>
-                            </h2>
-                            <div id="collapsePromo1" class="accordion-collapse collapse" 
-                                 data-bs-parent="#accordionPromotion">
-                                <div class="accordion-body">
-                                    <ul>
-                                        <li>Partagez votre lien public dans votre bio Instagram/TikTok</li>
-                                        <li>Créez des stories ou des posts engageants</li>
-                                        <li>Utilisez les hashtags officiels</li>
-                                        <li>Remerciez vos supporters</li>
-                                        <li>Utilisez le kit promotionnel fourni</li>
-                                    </ul>
+
+                    <!-- Article 6: Protection des Données -->
+                    <div class="reglement-article">
+                        <h3 class="mb-4">
+                            <span class="article-number">6</span> Protection des Données
+                        </h3>
+                        <div class="ps-4">
+                            <p class="mb-4">Conformément au RGPD et à la Loi Informatique et Libertés :</p>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3 col-6">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-shield-alt data-icon"></i>
+                                        <h6 class="mb-1">Collecte limitée</h6>
+                                        <p class="text-muted small mb-0">Données nécessaires uniquement</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 col-6">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-lock data-icon"></i>
+                                        <h6 class="mb-1">Sécurité</h6>
+                                        <p class="text-muted small mb-0">Mesures de protection adaptées</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 col-6">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-eye data-icon"></i>
+                                        <h6 class="mb-1">Transparence</h6>
+                                        <p class="text-muted small mb-0">Accès et modification possibles</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 col-6">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-calendar-times data-icon"></i>
+                                        <h6 class="mb-1">Conservation</h6>
+                                        <p class="text-muted small mb-0">Durée nécessaire uniquement</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Seção 5: Interdictions (MUITO IMPORTANTE) -->
-                <div id="section5" class="reglement-section">
-                    <h3>
-                        <i class="fas fa-ban me-2"></i>
-                        5. Interdictions strictes
-                    </h3>
-                    
-                    <div class="penalite-card">
-                        <h5 class="text-danger">
-                            <i class="fas fa-skull-crossbones me-2"></i>
-                            Ces actions entraînent une disqualification immédiate
-                        </h5>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Achat de votes</h5>
-                        <p>Il est strictement interdit d'acheter des votes ou des services de vote.</p>
-                        <span class="badge-regle badge-interdiction">Interdit</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Utilisation de bots</h5>
-                        <p>L'utilisation de robots, scripts ou programmes automatisés est interdite.</p>
-                        <span class="badge-regle badge-interdiction">Interdit</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Fausses promesses</h5>
-                        <p>Ne pas promettre des récompenses en échange de votes.</p>
-                        <span class="badge-regle badge-interdiction">Interdit</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Harcèlement</h5>
-                        <p>Le harcèlement d'autres candidats ou électeurs est interdit.</p>
-                        <span class="badge-regle badge-interdiction">Interdit</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Fausse identité</h5>
-                        <p>Ne pas se faire passer pour quelqu'un d'autre.</p>
-                        <span class="badge-regle badge-interdiction">Interdit</span>
-                    </div>
-                </div>
-                
-                <!-- Seção 6: Sanctions -->
-                <div id="section6" class="reglement-section">
-                    <h3>
-                        <i class="fas fa-gavel me-2"></i>
-                        6. Sanctions et pénalités
-                    </h3>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Infraction</th>
-                                    <th>Sanction</th>
-                                    <th>Application</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Achat de votes</td>
-                                    <td class="text-danger">Disqualification immédiate + bannissement permanent</td>
-                                    <td>Automatique</td>
-                                </tr>
-                                <tr>
-                                    <td>Utilisation de bots</td>
-                                    <td class="text-danger">Disqualification + annulation de tous les votes</td>
-                                    <td>Automatique</td>
-                                </tr>
-                                <tr>
-                                    <td>Contenu inapproprié</td>
-                                    <td class="text-warning">Disqualification de la candidature</td>
-                                    <td>Après vérification</td>
-                                </tr>
-                                <tr>
-                                    <td>Harcèlement</td>
-                                    <td class="text-warning">Disqualification + avertissement</td>
-                                    <td>Après enquête</td>
-                                </tr>
-                                <tr>
-                                    <td>Fausse identité</td>
-                                    <td class="text-danger">Bannissement du compte</td>
-                                    <td>Automatique</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="alert alert-danger mt-4">
-                        <h6><i class="fas fa-exclamation-circle me-2"></i>Procédure de contestation</h6>
-                        <p class="mb-0">
-                            En cas de sanction, vous pouvez contester dans les 7 jours à l'adresse :
-                            <a href="mailto:contestation@socialmediaawards.fr" class="text-white">
-                                contestation@socialmediaawards.fr
-                            </a>
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- Seção 7: Résultats -->
-                <div id="section7" class="reglement-section">
-                    <h3>
-                        <i class="fas fa-flag-checkered me-2"></i>
-                        7. Publication des résultats
-                    </h3>
-                    
-                    <div class="reglement-item">
-                        <h5>Délai de publication</h5>
-                        <p>Les résultats sont publiés 3 jours ouvrables après la fin des votes.</p>
-                        <span class="badge-regle badge-obligation">Obligatoire</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Finalité des résultats</h5>
-                        <p>Les résultats sont définitifs et ne sont pas sujets à modification.</p>
-                        <span class="badge-regle badge-obligation">Obligatoire</span>
-                    </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Certificats de participation</h5>
-                        <p>Tous les nominés reçoivent un certificat de participation numérique.</p>
-                        <span class="badge-regle badge-conseil">Avantage</span>
-                    </div>
-                    
-                    <?php if ($isNominee): ?>
-                    <div class="alert alert-info mt-4">
-                        <h6><i class="fas fa-trophy me-2"></i>Pour les gagnants</h6>
-                        <p class="mb-0">
-                            Les gagnants seront contactés par email pour les modalités de réception des prix.
-                            Les prix doivent être réclamés dans les 30 jours suivant l'annonce.
-                        </p>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                
-                <!-- Seção 8: Contact -->
-                <div id="section8" class="reglement-section">
-                    <h3>
-                        <i class="fas fa-headset me-2"></i>
-                        8. Support et contact
-                    </h3>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="reglement-item">
-                                <h5>Support technique</h5>
-                                <p>
-                                    <i class="fas fa-envelope me-2"></i>
-                                    <a href="mailto:support@socialmediaawards.fr">support@socialmediaawards.fr</a>
-                                </p>
-                                <p>
-                                    <i class="fas fa-phone me-2"></i>
-                                    +33 1 23 45 67 89 (10h-18h)
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="reglement-item">
-                                <h5>Support nominés</h5>
-                                <?php if ($isNominee): ?>
-                                <p>
-                                    <i class="fas fa-envelope me-2"></i>
-                                    <a href="mailto:nominations@socialmediaawards.fr">nominations@socialmediaawards.fr</a>
-                                </p>
-                                <p>
-                                    <i class="fas fa-comment-alt me-2"></i>
-                                    Support prioritaire pour les nominés
-                                </p>
-                                <?php else: ?>
-                                <p class="text-muted">Disponible uniquement pour les nominés</p>
-                                <?php endif; ?>
+
+                            <div class="alert alert-secondary">
+                                <h6 class="alert-heading">Exercice de vos droits :</h6>
+                                <p class="mb-1"><strong>Email DPD :</strong> dpo@socialmediaawards.fr</p>
+                                <p class="mb-0"><strong>Poste :</strong> [Organisateur] - Service Juridique</p>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="reglement-item">
-                        <h5>Délais de réponse</h5>
-                        <p>Réponse sous 48h ouvrables pour toutes les demandes.</p>
-                        <p>Urgences : réponse sous 24h.</p>
+
+                    <!-- Article 7: Droits d'Auteur -->
+                    <div class="reglement-article">
+                        <h3 class="mb-4">
+                            <span class="article-number">7</span> Droits d'Auteur
+                        </h3>
+                        <div class="ps-4">
+                            <p>Les candidats garantissent :</p>
+                            <ul class="mb-4">
+                                <li>Être titulaires des droits sur les contenus</li>
+                                <li>Avoir obtenu toutes les autorisations</li>
+                                <li>Contenus originaux sans violation de droits tiers</li>
+                            </ul>
+
+                            <div class="alert alert-danger">
+                                <h6 class="alert-heading"><i class="fas fa-exclamation-circle"></i> Attention :</h6>
+                                <p class="mb-0">Toute réclamation pour violation de droits entraîne la disqualification immédiate.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Article 8: Prix et Récompenses -->
+                    <div class="reglement-article">
+                        <h3 class="mb-4">
+                            <span class="article-number">8</span> Prix et Récompenses
+                        </h3>
+                        <div class="ps-4">
+                            <p>Les lauréats reçoivent :</p>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3 col-6">
+                                    <div class="text-center p-3">
+                                        <div class="prize-icon">
+                                            <i class="fas fa-trophy"></i>
+                                        </div>
+                                        <h6 class="mb-1">Trophée</h6>
+                                        <p class="text-muted small mb-0">Trophée physique personnalisé</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 col-6">
+                                    <div class="text-center p-3">
+                                        <div class="prize-icon">
+                                            <i class="fas fa-certificate"></i>
+                                        </div>
+                                        <h6 class="mb-1">Certificat</h6>
+                                        <p class="text-muted small mb-0">Reconnaissance officielle</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 col-6">
+                                    <div class="text-center p-3">
+                                        <div class="prize-icon">
+                                            <i class="fas fa-bullhorn"></i>
+                                        </div>
+                                        <h6 class="mb-1">Visibilité</h6>
+                                        <p class="text-muted small mb-0">Promotion médiatique</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 col-6">
+                                    <div class="text-center p-3">
+                                        <div class="prize-icon">
+                                            <i class="fas fa-gift"></i>
+                                        </div>
+                                        <h6 class="mb-1">Partenariats</h6>
+                                        <p class="text-muted small mb-0">Collaborations exclusives</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">Conditions :</h6>
+                                <ul class="mb-0">
+                                    <li>Prix non transférables ni échangeables</li>
+                                    <li>Taxes à charge des lauréats</li>
+                                    <li>En cas d'égalité, prix partagés</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Article 9: Résultats et Litiges -->
+                    <div class="reglement-article">
+                        <h3 class="mb-4">
+                            <span class="article-number">9</span> Résultats et Litiges
+                        </h3>
+                        <div class="ps-4">
+                            <p>Publication des résultats :</p>
+                            <ul class="mb-4">
+                                <li>Site officiel des Social Media Awards</li>
+                                <li>Réseaux sociaux officiels</li>
+                                <li>Cérémonie de remise des prix</li>
+                            </ul>
+
+                            <div class="alert alert-secondary">
+                                <h6 class="alert-heading"><i class="fas fa-balance-scale"></i> Règlement des litiges :</h6>
+                                <p class="mb-0">
+                                    Solution amiable recherchée en premier lieu.<br>
+                                    Tribunaux compétents : lieu du siège social de l'Organisateur.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Article 10: Modifications -->
+                    <div class="reglement-article">
+                        <h3 class="mb-4">
+                            <span class="article-number">10</span> Modifications
+                        </h3>
+                        <div class="ps-4">
+                            <p>L'Organisateur se réserve le droit de :</p>
+                            <ul class="mb-4">
+                                <li>Modifier le règlement à tout moment</li>
+                                <li>Interrompre ou annuler le Concours</li>
+                                <li>Prendre mesures pour le bon déroulement</li>
+                            </ul>
+
+                            <div class="bg-light p-4 rounded text-center">
+                                <p class="mb-2"><strong>Date d'entrée en vigueur :</strong> <?= date('d/m/Y') ?></p>
+                                <p class="mb-0"><strong>Dernière mise à jour :</strong> <?= date('d/m/Y') ?></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Aceitação do regulamento -->
-                <div class="acceptation-container mb-4">
-                    <h4 class="mb-3">
-                        <i class="fas fa-handshake me-2"></i>
-                        Acceptation du règlement
-                    </h4>
-                    <p class="mb-4">
-                        En participant aux Social Media Awards, vous reconnaissez avoir lu, compris et accepté l'intégralité de ce règlement.
-                    </p>
-                    
-                    <div class="form-check d-inline-block me-4">
-                        <input class="form-check-input" type="checkbox" id="acceptReglement" checked disabled>
-                        <label class="form-check-label" for="acceptReglement">
-                            J'ai lu le règlement
-                        </label>
-                    </div>
-                    
-                    <div class="form-check d-inline-block">
-                        <input class="form-check-input" type="checkbox" id="acceptConditions" checked disabled>
-                        <label class="form-check-label" for="acceptConditions">
-                            J'accepte les conditions
-                        </label>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <p class="small text-muted">
-                            Dernière mise à jour : <?= date('d/m/Y') ?> | 
-                            Version : 2.3
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- Download do regulamento -->
-                <div class="text-center">
-                    <a href="#" class="btn btn-primary">
-                        <i class="fas fa-download me-2"></i>
-                        Télécharger le règlement (PDF)
-                    </a>
-                    <a href="candidate-dashboard.php" class="btn btn-outline-secondary ms-2">
-                        <i class="fas fa-arrow-left me-2"></i>
-                        Retour au dashboard
-                    </a>
-                </div>
+
             </div>
         </div>
-    </div>
-    
+        </div>
+    </main>
+
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="bg-dark text-white py-4 mt-5">
         <div class="container">
-            <div class="footer-content">
-                <div>
-                    <h5>Social Media Awards</h5>
-                    <p>Célébrons la créativité numérique ensemble.</p>
-                </div>
-                <div>
-                    <h5>Support juridique</h5>
-                    <ul class="footer-links">
-                        <li><a href="mailto:juridique@socialmediaawards.fr">juridique@socialmediaawards.fr</a></li>
-                        <li><a href="#">Mentions légales</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p class="mb-0">&copy; <?= date('Y') ?> Social Media Awards. Tous droits réservés.</p>
+            <div class="text-center">
+                <p class="mb-0">
+                    &copy; <?= date('Y') ?> Social Media Awards. Tous droits réservés. |
+                    <a href="#contact" class="text-white text-decoration-none">Contact</a> |
+                    <a href="#mentions-legales" class="text-white text-decoration-none">Mentions légales</a> |
+                    <a href="#politique-confidentialite" class="text-white text-decoration-none">Politique de confidentialité</a>
+                </p>
             </div>
         </div>
     </footer>
-    
-    <!-- Bootstrap JS -->
+
+    <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                if (this.getAttribute('href') !== '#') {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
 </body>
+
 </html>

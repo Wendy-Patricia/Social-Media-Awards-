@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../../../config/session.php';
 require_once __DIR__ . '/../../../config/permissions.php';
 requireAdmin();
+require_once __DIR__ . '/../../../config/database.php';
+require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) {
@@ -9,10 +11,8 @@ if ($id <= 0) {
     exit;
 }
 
-require_once __DIR__ . '/../../../app/Controllers/AdminController.php';
 
-$controller = new App\Controllers\AdminController();
-$candidature = $controller->getCandidatureById($id);
+$candidature = $candidatureController->getCandidatureById($id);
 
 if (!$candidature) {
     header("Location: manage-candidatures.php");
@@ -51,7 +51,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
             <p><?= htmlspecialchars($candidature['libelle']) ?></p>
         </div>
         <div class="header-actions">
-            <a href="manage-candidatures.php" class="btn btn-secondary">
+            <a href="manage-candidature.php" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Retour
             </a>
         </div>

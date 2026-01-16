@@ -68,7 +68,7 @@ $shareTexts = [
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="/Social-Media-Awards/assets/css/candidat.css">
+    <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/candidat.css">
     
     <style>
     .share-platform-card {

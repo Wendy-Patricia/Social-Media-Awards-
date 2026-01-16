@@ -4,17 +4,28 @@
 require_once __DIR__ . '/../Models/User.php';
 require_once __DIR__ . '/../Services/UserService.php';
 
+/**
+ * Contrôleur gérant l'authentification et l'inscription des utilisateurs
+ */
 class UserController
 {
     private $userService;
     private $userModel;
 
+    /**
+     * Constructeur du contrôleur utilisateur
+     */
     public function __construct()
     {
         $this->userService = new UserService();
         $this->userModel = new User();
     }
 
+    /**
+     * Gère la tentative de connexion d'un utilisateur
+     *
+     * @return array Tableau contenant les informations d'erreur en cas d'échec
+     */
     public function handleLogin()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -37,6 +48,11 @@ class UserController
         ];
     }
 
+    /**
+     * Gère le processus d'inscription d'un nouvel utilisateur
+     *
+     * @return array Résultat de l'inscription avec succès/erreurs et données soumises
+     */
     public function handleRegistration()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -55,14 +71,14 @@ class UserController
             'genre' => $_POST['genre'] ?? ''
         ];
 
-        // Validações
+        // Validations du pseudonyme
         if (empty($data['pseudonyme']) || strlen($data['pseudonyme']) < 3) {
             $errors[] = "Le pseudonyme doit contenir au moins 3 caractères";
         } elseif (strlen($data['pseudonyme']) > 50) {
             $errors[] = "Le pseudonyme ne doit pas dépasser 50 caractères";
         }
 
-        // VERIFICAR SE PSEUDONYME JÁ EXISTE - NOVA VERIFICAÇÃO
+        // Vérification unicité du pseudonyme
         if (!empty($data['pseudonyme']) && strlen($data['pseudonyme']) >= 3) {
             $existingPseudonyme = $this->userModel->getUserByPseudonyme($data['pseudonyme']);
             if ($existingPseudonyme) {
@@ -70,17 +86,18 @@ class UserController
             }
         }
 
+        // Validation de l'email
         if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors[] = "Email invalide";
         }
 
-        // VERIFICAR SE EMAIL JÁ EXISTE (já existe)
+        // Vérification unicité de l'email
         $existingUser = $this->userModel->getUserByEmail($data['email']);
         if ($existingUser) {
             $errors[] = "Cet email est déjà utilisé";
         }
 
-        // Validação de password
+        // Validation du mot de passe
         if (strlen($data['mot_de_passe']) < 6) {
             $errors[] = "Le mot de passe doit contenir au moins 6 caractères";
         }
@@ -89,10 +106,12 @@ class UserController
             $errors[] = "Les mots de passe ne correspondent pas";
         }
 
+        // Validation du type d'utilisateur
         if (empty($data['type_user']) || !in_array($data['type_user'], ['voter', 'candidate'])) {
             $errors[] = "Veuillez sélectionner un type d'utilisateur valide";
         }
 
+        // Validation de la date de naissance (âge minimum 13 ans)
         if (empty($data['date_naissance'])) {
             $errors[] = "La date de naissance est obligatoire";
         } elseif (strtotime($data['date_naissance']) > strtotime('-13 years')) {
@@ -103,24 +122,24 @@ class UserController
             $errors[] = "Le pays est obligatoire";
         }
 
-        // Verificar se os termos foram aceitos
+        // Vérification acceptation des conditions
         if (!isset($_POST['terms'])) {
             $errors[] = "Vous devez accepter les conditions d'utilisation";
         }
 
+        // Retourner les erreurs si validation échoue
         if (!empty($errors)) {
             return ['success' => false, 'errors' => $errors, 'data' => $data];
         }
 
-        // Resto do código permanece igual...
         try {
-            // Hash da senha
+            // Hashage du mot de passe
             $hashedPassword = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
 
-            // Código de verificação
+            // Code de vérification (à remplacer par un vrai système plus tard)
             $codeVerification = '000000';
 
-            // Dados para criação na tabela compte
+            // Préparation des données pour la table compte
             $userData = [
                 ':pseudonyme' => $data['pseudonyme'],
                 ':email' => $data['email'],
@@ -131,14 +150,14 @@ class UserController
                 ':code_verification' => $codeVerification
             ];
 
-            // Criar usuário na tabela compte
+            // Création du compte principal
             $userId = $this->userModel->createUser($userData);
 
             if (!$userId) {
                 return ['success' => false, 'errors' => ['Erreur lors de la création du compte'], 'data' => $data];
             }
 
-            // Determinar role e inserir na tabela específica
+            // Insertion dans la table spécifique selon le type d'utilisateur
             if ($data['type_user'] === 'candidate') {
                 $this->insertCandidate($userId);
                 $role = 'candidate';
@@ -147,11 +166,12 @@ class UserController
                 $role = 'voter';
             }
 
-            // Iniciar sessão
+            // Démarrage de la session
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
 
+            // Enregistrement des informations de session
             $_SESSION['user_id'] = $userId;
             $_SESSION['user_pseudonyme'] = $data['pseudonyme'];
             $_SESSION['user_email'] = $data['email'];
@@ -159,7 +179,7 @@ class UserController
             $_SESSION['logged_in'] = true;
             $_SESSION['login_time'] = time();
 
-            // Redirecionar para dashboard apropriado
+            // Redirection vers le tableau de bord approprié
             $redirect = $this->getDashboardPath($role);
             header('Location: ' . $redirect);
             exit();
@@ -169,6 +189,12 @@ class UserController
         }
     }
 
+    /**
+     * Insère un enregistrement dans la table candidat
+     *
+     * @param int $userId ID du compte principal
+     * @return bool Succès de l'insertion
+     */
     private function insertCandidate($userId)
     {
         try {
@@ -184,6 +210,12 @@ class UserController
         }
     }
 
+    /**
+     * Insère un enregistrement dans la table utilisateur (votant)
+     *
+     * @param int $userId ID du compte principal
+     * @return bool Succès de l'insertion
+     */
     private function insertUtilisateur($userId)
     {
         try {
@@ -199,6 +231,12 @@ class UserController
         }
     }
 
+    /**
+     * Retourne le chemin du tableau de bord selon le rôle de l'utilisateur
+     *
+     * @param string $role Rôle de l'utilisateur (admin, candidate, voter)
+     * @return string Chemin vers le dashboard correspondant
+     */
     private function getDashboardPath($role)
     {
         switch ($role) {
@@ -213,6 +251,11 @@ class UserController
         }
     }
 
+    /**
+     * Déconnecte l'utilisateur et détruit la session
+     *
+     * @return bool True si la déconnexion a réussi
+     */
     public function logout()
     {
         session_start();
@@ -235,7 +278,11 @@ class UserController
         return true;
     }
 
-    // Método para obter a conexão PDO (adicione no modelo User se necessário)
+    /**
+     * Obtient la connexion PDO (méthode de commodité)
+     *
+     * @return PDO
+     */
     private function getDb()
     {
         return $this->userModel->getDb();

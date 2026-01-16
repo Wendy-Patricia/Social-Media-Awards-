@@ -420,3 +420,89 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+
+// Função para verificar se já tem candidatura na categoria
+async function checkExistingCandidature(categoryId) {
+    if (!categoryId) return false;
+    
+    try {
+        const response = await fetch(`check-candidature.php?category_id=${categoryId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        return result.has_candidature;
+    } catch (error) {
+        console.error('Erreur de vérification:', error);
+        return false;
+    }
+}
+
+// Modificar a função checkFormValidity()
+async function checkFormValidity() {
+    const libelle = document.getElementById('libelle').value.trim();
+    const argumentaire = document.getElementById('argumentaire').value.trim();
+    const platform = document.getElementById('plateformeInput').value;
+    const category = document.getElementById('categorie').value;
+    const url = document.getElementById('url_contenu').value.trim();
+    const edition = document.getElementById('edition').value;
+    const categoryId = document.getElementById('categorie').value;
+    
+    // Verificar duplicação
+    let hasDuplicate = false;
+    if (categoryId) {
+        hasDuplicate = await checkExistingCandidature(categoryId);
+    }
+    
+    // Adicionar mensagem de erro se já tiver candidatura
+    const duplicateError = document.getElementById('duplicate-error');
+    if (hasDuplicate && !duplicateError) {
+        const errorDiv = document.createElement('div');
+        errorDiv.id = 'duplicate-error';
+        errorDiv.className = 'alert alert-warning mt-3';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Attention :</strong> Vous avez déjà une candidature dans cette catégorie.
+            Vous ne pouvez soumettre qu'une seule candidature par catégorie.
+        `;
+        const form = document.getElementById('candidatureForm');
+        form.insertBefore(errorDiv, form.firstChild);
+    } else if (!hasDuplicate && duplicateError) {
+        duplicateError.remove();
+    }
+    
+    // Verificar se todos os campos obrigatórios estão preenchidos
+    const isFormValid = libelle && 
+                       argumentaire.length >= 200 && 
+                       platform && 
+                       category && 
+                       url && 
+                       edition && 
+                       hasValidImage &&
+                       !hasDuplicate; // Adicionar esta condição
+    
+    // Habilitar/desabilitar botão de submit
+    submitButton.disabled = !isFormValid;
+    
+    // Atualizar mensagem no botão se houver duplicação
+    if (hasDuplicate) {
+        submitButton.innerHTML = '<i class="fas fa-ban me-2"></i> Déjà candidaté dans cette catégorie';
+        submitButton.classList.remove('btn-primary');
+        submitButton.classList.add('btn-secondary');
+    } else {
+        submitButton.innerHTML = editId 
+            ? '<i class="fas fa-paper-plane me-2"></i> Mettre à jour la Candidature'
+            : '<i class="fas fa-paper-plane me-2"></i> Soumettre la Candidature';
+        if (isFormValid) {
+            submitButton.classList.remove('btn-secondary');
+            submitButton.classList.add('btn-primary');
+        } else {
+            submitButton.classList.remove('btn-primary');
+            submitButton.classList.add('btn-secondary');
+        }
+    }
+}
