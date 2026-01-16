@@ -1,4 +1,3 @@
-
 <?php
 // FICHIER : login.php
 // DESCRIPTION : Page de connexion avec support de redirection
@@ -15,7 +14,7 @@ if (isAuthenticated()) {
     $redirect = match(getUserType()) {
         'admin' => '../views/admin/dashboard.php',
         'candidate' => '../views/candidate/candidate-dashboard.php',
-        'voter' => '../views/use/user-dashboard.php', 
+        'voter' => '../views/user/user-dashboard.php', // CORRIGIDO AQUI
         default => '../index.php'
     };
     
@@ -48,7 +47,7 @@ if (isset($result['success']) && $result['success']) {
         $redirect = match($_SESSION['user_role'] ?? '') {
             'admin' => '../views/admin/dashboard.php',
             'candidate' => '../views/candidate/candidate-dashboard.php',
-            'voter' => '../views/user/user-dashboard.php', 
+            'voter' => '../views/user/user-dashboard.php', // CORRIGIDO AQUI TAMBÉM
             default => '../index.php'
         };
         header("Location: $redirect");

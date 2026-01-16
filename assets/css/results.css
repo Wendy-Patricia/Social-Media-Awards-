@@ -1,16 +1,16 @@
-
 /* results.css - Estilo específico para a página de resultados */
 
 :root {
     /* Cores principais - MESMA PALETA QUE categories.css */
     --principal: #4FB9AB;
     --principal-dark: #45a999;
-    --secondary: #3da895;     /* Mantendo o secondary original do categories.css */
+    --secondary: #3da895;
+    /* Mantendo o secondary original do categories.css */
     --dark: #2C3E50;
     --gray: #7F8C8D;
     --light-gray: #F8F9FA;
     --white: #FFFFFF;
-    
+
     /* Cores para plataformas sociais - MESMAS QUE categories.css */
     --tiktok: #000000;
     --instagram: #E4405F;
@@ -19,21 +19,23 @@
     --facebook: #1877F2;
     --spotify: #1DB954;
     --twitch: #9146FF;
-    
+
     /* Cores funcionais (mantidas por necessidade) */
     --success: #32D583;
     --warning: #FF9E00;
     --danger: #FF6668;
     --info: #4CC9F0;
-    
+
     /* NOVA COR para statistiques globales - ROSA da charte graphique */
-    --stat-card-color: #FF5A79; /* Rose vibrant da charte graphique */
-    
+    --stat-card-color: #FF5A79;
+    /* Rose vibrant da charte graphique */
+
     /* Sombras */
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
-    --shadow-md: 0 4px 8px rgba(0,0,0,0.12);
-    --shadow-lg: 0 8px 16px rgba(0,0,0,0.15);
-    --shadow-xl: 0 10px 30px rgba(255, 90, 121, 0.3); /* Usando rosa para shadow */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 10px 30px rgba(255, 90, 121, 0.3);
+    /* Usando rosa para shadow */
 }
 
 * {
@@ -42,7 +44,8 @@
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     width: 100%;
     margin: 0;
     padding: 0;
@@ -96,7 +99,7 @@ body {
     font-size: 3rem;
     margin-bottom: 1rem;
     font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .results-hero p {
@@ -179,7 +182,8 @@ body {
 }
 
 /* MENSAGENS DE VOTO */
-.vote-in-progress, .vote-not-started {
+.vote-in-progress,
+.vote-not-started {
     margin-top: 2rem;
     width: 100%;
     max-width: 800px;
@@ -293,11 +297,25 @@ body {
     color: var(--white);
 }
 
-.platform-tag.tiktok { background: var(--tiktok); }
-.platform-tag.instagram { background: var(--instagram); }
-.platform-tag.youtube { background: var(--youtube); }
-.platform-tag.twitter { background: var(--twitter); }
-.platform-tag.facebook { background: var(--facebook); }
+.platform-tag.tiktok {
+    background: var(--tiktok);
+}
+
+.platform-tag.instagram {
+    background: var(--instagram);
+}
+
+.platform-tag.youtube {
+    background: var(--youtube);
+}
+
+.platform-tag.twitter {
+    background: var(--twitter);
+}
+
+.platform-tag.facebook {
+    background: var(--facebook);
+}
 
 .winners-list {
     margin-bottom: 1.5rem;
@@ -389,7 +407,8 @@ body {
     font-size: 1.1rem;
 }
 
-.no-winners, .no-categories {
+.no-winners,
+.no-categories {
     text-align: center;
     padding: 2rem;
     background: var(--light-gray);
@@ -495,117 +514,142 @@ body.vote-ended .category-results {
     padding-top: 0;
 }
 
- /* Style pour le message de vote en cours */
-        .vote-in-progress {
-            background: linear-gradient(135deg, #4FB9AB, #3da895);
-            color: white;
-            padding: 2.5rem;
-            border-radius: 15px;
-            text-align: center;
-            margin-top: 2rem;
-            box-shadow: 0 8px 25px rgba(79, 185, 171, 0.3);
-            width: 100%;
-        }
-        
-        .vote-in-progress i {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .vote-in-progress h2 {
-            font-size: 2.2rem;
-            margin-bottom: 1rem;
-        }
-        
-        .vote-in-progress .countdown {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-top: 1rem;
-            background: rgba(255, 255, 255, 0.2);
-            display: inline-block;
-            padding: 0.5rem 1.5rem;
-            border-radius: 25px;
-        }
-        
-        /* Style pour votes pas encore commencés */
-        .vote-not-started {
-            background: linear-gradient(135deg, #FF9F00, #FFC107);
-            color: white;
-            padding: 2.5rem;
-            border-radius: 15px;
-            text-align: center;
-            margin-top: 2rem;
-            box-shadow: 0 8px 25px rgba(255, 159, 0, 0.3);
-            width: 100%;
-        }
-        
-        .vote-not-started i {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .vote-not-started h2 {
-            font-size: 2.2rem;
-            margin-bottom: 1rem;
-        }
-        
-        /* Indicador de carregamento */
-        .loading-indicator {
-            display: none;
-            padding: 1rem;
-            text-align: center;
-            color: var(--white);
-        }
-        
-        .loading-indicator.active {
-            display: block;
-        }
-        
-        /* Melhorar a aparência das estatísticas */
-        .vote-stats {
-            display: flex;
-            gap: 1.5rem;
-        }
-        
-        .vote-stats .stat {
-            text-align: center;
-            padding: 0.8rem 1.2rem;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            min-width: 120px;
-        }
-        
-        .vote-stats .stat-number {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 0.3rem;
-            color: var(--white);
-        }
-        
-        .vote-stats .stat-label {
-            font-size: 0.85rem;
-            opacity: 0.9;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        /* Garantir que as sections ocupem 100% da largura */
-        .results-hero, .category-results, .statistics-section {
-            width: 100%;
-        }
-        
-        /* Container principal para corresponder ao footer */
-        .global-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        /* Cacher les sections si vote en cours */
-        .vote-active .category-results,
-        .vote-not-started-page .category-results {
-            display: none;
-        }
+/* Style pour le message de vote en cours */
+.vote-in-progress {
+    background: linear-gradient(135deg, #4FB9AB, #3da895);
+    color: white;
+    padding: 2.5rem;
+    border-radius: 15px;
+    text-align: center;
+    margin-top: 2rem;
+    box-shadow: 0 8px 25px rgba(79, 185, 171, 0.3);
+    width: 100%;
+}
+
+.vote-in-progress i {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+}
+
+.vote-in-progress h2 {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+}
+
+.vote-in-progress .countdown {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    border-radius: 25px;
+}
+
+/* Style pour votes pas encore commencés */
+.vote-not-started {
+    background: linear-gradient(135deg, #FF9F00, #FFC107);
+    color: white;
+    padding: 2.5rem;
+    border-radius: 15px;
+    text-align: center;
+    margin-top: 2rem;
+    box-shadow: 0 8px 25px rgba(255, 159, 0, 0.3);
+    width: 100%;
+}
+
+.vote-not-started i {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+}
+
+.vote-not-started h2 {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+}
+
+/* Indicador de carregamento */
+.loading-indicator {
+    display: none;
+    padding: 1rem;
+    text-align: center;
+    color: var(--white);
+}
+
+.loading-indicator.active {
+    display: block;
+}
+
+/* Melhorar a aparência das estatísticas */
+.vote-stats {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.vote-stats .stat {
+    text-align: center;
+    padding: 0.8rem 1.2rem;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    min-width: 120px;
+}
+
+.vote-stats .stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    color: var(--white);
+}
+
+.vote-stats .stat-label {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Garantir que as sections ocupem 100% da largura */
+.results-hero,
+.category-results,
+.statistics-section {
+    width: 100%;
+}
+
+/* Container principal para corresponder ao footer */
+.global-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Cacher les sections si vote en cours */
+.vote-active .category-results,
+.vote-not-started-page .category-results {
+    display: none;
+}
+
+/* Solução mais direta - apenas ajustar o padding do hero */
+.results-hero .global-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Apenas remover o padding lateral */
+    padding-left: 0;
+    padding-right: 0;
+    /* Mas manter o padding vertical */
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
+
+/* Ajustar o conteúdo dentro para não encostar nas bordas */
+.results-hero .global-container>* {
+    width: 100%;
+    max-width: 1200px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
 
 /* FOOTER - Garantir que ocupa toda a largura */
 footer {
@@ -618,69 +662,69 @@ footer {
     .global-container {
         padding: 0 15px;
     }
-    
+
     .results-hero {
         padding: 40px 0;
     }
-    
+
     .results-hero h1 {
         font-size: 2.2rem;
     }
-    
+
     .edition-selector {
         flex-direction: column;
         gap: 1.5rem;
         padding: 1.2rem;
         max-width: 100%;
     }
-    
+
     #editionSelect {
         min-width: 100%;
         max-width: 100%;
     }
-    
+
     .vote-stats {
         flex-direction: row;
         justify-content: center;
         gap: 1rem;
     }
-    
+
     .vote-stats .stat {
         min-width: 120px;
         padding: 0.6rem 1rem;
     }
-    
+
     .vote-stats .stat-number {
         font-size: 1.5rem;
     }
-    
+
     .category-results,
     .statistics-section {
         padding: 3rem 0;
     }
-    
+
     .category-results h2,
     .statistics-section h2 {
         font-size: 2rem;
     }
-    
+
     .results-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
-    
+
     .stat-card {
         padding: 1.5rem;
     }
-    
+
     .stat-number {
         font-size: 2rem;
     }
-    
+
     .tab-btn {
         padding: 0.7rem 1.2rem;
         font-size: 0.9rem;
@@ -691,48 +735,48 @@ footer {
     .results-hero h1 {
         font-size: 1.8rem;
     }
-    
+
     .results-hero p {
         font-size: 1rem;
     }
-    
+
     .vote-stats {
         flex-direction: column;
         gap: 1rem;
         width: 100%;
     }
-    
+
     .vote-stats .stat {
         width: 100%;
     }
-    
+
     .edition-selector {
         padding: 1rem;
     }
-    
+
     .results-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .tab-btn {
         padding: 0.6rem 1rem;
         font-size: 0.85rem;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .stat-card {
         padding: 1.2rem;
     }
-    
+
     .category-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
     }
-    
+
     .platform-tag {
         align-self: flex-start;
     }
@@ -744,13 +788,16 @@ footer {
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-.result-card, .stat-card, .winner-item {
+.result-card,
+.stat-card,
+.winner-item {
     animation: fadeInUp 0.6s ease-out;
 }
 
