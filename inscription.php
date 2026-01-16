@@ -1,4 +1,3 @@
-
 <?php
 // inscription.php
 require_once 'app/Controllers/UserController.php';
@@ -193,7 +192,7 @@ $data = $result['data'] ?? [];
                     <div class="form-group terms-group">
                         <label class="checkbox-label">
                             <input type="checkbox" name="terms" id="terms" required>
-                            <span>J'accepte les <a href="#terms" class="terms-link">conditions d'utilisation</a> et la <a href="#privacy" class="privacy-link">politique de confidentialité</a> *</span>
+                            <span>J'accepte les <a href="cgu.php" target="_blank" class="terms-link">conditions d'utilisation</a> et la <a href="privacy.php" target="_blank" class="privacy-link">politique de confidentialité</a> *</span>
                         </label>
                     </div>
                     

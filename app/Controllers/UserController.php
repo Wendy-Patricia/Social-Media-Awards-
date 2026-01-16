@@ -1,7 +1,9 @@
 <?php
-// app/Controllers/UserController.php 
+// FICHIER : UserController.php
+// DESCRIPTION : Contrôleur de gestion des utilisateurs avec système de redirection
+// FONCTIONNALITÉ : Gère login, inscription, logout et redirections adaptatives
 
-require_once __DIR__ . '/../Models/User.php';
+require_once __DIR__ . '/../Models/UserModel.php';
 require_once __DIR__ . '/../Services/UserService.php';
 
 /**
@@ -22,9 +24,12 @@ class UserController
     }
 
     /**
-     * Gère la tentative de connexion d'un utilisateur
-     *
-     * @return array Tableau contenant les informations d'erreur en cas d'échec
+     * Gère le processus de connexion
+     * - Authentifie l'utilisateur
+     * - Définit les variables de session
+     * - Redirige vers la page appropriée
+     * 
+     * @return array Résultat de l'authentification
      */
     public function handleLogin()
     {
@@ -34,11 +39,20 @@ class UserController
 
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['mot_de_passe'] ?? '';
+        $redirectParam = $_POST['redirect'] ?? ''; // Récupère la redirection
 
         $result = $this->userService->login($email, $password);
 
         if ($result['success']) {
-            $redirect = $this->getDashboardPath($result['user']['role']);
+            // PRIORITÉS DE REDIRECTION :
+            // 1. Paramètre 'redirect' du formulaire (venant de login.php)
+            // 2. Dashboard par défaut selon le rôle
+            if (!empty($redirectParam)) {
+                $redirect = $redirectParam;
+            } else {
+                $redirect = $this->getDashboardPath($result['user']['role']);
+            }
+            
             header('Location: ' . $redirect);
             exit();
         }
@@ -49,9 +63,12 @@ class UserController
     }
 
     /**
-     * Gère le processus d'inscription d'un nouvel utilisateur
-     *
-     * @return array Résultat de l'inscription avec succès/erreurs et données soumises
+     * Gère l'inscription d'un nouvel utilisateur
+     * - Valide les données
+     * - Crée le compte
+     * - Redirige vers le dashboard approprié
+     * 
+     * @return array Résultat de l'inscription
      */
     public function handleRegistration()
     {
@@ -118,6 +135,7 @@ class UserController
             $errors[] = "Vous devez avoir au moins 13 ans";
         }
 
+        // VALIDATION DU PAYS
         if (empty($data['pays'])) {
             $errors[] = "Le pays est obligatoire";
         }
@@ -190,9 +208,9 @@ class UserController
     }
 
     /**
-     * Insère un enregistrement dans la table candidat
-     *
-     * @param int $userId ID du compte principal
+     * Insère un nouvel enregistrement dans la table CANDIDAT
+     * 
+     * @param int $userId ID du compte utilisateur
      * @return bool Succès de l'insertion
      */
     private function insertCandidate($userId)
@@ -211,9 +229,9 @@ class UserController
     }
 
     /**
-     * Insère un enregistrement dans la table utilisateur (votant)
-     *
-     * @param int $userId ID du compte principal
+     * Insère un nouvel enregistrement dans la table UTILISATEUR
+     * 
+     * @param int $userId ID du compte utilisateur
      * @return bool Succès de l'insertion
      */
     private function insertUtilisateur($userId)
@@ -232,10 +250,10 @@ class UserController
     }
 
     /**
-     * Retourne le chemin du tableau de bord selon le rôle de l'utilisateur
-     *
-     * @param string $role Rôle de l'utilisateur (admin, candidate, voter)
-     * @return string Chemin vers le dashboard correspondant
+     * Détermine le chemin du dashboard selon le rôle de l'utilisateur
+     * 
+     * @param string $role Rôle de l'utilisateur (admin, voter, candidate)
+     * @return string Chemin du dashboard approprié
      */
     private function getDashboardPath($role)
     {
@@ -245,22 +263,27 @@ class UserController
             case 'candidate':
                 return '/Social-Media-Awards-/views/candidate/candidate-dashboard.php';
             case 'voter':
-                return '/Social-Media-Awards-/views/user/user-dashboard.php';
+                // MODIFICATION : ÉLECTEURS REDIRIGÉS VERS LA PAGE DE VOTE
+                return '/Social-Media-Awards-/views/user/Vote.php';
             default:
                 return '/index.php';
         }
     }
 
     /**
-     * Déconnecte l'utilisateur et détruit la session
-     *
-     * @return bool True si la déconnexion a réussi
+     * Gère la déconnexion de l'utilisateur
+     * - Nettoie la session
+     * - Détruit les cookies
+     * - Redirige vers l'accueil
+     * 
+     * @return bool Succès de la déconnexion
      */
     public function logout()
     {
         session_start();
         $_SESSION = array();
 
+        // SUPPRESSION DES COOKIES DE SESSION
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(
@@ -279,9 +302,9 @@ class UserController
     }
 
     /**
-     * Obtient la connexion PDO (méthode de commodité)
-     *
-     * @return PDO
+     * Obtient l'instance de la base de données
+     * 
+     * @return PDO Instance de connexion à la base de données
      */
     private function getDb()
     {

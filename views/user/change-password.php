@@ -1,7 +1,7 @@
 <?php
 // views/user/change-password.php
 require_once '../../config/session.php';
-require_once '../../app/Models/User.php';
+require_once '../../app/Models/UserModel.php';
 
 requireRole('voter');
 

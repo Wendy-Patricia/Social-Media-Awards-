@@ -192,4 +192,5 @@ class Category
 
         return $now >= $debut && $now <= $this->date_fin_votes;
     }
+    
 }
