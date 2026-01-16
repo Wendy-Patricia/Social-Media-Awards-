@@ -49,7 +49,7 @@
                 <ul>
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-application.php' ? 'active' : ''; ?>">
                         <a href="/Social-Media-Awards-/views/admin/candidatures/manage-candidature.php">
-                            <i class="fas fa-file-alt"></i> Toutes les Candidatures
+                             <i class="fas fa-gavel"></i> Candidatures
                         </a>
                     </li>
                 </ul>
@@ -63,32 +63,16 @@
                             <i class="fas fa-user-tie"></i> Liste des Nomination
                         </a>
                     </li>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'edit-nomination.php' ? 'active' : ''; ?>">
-                        <a href="/Social-Media-Awards-/views/admin/nominations/edit-nomination.php">
-                            <i class="fas fa-user-plus"></i> Editer un Nominee
-                        </a>
-                    </li>
                 </ul>
             </li>
 
 
             <li class="nav-section">
-                <span class="section-title">Élections</span>
+                <span class="section-title">Resultats</span>
                 <ul>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'manage-elections.php' ? 'active' : ''; ?>">
-                        <a href="manage-elections.php">
-                            <i class="fas fa-vote-yea"></i> Gérer les Élections
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            <li class="nav-section">
-                <span class="section-title">Modération</span>
-                <ul>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'moderate-candidacies.php' ? 'active' : ''; ?>">
-                        <a href="moderate-candidacies.php">
-                            <i class="fas fa-gavel"></i> Candidatures
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'results.php' ? 'active' : ''; ?>">
+                        <a href="/Social-Media-Awards-/results.php">
+                            <i class="fas fa-vote-yea"></i> Resultats
                         </a>
                     </li>
                 </ul>
