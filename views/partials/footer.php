@@ -66,7 +66,7 @@
 
     <div class="footer-bottom">
         <div class="footer-bottom-content">
-            <p>&copy; 2025 Social Media Awards. Tous droits réservés.</p>
+            <p>&copy; 2026 Social Media Awards. Tous droits réservés.</p>
             <div class="footer-bottom-links">
                 <a href="#privacy">Confidentialité</a>
                 <a href="#terms">Conditions</a>

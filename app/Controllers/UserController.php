@@ -1,7 +1,9 @@
 <?php
-// app/Controllers/UserController.php 
+// FICHIER : UserController.php
+// DESCRIPTION : Contrôleur de gestion des utilisateurs avec système de redirection
+// FONCTIONNALITÉ : Gère login, inscription, logout et redirections adaptatives
 
-require_once __DIR__ . '/../Models/User.php';
+require_once __DIR__ . '/../Models/UserModel.php';
 require_once __DIR__ . '/../Services/UserService.php';
 
 class UserController
@@ -15,6 +17,14 @@ class UserController
         $this->userModel = new User();
     }
 
+    /**
+     * Gère le processus de connexion
+     * - Authentifie l'utilisateur
+     * - Définit les variables de session
+     * - Redirige vers la page appropriée
+     * 
+     * @return array Résultat de l'authentification
+     */
     public function handleLogin()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -23,11 +33,20 @@ class UserController
 
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['mot_de_passe'] ?? '';
+        $redirectParam = $_POST['redirect'] ?? ''; // Récupère la redirection
 
         $result = $this->userService->login($email, $password);
 
         if ($result['success']) {
-            $redirect = $this->getDashboardPath($result['user']['role']);
+            // PRIORITÉS DE REDIRECTION :
+            // 1. Paramètre 'redirect' du formulaire (venant de login.php)
+            // 2. Dashboard par défaut selon le rôle
+            if (!empty($redirectParam)) {
+                $redirect = $redirectParam;
+            } else {
+                $redirect = $this->getDashboardPath($result['user']['role']);
+            }
+            
             header('Location: ' . $redirect);
             exit();
         }
@@ -37,6 +56,14 @@ class UserController
         ];
     }
 
+    /**
+     * Gère l'inscription d'un nouvel utilisateur
+     * - Valide les données
+     * - Crée le compte
+     * - Redirige vers le dashboard approprié
+     * 
+     * @return array Résultat de l'inscription
+     */
     public function handleRegistration()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -55,14 +82,14 @@ class UserController
             'genre' => $_POST['genre'] ?? ''
         ];
 
-        // Validações
+        // VALIDATION DU PSEUDONYME
         if (empty($data['pseudonyme']) || strlen($data['pseudonyme']) < 3) {
             $errors[] = "Le pseudonyme doit contenir au moins 3 caractères";
         } elseif (strlen($data['pseudonyme']) > 50) {
             $errors[] = "Le pseudonyme ne doit pas dépasser 50 caractères";
         }
 
-        // VERIFICAR SE PSEUDONYME JÁ EXISTE - NOVA VERIFICAÇÃO
+        // VÉRIFICATION DE L'UNICITÉ DU PSEUDONYME
         if (!empty($data['pseudonyme']) && strlen($data['pseudonyme']) >= 3) {
             $existingPseudonyme = $this->userModel->getUserByPseudonyme($data['pseudonyme']);
             if ($existingPseudonyme) {
@@ -70,17 +97,18 @@ class UserController
             }
         }
 
+        // VALIDATION DE L'EMAIL
         if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors[] = "Email invalide";
         }
 
-        // VERIFICAR SE EMAIL JÁ EXISTE (já existe)
+        // VÉRIFICATION DE L'UNICITÉ DE L'EMAIL
         $existingUser = $this->userModel->getUserByEmail($data['email']);
         if ($existingUser) {
             $errors[] = "Cet email est déjà utilisé";
         }
 
-        // Validação de password
+        // VALIDATION DU MOT DE PASSE
         if (strlen($data['mot_de_passe']) < 6) {
             $errors[] = "Le mot de passe doit contenir au moins 6 caractères";
         }
@@ -89,38 +117,42 @@ class UserController
             $errors[] = "Les mots de passe ne correspondent pas";
         }
 
+        // VALIDATION DU TYPE D'UTILISATEUR
         if (empty($data['type_user']) || !in_array($data['type_user'], ['voter', 'candidate'])) {
             $errors[] = "Veuillez sélectionner un type d'utilisateur valide";
         }
 
+        // VALIDATION DE LA DATE DE NAISSANCE
         if (empty($data['date_naissance'])) {
             $errors[] = "La date de naissance est obligatoire";
         } elseif (strtotime($data['date_naissance']) > strtotime('-13 years')) {
             $errors[] = "Vous devez avoir au moins 13 ans";
         }
 
+        // VALIDATION DU PAYS
         if (empty($data['pays'])) {
             $errors[] = "Le pays est obligatoire";
         }
 
-        // Verificar se os termos foram aceitos
+        // ACCEPTATION DES CONDITIONS
         if (!isset($_POST['terms'])) {
             $errors[] = "Vous devez accepter les conditions d'utilisation";
         }
 
+        // SI ERREURS, RETOURNE LES MESSAGES
         if (!empty($errors)) {
             return ['success' => false, 'errors' => $errors, 'data' => $data];
         }
 
-        // Resto do código permanece igual...
+        // CRÉATION DU COMPTE
         try {
-            // Hash da senha
+            // HACHAGE DU MOT DE PASSE
             $hashedPassword = password_hash($data['mot_de_passe'], PASSWORD_DEFAULT);
 
-            // Código de verificação
+            // CODE DE VÉRIFICATION (simplifié pour le prototype)
             $codeVerification = '000000';
 
-            // Dados para criação na tabela compte
+            // DONNÉES POUR LA TABLE COMPTE
             $userData = [
                 ':pseudonyme' => $data['pseudonyme'],
                 ':email' => $data['email'],
@@ -131,14 +163,14 @@ class UserController
                 ':code_verification' => $codeVerification
             ];
 
-            // Criar usuário na tabela compte
+            // CRÉATION DU COMPTE UTILISATEUR
             $userId = $this->userModel->createUser($userData);
 
             if (!$userId) {
                 return ['success' => false, 'errors' => ['Erreur lors de la création du compte'], 'data' => $data];
             }
 
-            // Determinar role e inserir na tabela específica
+            // INSERTION DANS LA TABLE SPÉCIFIQUE (CANDIDAT OU UTILISATEUR)
             if ($data['type_user'] === 'candidate') {
                 $this->insertCandidate($userId);
                 $role = 'candidate';
@@ -147,11 +179,12 @@ class UserController
                 $role = 'voter';
             }
 
-            // Iniciar sessão
+            // INITIALISATION DE LA SESSION
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
 
+            // DÉFINITION DES VARIABLES DE SESSION
             $_SESSION['user_id'] = $userId;
             $_SESSION['user_pseudonyme'] = $data['pseudonyme'];
             $_SESSION['user_email'] = $data['email'];
@@ -159,7 +192,7 @@ class UserController
             $_SESSION['logged_in'] = true;
             $_SESSION['login_time'] = time();
 
-            // Redirecionar para dashboard apropriado
+            // REDIRECTION VERS LE DASHBOARD APPROPRIÉ
             $redirect = $this->getDashboardPath($role);
             header('Location: ' . $redirect);
             exit();
@@ -169,6 +202,12 @@ class UserController
         }
     }
 
+    /**
+     * Insère un nouvel enregistrement dans la table CANDIDAT
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @return bool Succès de l'insertion
+     */
     private function insertCandidate($userId)
     {
         try {
@@ -184,6 +223,12 @@ class UserController
         }
     }
 
+    /**
+     * Insère un nouvel enregistrement dans la table UTILISATEUR
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @return bool Succès de l'insertion
+     */
     private function insertUtilisateur($userId)
     {
         try {
@@ -199,6 +244,12 @@ class UserController
         }
     }
 
+    /**
+     * Détermine le chemin du dashboard selon le rôle de l'utilisateur
+     * 
+     * @param string $role Rôle de l'utilisateur (admin, voter, candidate)
+     * @return string Chemin du dashboard approprié
+     */
     private function getDashboardPath($role)
     {
         switch ($role) {
@@ -207,17 +258,27 @@ class UserController
             case 'candidate':
                 return '/Social-Media-Awards-/views/candidate/candidate-dashboard.php';
             case 'voter':
-                return '/Social-Media-Awards-/views/user/user-dashboard.php';
+                // MODIFICATION : ÉLECTEURS REDIRIGÉS VERS LA PAGE DE VOTE
+                return '/Social-Media-Awards-/views/user/Vote.php';
             default:
                 return '/index.php';
         }
     }
 
+    /**
+     * Gère la déconnexion de l'utilisateur
+     * - Nettoie la session
+     * - Détruit les cookies
+     * - Redirige vers l'accueil
+     * 
+     * @return bool Succès de la déconnexion
+     */
     public function logout()
     {
         session_start();
         $_SESSION = array();
 
+        // SUPPRESSION DES COOKIES DE SESSION
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(
@@ -235,7 +296,11 @@ class UserController
         return true;
     }
 
-    // Método para obter a conexão PDO (adicione no modelo User se necessário)
+    /**
+     * Obtient l'instance de la base de données
+     * 
+     * @return PDO Instance de connexion à la base de données
+     */
     private function getDb()
     {
         return $this->userModel->getDb();

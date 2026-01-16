@@ -424,3 +424,40 @@ body {
         max-width: 1300px;
     }
 }
+
+/* STYLES POUR LE SYSTÈME DE VOTE ADAPTATIF */
+
+/* BOUTON DÉSACTIVÉ (non-authentifié ou non-électeur) */
+.btn-vote.btn-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #ccc !important;
+    color: #666 !important;
+    pointer-events: none; /* Empêche l'interaction par défaut */
+}
+
+/* État hover pour bouton désactivé */
+.btn-vote.btn-disabled:hover {
+    background-color: #ccc !important;
+    color: #666 !important;
+    transform: none;
+    box-shadow: none;
+}
+
+/* IMPORTANT : Autorise les événements JavaScript pour notre gestion personnalisée */
+.btn-vote.btn-disabled {
+    pointer-events: auto !important;
+}
+
+/* BOUTON ACTIF (électeur authentifié) */
+.btn-vote {
+    background-color: var(--principal, #4FBDAB);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-vote:hover {
+    background-color: var(--secondary, #3DA997);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
