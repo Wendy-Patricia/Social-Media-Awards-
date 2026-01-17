@@ -27,8 +27,7 @@ $formData = [
     'date_debut_candidatures' => $_POST['date_debut_candidatures'] ?? $edition['date_debut_candidatures'],
     'date_fin_candidatures' => $_POST['date_fin_candidatures'] ?? $edition['date_fin_candidatures'],
     'date_debut' => $_POST['date_debut'] ?? $edition['date_debut'],
-    'date_fin' => $_POST['date_fin'] ?? $edition['date_fin'],
-    'est_active' => $_POST['est_active'] ?? $edition['est_active']
+    'date_fin' => $_POST['date_fin'] ?? $edition['date_fin']
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -40,8 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'date_debut_candidatures' => $_POST['date_debut_candidatures'] ?? '',
         'date_fin_candidatures' => $_POST['date_fin_candidatures'] ?? '',
         'date_debut' => $_POST['date_debut'] ?? '',
-        'date_fin' => $_POST['date_fin'] ?? '',
-        'est_active' => isset($_POST['est_active']) ? 1 : 0
+        'date_fin' => $_POST['date_fin'] ?? ''
     ];
 
     $validationErrors = [];
@@ -59,7 +57,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (strtotime($data['date_debut_candidatures']) >= strtotime($data['date_fin_candidatures']) ||
             strtotime($data['date_fin_candidatures']) >= strtotime($data['date_debut']) ||
             strtotime($data['date_debut']) >= strtotime($data['date_fin'])) {
-            $validationErrors[] = "Les dates doivent être dans l'ordre logique.";
+            $validationErrors[] = "Les dates doivent être dans l'ordre logique: Début candidatures < Fin candidatures < Début édition < Fin édition.";
+        }
+        
+        // Vérifier s'il y a déjà une édition active pendant cette période (exclure l'édition actuelle)
+        $debut = $data['date_debut'];
+        $fin = $data['date_fin'];
+        
+        $checkOverlapSql = "SELECT COUNT(*) as count FROM edition 
+                           WHERE id_edition != :id 
+                           AND ((date_debut <= :fin AND date_fin >= :debut)
+                           OR (date_debut >= :debut2 AND date_fin <= :fin2))";
+        $checkStmt = $pdo->prepare($checkOverlapSql);
+        $checkStmt->execute([
+            ':id' => $id,
+            ':debut' => $debut,
+            ':fin' => $fin,
+            ':debut2' => $debut,
+            ':fin2' => $fin
+        ]);
+        $overlapCount = $checkStmt->fetch()['count'];
+        
+        if ($overlapCount > 0) {
+            $validationErrors[] = "Une autre édition existe déjà pendant cette période. Les éditions ne peuvent pas se chevaucher.";
         }
     }
 
@@ -106,6 +126,11 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                 <?= $error ?>
             </div>
         <?php endif; ?>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Note:</strong> Une édition est automatiquement active si la date actuelle est comprise entre sa date de début et sa date de fin. Les éditions ne peuvent pas se chevaucher.
+        </div>
 
         <?php if ($edition['image']): ?>
         <div class="current-image-section">
@@ -160,14 +185,8 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                         <input type="datetime-local" name="date_fin" required
                                value="<?= htmlspecialchars($formData['date_fin']) ?>">
                     </div>
+                    <small class="form-text">L'édition sera active automatiquement pendant cette période</small>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" name="est_active" value="1" <?= $formData['est_active'] ? 'checked' : '' ?>>
-                    Édition active (en cours)
-                </label>
             </div>
 
             <div class="form-group">

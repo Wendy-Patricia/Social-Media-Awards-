@@ -13,7 +13,6 @@ class Edition
     private string $date_fin_candidatures;
     private string $date_debut;
     private string $date_fin;
-    private bool $est_active = false;
     private ?string $theme = null;
     private int $nb_categories = 0;
     private int $nb_candidatures = 0;
@@ -31,7 +30,6 @@ class Edition
             $this->setDateFinCandidatures($data['date_fin_candidatures'] ?? '');
             $this->setDateDebut($data['date_debut'] ?? '');
             $this->setDateFin($data['date_fin'] ?? '');
-            $this->setEstActive($data['est_active'] ?? false);
             $this->setTheme($data['theme'] ?? null);
             $this->setNbCategories($data['nb_categories'] ?? 0);
             $this->setNbCandidatures($data['nb_candidatures'] ?? 0);
@@ -48,11 +46,19 @@ class Edition
     public function getDateFinCandidatures(): string { return $this->date_fin_candidatures; }
     public function getDateDebut(): string { return $this->date_debut; }
     public function getDateFin(): string { return $this->date_fin; }
-    public function getEstActive(): bool { return $this->est_active; }
     public function getTheme(): ?string { return $this->theme; }
     public function getNbCategories(): int { return $this->nb_categories; }
     public function getNbCandidatures(): int { return $this->nb_candidatures; }
     public function getNbVotants(): int { return $this->nb_votants; }
+    
+    public function isActive(): bool 
+    { 
+        $now = new \DateTime();
+        $debut = new \DateTime($this->date_debut);
+        $fin = new \DateTime($this->date_fin);
+        
+        return ($now >= $debut && $now <= $fin);
+    }
 
     public function setIdEdition(?int $id_edition): void { $this->id_edition = $id_edition; }
     public function setAnnee(int $annee): void
@@ -79,7 +85,6 @@ class Edition
     public function setDateFinCandidatures(string $date): void { $this->date_fin_candidatures = $date; }
     public function setDateDebut(string $date): void { $this->date_debut = $date; }
     public function setDateFin(string $date): void { $this->date_fin = $date; }
-    public function setEstActive(bool $est_active): void { $this->est_active = $est_active; }
     public function setTheme(?string $theme): void { $this->theme = $theme; }
     public function setNbCategories(int $nb): void { $this->nb_categories = max(0, $nb); }
     public function setNbCandidatures(int $nb): void { $this->nb_candidatures = max(0, $nb); }
@@ -92,7 +97,7 @@ class Edition
         $fin = new \DateTime($this->date_fin);
 
         if ($now < $debut) return 'upcoming';
-        if ($now <= $fin && $this->est_active) return 'active';
+        if ($now <= $fin && $this->isActive()) return 'active';
         return 'completed';
     }
 }

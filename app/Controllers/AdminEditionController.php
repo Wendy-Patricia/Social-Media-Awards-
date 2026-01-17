@@ -82,10 +82,14 @@ class AdminEditionController implements AdminEditionControllerInterface
      * @param int $id Identifiant de l'édition à modifier
      * @param array $data Nouvelles données
      * @param array|null $imageFile Nouvelle image (facultatif)
+     * @param bool $removeImage Supprimer l'image actuelle
      * @return bool True en cas de succès, false sinon
      */
-    public function updateEdition(int $id, array $data, ?array $imageFile = null): bool
+    public function updateEdition(int $id, array $data, ?array $imageFile = null, bool $removeImage = false): bool
     {
+        if ($removeImage) {
+            $_POST['remove_image'] = '1';
+        }
         return $this->editionService->updateEdition($id, $data, $imageFile);
     }
 
@@ -99,5 +103,4 @@ class AdminEditionController implements AdminEditionControllerInterface
     {
         return $this->editionService->deleteEdition($id);
     }
-    
 }

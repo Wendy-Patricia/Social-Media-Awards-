@@ -58,13 +58,14 @@ class EditionService
         if ($checkStmt->fetch()) {
             throw new \Exception("Une édition avec l'année {$data['annee']} existe déjà.");
         }
+
         $imagePath = $this->uploadImage($imageFile);
 
         $sql = "INSERT INTO edition 
                 (annee, nom, description, image, date_debut_candidatures, date_fin_candidatures, 
-                 date_debut, date_fin, est_active, theme)
+                 date_debut, date_fin, theme)
                 VALUES (:annee, :nom, :description, :image, :date_debut_candidatures, 
-                        :date_fin_candidatures, :date_debut, :date_fin, :est_active, :theme)";
+                        :date_fin_candidatures, :date_debut, :date_fin, :theme)";
 
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([
@@ -76,7 +77,6 @@ class EditionService
             ':date_fin_candidatures' => $data['date_fin_candidatures'],
             ':date_debut' => $data['date_debut'],
             ':date_fin' => $data['date_fin'],
-            ':est_active' => $data['est_active'] ?? 0,
             ':theme' => $data['theme'] ?: null
         ]);
     }
@@ -110,7 +110,6 @@ class EditionService
                 date_fin_candidatures = :date_fin_candidatures,
                 date_debut = :date_debut,
                 date_fin = :date_fin,
-                est_active = :est_active,
                 theme = :theme
                 WHERE id_edition = :id";
 
@@ -124,7 +123,6 @@ class EditionService
             ':date_fin_candidatures' => $data['date_fin_candidatures'],
             ':date_debut' => $data['date_debut'],
             ':date_fin' => $data['date_fin'],
-            ':est_active' => $data['est_active'] ?? 0,
             ':theme' => $data['theme'] ?: null,
             ':id' => $id
         ]);
@@ -162,5 +160,19 @@ class EditionService
             return 'uploads/editions/' . $filename;
         }
         return null;
+    }
+
+    /**
+     * Récupère l'édition active actuelle (si elle existe)
+     */
+    public function getActiveEdition(): ?array
+    {
+        $now = date('Y-m-d H:i:s');
+        $sql = "SELECT * FROM edition 
+                WHERE date_debut <= :now AND date_fin >= :now
+                LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':now' => $now]);
+        return $stmt->fetch() ?: null;
     }
 }
