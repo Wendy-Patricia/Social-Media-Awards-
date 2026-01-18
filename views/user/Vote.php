@@ -1,38 +1,41 @@
 <?php
-// views/user/Vote.php - VERSÃO ATUALIZADA COM CHARTE GRAPHIQUE
+// views/user/Vote.php - VERSION AVEC CHARTE GRAPHIQUE
+// Interface de vote principale pour les électeurs
+// Permet de sélectionner des catégories et de voter pour des nominations
+
 require_once '../../config/session.php';
 
-// Verificar autenticação
+// Vérifier l'authentification
 requireRole('voter');
 
-// Inicializar controlador
+// Initialiser le contrôleur de vote
 require_once '../../app/Controllers/VoteController.php';
 $voteController = new VoteController();
 
-// Obter dados para a página
+// Récupérer les données pour la page
 $pageData = $voteController->showVotingPage();
 
-// Verificar se está em processo de votação específico
+// Vérifier si l'utilisateur est dans un processus de vote spécifique
 $categoryId = isset($_GET['category_id']) ? intval($_GET['category_id']) : null;
 $viewResults = isset($_GET['view']) && $_GET['view'] === 'results';
 $nominations = [];
 $currentCategory = null;
 
 if ($categoryId && $categoryId > 0) {
-    // Obter nomeações para esta categoria
+    // Récupérer les nominations pour cette catégorie
     require_once '../../app/Models/VoteModel.php';
     $voteModel = new Vote();
     $nominations = $voteModel->getNominationsForCategory($categoryId);
     $currentCategory = $voteModel->getCategoryInfo($categoryId);
 
-    // Se não encontrar categoria, redirecionar
+    // Rediriger si la catégorie n'est pas trouvée
     if (!$currentCategory) {
         header('Location: vote.php?error=invalid_category');
         exit();
     }
 }
 
-// Processar voto se formulário enviado
+// Traiter le vote si le formulaire est soumis
 $error = null;
 $success = false;
 $successMessage = null;
@@ -43,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $result = $voteController->startCategoryVoting();
 
         if ($result['success']) {
-            // Redirecionar para a página de votação
+            // Rediriger vers la page de vote
             header('Location: vote.php?category_id=' . $_POST['category_id']);
             exit();
         } else {
@@ -66,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $error = $result['message'];
             $alreadyVoted = $result['already_voted'] ?? false;
 
-            // Se já votou, redirecionar para evitar mensagem de sucesso antiga
+            // Rediriger si l'utilisateur a déjà voté
             if ($alreadyVoted) {
                 header('Location: vote.php?error=already_voted&category_id=' . ($_POST['category_id'] ?? ''));
                 exit();
@@ -75,19 +78,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Verificar se há mensagem de sucesso
+// Vérifier s'il y a un message de succès
 if (isset($_GET['success']) || isset($_SESSION['vote_success'])) {
     $success = true;
     $successMessage = $_SESSION['vote_message'] ?? 'Votre vote a été enregistré avec succès!';
 
-    // Limpar mensagens da sessão
+    // Nettoyer les messages de session
     if (isset($_SESSION['vote_success'])) {
         unset($_SESSION['vote_success']);
         unset($_SESSION['vote_message']);
     }
 }
 
-// Verificar erros da URL
+// Vérifier les erreurs depuis l'URL
 if (isset($_GET['error'])) {
     switch ($_GET['error']) {
         case 'invalid_category':
@@ -119,7 +122,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* Apenas o estilo necessário para o progresso */
+        /* Style dynamique pour la barre de progression */
         .progress-fill {
             width: <?php
                     $votedCount = 0;
@@ -163,7 +166,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
 
     <main class="dashboard-container">
         <div class="dashboard-main">
-            <!-- Mensagens -->
+            <!-- Messages d'alerte -->
             <?php if ($success && $successMessage): ?>
                 <div class="voting-alert alert-success">
                     <i class="fas fa-check-circle fa-2x"></i>
@@ -201,10 +204,10 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                 <?php endif; ?>
             <?php endif; ?>
 
-            <!-- Seção Principal -->
+            <!-- Conteneur principal de la page de vote -->
             <div class="vote-page-container">
                 <?php if (!$categoryId): ?>
-                    <!-- Visão geral das categorias -->
+                    <!-- Vue d'ensemble des catégories -->
                     <section class="categories-overview">
                         <div class="section-header">
                             <div class="section-title">
@@ -215,6 +218,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                         </div>
 
                         <?php if (empty($pageData['available_categories'])): ?>
+                            <!-- État vide : aucune catégorie disponible -->
                             <div class="empty-state">
                                 <i class="fas fa-calendar-times"></i>
                                 <h3>Aucune catégorie disponible pour le moment</h3>
@@ -227,6 +231,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                 </div>
                             </div>
                         <?php else: ?>
+                            <!-- Grille des catégories disponibles -->
                             <div class="categories-grid">
                                 <?php foreach ($pageData['available_categories'] as $category):
                                     $status = null;
@@ -237,7 +242,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                         }
                                     }
 
-                                    // Correção IMPORTANTE: usar nomination_count direto da categoria, não do status
+                                    // CORRECTION IMPORTANTE: utiliser nomination_count directement de la catégorie
                                     $actualNominationCount = $category['nomination_count'] ?? 0;
                                     $hasNominations = $actualNominationCount > 0;
                                     $canVote = $status && !$status['has_voted'] && $status['is_active'] && $hasNominations;
@@ -251,6 +256,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                                 <i class="fas fa-trophy"></i>
                                             </div>
                                             <div class="category-badge">
+                                                <!-- Badge selon le statut de vote -->
                                                 <?php if ($status && $status['has_voted']): ?>
                                                     <span class="badge voted-badge">
                                                         <i class="fas fa-check-circle"></i>
@@ -316,7 +322,6 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                                     <div class="number"><?php echo $status && $status['has_voted'] ? '1' : '0'; ?></div>
                                                     <div class="label">Votes</div>
                                                 </div>
-                                               
                                             </div>
 
                                             <div class="category-actions">
@@ -326,6 +331,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                                         Déjà voté
                                                     </button>
                                                 <?php elseif ($canVote): ?>
+                                                    <!-- Formulaire pour démarrer le vote -->
                                                     <form method="POST" action="" class="category-form">
                                                         <input type="hidden" name="action" value="start_voting">
                                                         <input type="hidden" name="category_id" value="<?php echo $category['id_categorie']; ?>">
@@ -353,7 +359,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                         <?php endif; ?>
                     </section>
 
-                    <!-- Status de votação -->
+                    <!-- Section de progression du vote -->
                     <section class="voting-progress">
                         <div class="section-header">
                             <div class="section-title">
@@ -374,6 +380,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                             $percentage = $totalCategories > 0 ? round(($votedCategories / $totalCategories) * 100) : 0;
                             ?>
 
+                            <!-- Cercle de progression SVG -->
                             <div class="progress-circle">
                                 <svg width="140" height="140" viewBox="0 0 140 140">
                                     <defs>
@@ -393,6 +400,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                 </div>
                             </div>
 
+                            <!-- Détails de progression -->
                             <div class="progress-details">
                                 <div class="detail-item">
                                     <span class="detail-value"><?php echo $totalCategories; ?></span>
@@ -410,9 +418,10 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                         </div>
                     </section>
                 <?php else: ?>
-                    <!-- Interface de votação específica -->
+                    <!-- Interface de vote spécifique à une catégorie -->
                     <section class="voting-interface">
                         <div class="voting-header">
+                            <!-- Navigation de retour -->
                             <a href="vote.php" class="back-to-categories">
                                 <i class="fas fa-arrow-left"></i>
                                 Retour aux catégories
@@ -435,6 +444,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                 <?php endif; ?>
                             </div>
 
+                            <!-- Informations importantes sur le vote -->
                             <div class="voting-info">
                                 <div class="info-card">
                                     <i class="fas fa-info-circle"></i>
@@ -447,6 +457,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                         </div>
 
                         <?php if ($alreadyVoted): ?>
+                            <!-- Message : déjà voté -->
                             <div class="empty-state">
                                 <i class="fas fa-check-circle fa-3x" style="color: #32D583;"></i>
                                 <h3>Vous avez déjà voté dans cette catégorie</h3>
@@ -459,6 +470,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                 </div>
                             </div>
                         <?php elseif (empty($nominations)): ?>
+                            <!-- Message : aucun nominé disponible -->
                             <div class="empty-state">
                                 <i class="fas fa-users-slash"></i>
                                 <h3>Aucun nominé disponible</h3>
@@ -472,12 +484,13 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                             </div>
                         <?php else: ?>
                             <?php if (!$viewResults): ?>
-                                <!-- Formulaire de votação -->
+                                <!-- Formulaire de vote -->
                                 <form method="POST" action="" class="voting-form" id="voteForm">
                                     <input type="hidden" name="action" value="cast_vote">
                                     <input type="hidden" name="category_id" value="<?php echo $categoryId; ?>">
                                     <input type="hidden" name="token" value="<?php echo $_SESSION['voting_token'] ?? ''; ?>">
 
+                                    <!-- Grille des nominations -->
                                     <div class="nominations-grid">
                                         <?php foreach ($nominations as $index => $nomination): ?>
                                             <div class="nomination-card" onclick="selectNomination(<?php echo $nomination['id_nomination']; ?>, '<?php echo addslashes($nomination['libelle']); ?>')">
@@ -538,6 +551,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                                             <?php endif; ?>
                                                         </div>
 
+                                                        <!-- Indicateur de sélection -->
                                                         <div class="nomination-select">
                                                             <div class="select-indicator">
                                                                 <i class="fas fa-check-circle"></i>
@@ -550,6 +564,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                         <?php endforeach; ?>
                                     </div>
 
+                                    <!-- Actions de vote -->
                                     <div class="voting-actions">
                                         <div class="voting-security">
                                             <div class="security-notice">
@@ -570,7 +585,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                     </div>
                                 </form>
                             <?php else: ?>
-                                <!-- Visualização de resultados -->
+                                <!-- Visualisation des résultats -->
                                 <div class="results-view">
                                     <div class="results-header">
                                         <h3><i class="fas fa-chart-bar"></i> Résultats pour cette catégorie</h3>
@@ -579,7 +594,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
 
                                     <div class="results-grid">
                                         <?php
-                                        // Ordenar por número de votos
+                                        // Trier par nombre de votes
                                         usort($nominations, function ($a, $b) {
                                             return ($b['vote_count'] ?? 0) - ($a['vote_count'] ?? 0);
                                         });
@@ -591,6 +606,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                         ?>
                                             <div class="result-item <?php echo $index < 3 ? 'top-' . ($index + 1) : ''; ?>">
                                                 <div class="result-rank">
+                                                    <!-- Icônes pour les 3 premiers -->
                                                     <?php if ($index === 0): ?>
                                                         <i class="fas fa-crown gold"></i>
                                                     <?php elseif ($index === 1): ?>
@@ -615,6 +631,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                                                         </span>
                                                     </div>
 
+                                                    <!-- Barre de progression des résultats -->
                                                     <div class="result-bar">
                                                         <div class="bar-fill" style="width: <?php echo $percentage; ?>%;"></div>
                                                     </div>
@@ -648,7 +665,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
         </div>
     </main>
 
-    <!-- Modal de confirmação -->
+    <!-- Modal de confirmation de vote -->
     <div class="vote-confirm-modal" id="confirmModal">
         <div class="modal-content">
             <h3><i class="fas fa-question-circle"></i> Confirmer votre vote</h3>
@@ -670,7 +687,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
         </div>
     </div>
 
-    <!-- Footer -->
+    <!-- Footer du tableau de bord -->
     <footer class="dashboard-footer">
         <div class="footer-content">
             <div class="footer-links">
@@ -687,6 +704,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
         </div>
     </footer>
 
+    <!-- Scripts JavaScript pour la gestion du vote -->
     <script>
         // Gestion de la sélection des nominés
         let selectedNominationId = null;
@@ -703,34 +721,34 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
             if (card) {
                 card.classList.add('selected');
 
-                // Atualizar seleção
+                // Mettre à jour la sélection
                 document.getElementById(`nomination_${nominationId}`).checked = true;
                 selectedNominationId = nominationId;
                 selectedNominationName = nomineeName;
 
-                // Habilitar botão de envio
+                // Activer le bouton d'envoi
                 const submitBtn = document.getElementById('submitVoteBtn');
                 submitBtn.disabled = false;
 
-                // Atualizar texto do botão
+                // Mettre à jour le texte du bouton
                 const btnText = submitBtn.querySelector('.btn-text');
                 const shortName = nomineeName.length > 30 ? nomineeName.substring(0, 30) + '...' : nomineeName;
                 btnText.textContent = `Voter pour "${shortName}"`;
             }
         }
 
-        // Confirmação de voto
+        // Confirmation du vote
         function confirmVote() {
             if (!selectedNominationId) {
                 showToast('Veuillez sélectionner un nominé avant de voter.', 'error');
                 return;
             }
 
-            // Atualizar mensagem no modal
+            // Mettre à jour le message dans la modal
             document.getElementById('selectedNomineeName').textContent =
                 `Êtes-vous sûr de vouloir voter pour "${selectedNominationName}"?`;
 
-            // Mostrar modal
+            // Afficher la modal
             document.getElementById('confirmModal').style.display = 'flex';
         }
 
@@ -739,28 +757,28 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
         }
 
         function submitVote() {
-            // Mostrar loading
+            // Afficher l'indicateur de chargement
             const submitBtn = document.querySelector('.modal-actions .btn-primary');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement...';
             submitBtn.disabled = true;
 
-            // Enviar formulário após breve delay para mostrar feedback
+            // Envoyer le formulaire après un délai pour montrer le feedback
             setTimeout(() => {
                 document.getElementById('voteForm').submit();
             }, 1000);
         }
 
-        // Fechar modal ao clicar fora
+        // Fermer la modal en cliquant à l'extérieur
         document.getElementById('confirmModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeModal();
             }
         });
 
-        // Função para mostrar toast
+        // Fonction pour afficher les notifications toast
         function showToast(message, type = 'info') {
-            // Verificar se já existe um toast
+            // Vérifier si un toast existe déjà
             const existingToast = document.querySelector('.toast');
             if (existingToast) {
                 existingToast.remove();
@@ -775,17 +793,17 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
 
             document.body.appendChild(toast);
 
-            // Animação
+            // Animation d'apparition
             setTimeout(() => toast.classList.add('show'), 10);
 
-            // Remover após 5 segundos
+            // Supprimer après 5 secondes
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
             }, 5000);
         }
 
-        // Auto-dismiss alerts after 5 seconds
+        // Auto-dismiss des alertes après 5 secondes
         document.addEventListener('DOMContentLoaded', function() {
             const alerts = document.querySelectorAll('.voting-alert, .already-voted-alert');
             alerts.forEach(alert => {
@@ -798,7 +816,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                 }, 5000);
             });
 
-            // Limpar parâmetros da URL para evitar mensagens duplicadas
+            // Nettoyer les paramètres de l'URL pour éviter les messages dupliqués
             const url = new URL(window.location);
             if (url.searchParams.has('success') || url.searchParams.has('error')) {
                 url.searchParams.delete('success');
@@ -806,7 +824,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                 window.history.replaceState({}, '', url.toString());
             }
 
-            // Verificação de sessão
+            // Vérification périodique de la session
             setInterval(() => {
                 fetch('/Social-Media-Awards-/views/check_session.php')
                     .then(response => response.json())
@@ -818,7 +836,7 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
                     .catch(() => console.log('Erreur de vérification de session'));
             }, 300000); // 5 minutes
 
-            // Animar barras de progresso nos resultados
+            // Animer les barres de progression des résultats
             const barFills = document.querySelectorAll('.bar-fill');
             barFills.forEach(bar => {
                 const width = bar.style.width;
@@ -829,14 +847,13 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
             });
         });
 
-        // Keyboard shortcuts
+        // Raccourcis clavier
         document.addEventListener('keydown', function(e) {
-            // Escape to close modal
+            // Échap pour fermer la modal
             if (e.key === 'Escape') {
                 closeModal();
             }
         });
     </script>
 </body>
-
 </html>

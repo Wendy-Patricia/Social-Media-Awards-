@@ -3,15 +3,32 @@
 
 require_once __DIR__ . '/session.php';
 
-function isLoggedIn(): bool {
-    return isAuthenticated();
+/**
+ * Vérifie si l'utilisateur est actuellement connecté
+ * 
+ * @return bool True si l'utilisateur est connecté, sinon false
+ */
+function isLoggedIn(): bool
+{
+    return isAuthenticated(); // Réutilise la fonction existante
 }
 
-function requireLogin() {
-    requireAuth(); // Reutiliza a função existente
+/**
+ * Redirige vers la page de connexion si l'utilisateur n'est pas authentifié
+ */
+function requireLogin()
+{
+    requireAuth(); // Réutilise la fonction existante
 }
 
-function requireAdmin() {
+/**
+ * Exige que l'utilisateur soit administrateur
+ * - Vérifie d'abord l'authentification
+ * - Vérifie ensuite le rôle administrateur
+ * - Redirige ou affiche une erreur 403 si non autorisé
+ */
+function requireAdmin()
+{
     requireAuth();
     if (!isAdmin()) {
         http_response_code(403);
@@ -20,27 +37,40 @@ function requireAdmin() {
 }
 
 /**
- * Verificar se usuário pode votar em uma categoria
+ * Vérifie si un utilisateur peut voter dans une catégorie spécifique
+ * 
+ * @param int $userId ID de l'utilisateur
+ * @param int $categoryId ID de la catégorie
+ * @return bool True si l'utilisateur peut voter, sinon false
  */
-function canUserVote($userId, $categoryId) {
+function canUserVote($userId, $categoryId)
+{
     require_once __DIR__ . '/../app/Services/VoteService.php';
     $voteService = new VoteService();
     return $voteService->canUserVote($userId, $categoryId);
 }
 
 /**
- * Verificar se categoria está ativa para votação
+ * Vérifie si une catégorie est active pour le vote
+ * 
+ * @param int $categoryId ID de la catégorie
+ * @return bool True si la catégorie est active, sinon false
  */
-function isCategoryActive($categoryId) {
+function isCategoryActive($categoryId)
+{
     require_once __DIR__ . '/../app/Models/Vote.php';
     $voteModel = new Vote();
     return $voteModel->isCategoryActive($categoryId);
 }
 
 /**
- * Redirecionar para página de votação se não puder votar
+ * Vérifie les permissions de vote et redirige si nécessaire
+ * 
+ * @param int $userId ID de l'utilisateur
+ * @param int $categoryId ID de la catégorie
  */
-function requireVotingPermission($userId, $categoryId) {
+function requireVotingPermission($userId, $categoryId)
+{
     if (!canUserVote($userId, $categoryId)) {
         $_SESSION['error'] = 'Vous ne pouvez pas voter dans cette catégorie';
         header('Location: /Social-Media-Awards-/views/user/vote.php');
@@ -49,14 +79,20 @@ function requireVotingPermission($userId, $categoryId) {
 }
 
 /**
- * Verificar token de votação
+ * Valide un token de vote anonyme
+ * 
+ * @param string $token Valeur du token
+ * @param int $userId ID de l'utilisateur
+ * @param int $categoryId ID de la catégorie
+ * @return bool True si le token est valide, sinon false
  */
-function validateVotingToken($token, $userId, $categoryId) {
+function validateVotingToken($token, $userId, $categoryId)
+{
     require_once __DIR__ . '/../app/Models/Vote.php';
     $voteModel = new Vote();
     
     try {
-        // Verificar se token é válido
+        // Vérifie si le token existe, n'est pas utilisé et n'est pas expiré
         $stmt = $voteModel->getDb()->prepare("
             SELECT id_token FROM TOKEN_ANONYME 
             WHERE token_value = :token 

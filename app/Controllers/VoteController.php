@@ -1,21 +1,38 @@
 <?php
+/**
+ * Contrôleur gérant le processus de vote des utilisateurs
+ * - Affiche la page de vote
+ * - Gère le démarrage du vote par catégorie
+ * - Traite les votes soumis
+ * - Génère les certificats de participation
+ */
 class VoteController {
-    private $voteService;
+    private $voteService; // Service de traitement des votes
 
+    /**
+     * Constructeur du contrôleur de vote
+     * - Initialise le service de vote
+     */
     public function __construct() {
         require_once __DIR__ . '/../Services/VoteService.php';
         $this->voteService = new VoteService();
     }
 
     /**
-     * Página principal de votação
+     * Affiche la page principale de vote
+     * - Vérifie l'authentification de l'utilisateur
+     * - Récupère le statut de vote de l'utilisateur
+     * - Obtient les catégories disponibles pour l'utilisateur
+     * 
+     * @return array Données pour l'affichage de la page de vote
      */
     public function showVotingPage() {
-        // Verificar autenticação
+        // Vérifier si une session est active
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
+        // Rediriger si l'utilisateur n'est pas authentifié ou n'est pas un électeur
         if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'voter') {
             header('Location: /Social-Media-Awards-/login.php');
             exit();
@@ -23,10 +40,10 @@ class VoteController {
 
         $userId = $_SESSION['user_id'];
         
-        // Obter status de votação
+        // Obtenir le statut de vote de l'utilisateur
         $votingStatus = $this->voteService->getUserVotingStatus($userId);
         
-        // Obter categorias disponíveis
+        // Obtenir les catégories disponibles pour l'utilisateur
         $availableCategories = $this->voteService->getAvailableCategoriesForUser($userId);
         
         return [
@@ -40,10 +57,17 @@ class VoteController {
     }
 
     /**
-     * Iniciar votação em uma categoria específica - VERSÃO CORRIGIDA
+     * Démarre le processus de vote pour une catégorie spécifique - VERSION CORRIGÉE
+     * - Vérifie l'authentification et les permissions
+     * - Nettoie la session de vote précédente
+     * - Vérifie si l'utilisateur peut voter
+     * - Initialise un nouveau processus de vote
+     * - Stocke les informations dans la session
+     * 
+     * @return array Résultat de l'initialisation du vote
      */
     public function startCategoryVoting() {
-        // Verificar autenticação
+        // Vérifier l'authentification
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -52,6 +76,7 @@ class VoteController {
             return ['success' => false, 'message' => 'Non autorisé'];
         }
 
+        // Vérifier que la méthode est POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return ['success' => false, 'message' => 'Méthode non autorisée'];
         }
@@ -59,14 +84,15 @@ class VoteController {
         $userId = $_SESSION['user_id'];
         $categoryId = intval($_POST['category_id'] ?? 0);
 
+        // Validation de l'ID de catégorie
         if ($categoryId <= 0) {
             return ['success' => false, 'message' => 'Catégorie invalide'];
         }
         
-        // LIMPAR qualquer sessão de votação anterior ANTES de verificar
+        // NETTOYER toute session de vote antérieure AVANT la vérification
         $this->clearVotingSession();
         
-        // Verificar se pode votar (inclui verificação de já votou)
+        // Vérifier si l'utilisateur peut voter (inclut la vérification de vote existant)
         $canVote = $this->voteService->canUserVoteSimple($userId, $categoryId);
         
         if (!$canVote['can_vote']) {
@@ -77,32 +103,39 @@ class VoteController {
             ];
         }
 
-        // Iniciar novo processo de votação
+        // Démarrer un nouveau processus de vote
         $result = $this->voteService->startVotingProcess($userId, $categoryId);
         
         if ($result['success']) {
-            // Armazenar token e informações na sessão com timestamp
+            // Stocker le token et les informations dans la session avec horodatage
             $_SESSION['voting_token'] = $result['token'];
             $_SESSION['voting_category'] = $categoryId;
             $_SESSION['voting_category_name'] = $this->getCategoryName($categoryId);
             $_SESSION['voting_nominations'] = $result['nominations'];
             $_SESSION['voting_started'] = time();
-            $_SESSION['voting_expires'] = time() + 3600; // 1 hora
+            $_SESSION['voting_expires'] = time() + 3600; // 1 heure
             
-            error_log("DEBUG: Nova sessão de votação iniciada para categoria {$categoryId}");
+            // Journalisation pour débogage
+            error_log("DEBUG: Nouvelle session de vote démarrée pour catégorie {$categoryId}");
             error_log("DEBUG: Token: " . substr($result['token'], 0, 20) . "...");
         } else {
-            error_log("DEBUG: Falha ao iniciar votação: " . $result['message']);
+            error_log("DEBUG: Échec du démarrage du vote: " . $result['message']);
         }
 
         return $result;
     }
 
     /**
-     * Processar voto - VERSÃO CORRIGIDA
+     * Traite un vote soumis - VERSION CORRIGÉE
+     * - Vérifie l'authentification et les permissions
+     * - Effectue plusieurs validations (vote existant, token, session, expiration)
+     * - Traite le vote via le service
+     * - Nettoie et met à jour la session après vote
+     * 
+     * @return array Résultat du traitement du vote
      */
     public function castVote() {
-        // Verificar autenticação
+        // Vérifier l'authentification
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -111,6 +144,7 @@ class VoteController {
             return ['success' => false, 'message' => 'Non autorisé'];
         }
 
+        // Vérifier que la méthode est POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return ['success' => false, 'message' => 'Méthode non autorisée'];
         }
@@ -119,6 +153,7 @@ class VoteController {
         $categoryId = isset($_POST['category_id']) ? intval($_POST['category_id']) : 0;
         $nominationId = intval($_POST['nomination_id'] ?? 0);
 
+        // Validation des IDs
         if ($categoryId <= 0) {
             return ['success' => false, 'message' => 'Catégorie invalide'];
         }
@@ -127,7 +162,7 @@ class VoteController {
             return ['success' => false, 'message' => 'Sélection invalide'];
         }
         
-        // PRIMEIRA VERIFICAÇÃO: Já votou nesta categoria?
+        // PREMIÈRE VÉRIFICATION : L'utilisateur a-t-il déjà voté dans cette catégorie ?
         require_once __DIR__ . '/../Models/VoteModel.php';
         $voteModel = new Vote();
         $hasVoted = $voteModel->hasUserVoted($userId, $categoryId);
@@ -141,7 +176,7 @@ class VoteController {
             ];
         }
         
-        // SEGUNDA VERIFICAÇÃO: Token e sessão válidos?
+        // DEUXIÈME VÉRIFICATION : Token et session valides ?
         if (!isset($_SESSION['voting_token']) || !isset($_SESSION['voting_category'])) {
             $this->clearVotingSession();
             return [
@@ -151,7 +186,7 @@ class VoteController {
             ];
         }
         
-        // TERCEIRA VERIFICAÇÃO: Token corresponde à categoria?
+        // TROISIÈME VÉRIFICATION : Le token correspond-il à la catégorie ?
         if ($_SESSION['voting_category'] != $categoryId) {
             $this->clearVotingSession();
             return [
@@ -161,7 +196,7 @@ class VoteController {
             ];
         }
         
-        // QUARTA VERIFICAÇÃO: Sessão expirou?
+        // QUATRIÈME VÉRIFICATION : La session a-t-elle expiré ?
         if (isset($_SESSION['voting_expires']) && time() > $_SESSION['voting_expires']) {
             $this->clearVotingSession();
             return [
@@ -173,19 +208,19 @@ class VoteController {
 
         $token = $_SESSION['voting_token'];
 
-        // Processar voto
+        // Traiter le vote via le service
         $result = $this->voteService->processVote($token, $nominationId, $userId);
         
         if ($result['success']) {
-            // LIMPAR COMPLETAMENTE a sessão de votação
+            // NETTOYER COMPLÈTEMENT la session de vote
             $this->clearVotingSession();
             
-            // Limpar qualquer mensagem anterior
+            // Nettoyer tout message précédent
             if (isset($_SESSION['vote_success'])) unset($_SESSION['vote_success']);
             if (isset($_SESSION['vote_message'])) unset($_SESSION['vote_message']);
             if (isset($_SESSION['last_vote_details'])) unset($_SESSION['last_vote_details']);
             
-            // Armazenar APENAS o voto atual
+            // Stocker UNIQUEMENT le vote actuel
             $_SESSION['last_vote'] = [
                 'vote_id' => $result['vote_id'],
                 'category_id' => $categoryId,
@@ -193,28 +228,33 @@ class VoteController {
                 'certificate' => $result['certificate'] ?? null,
                 'message' => $result['message'],
                 'timestamp' => time(),
-                'is_current' => true // Marcar como voto atual
+                'is_current' => true // Marquer comme vote actuel
             ];
             
-            // Marcar que houve um voto bem-sucedido
+            // Marquer qu'un vote a réussi
             $_SESSION['vote_success'] = true;
             $_SESSION['vote_message'] = $result['message'];
             
-            error_log("DEBUG: Voto processado com sucesso. ID: " . $result['vote_id']);
+            error_log("DEBUG: Vote traité avec succès. ID: " . $result['vote_id']);
         } else {
-            // Se falhou, limpar a sessão
+            // En cas d'échec, nettoyer la session
             $this->clearVotingSession();
-            error_log("DEBUG: Falha ao processar voto: " . $result['message']);
+            error_log("DEBUG: Échec du traitement du vote: " . $result['message']);
         }
 
         return $result;
     }
 
     /**
-     * Obter certificado de participação
+     * Récupère le certificat de participation
+     * - Vérifie l'authentification
+     * - Cherche d'abord dans la session
+     * - Puis dans la base de données
+     * 
+     * @return array Résultat avec le certificat ou message d'erreur
      */
     public function getCertificate() {
-        // Verificar autenticação
+        // Vérifier l'authentification
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -226,7 +266,7 @@ class VoteController {
         $userId = $_SESSION['user_id'];
         $categoryId = intval($_GET['category_id'] ?? 0);
 
-        // Primeiro verificar último voto na sessão
+        // Vérifier d'abord le dernier vote dans la session
         if (isset($_SESSION['last_vote']) && $_SESSION['last_vote']['is_current']) {
             return [
                 'success' => true,
@@ -234,7 +274,7 @@ class VoteController {
             ];
         }
 
-        // Se não, buscar no banco
+        // Sinon, chercher dans la base de données
         if ($categoryId > 0) {
             $voteModel = $this->voteService->getVoteModel();
             $certificate = $voteModel->getParticipationCertificate($userId, $categoryId);
@@ -254,7 +294,11 @@ class VoteController {
     }
 
     /**
-     * Verificar status de voto em tempo real
+     * Vérifie le statut de vote en temps réel
+     * - Vérifie l'authentification
+     * - Appelle le service pour obtenir le statut
+     * 
+     * @return array Statut d'authentification et de vote
      */
     public function checkVotingStatus() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -272,7 +316,10 @@ class VoteController {
     }
 
     /**
-     * Helper: obter nome da categoria
+     * Fonction utilitaire : obtient le nom d'une catégorie
+     * 
+     * @param int $categoryId ID de la catégorie
+     * @return string Nom de la catégorie ou texte par défaut
      */
     private function getCategoryName($categoryId) {
         try {
@@ -286,7 +333,9 @@ class VoteController {
     }
     
     /**
-     * Limpar sessão de votação
+     * Nettoie la session de vote
+     * - Supprime toutes les variables de session liées au vote
+     * - Marque le dernier vote comme non actuel
      */
     private function clearVotingSession() {
         unset($_SESSION['voting_token']);
@@ -296,7 +345,7 @@ class VoteController {
         unset($_SESSION['voting_started']);
         unset($_SESSION['voting_expires']);
         
-        // Marcar último voto como não atual
+        // Marquer le dernier vote comme non actuel
         if (isset($_SESSION['last_vote'])) {
             $_SESSION['last_vote']['is_current'] = false;
         }

@@ -1,5 +1,10 @@
 <?php
 // privacy.php
+// FICHIER : privacy.php
+// DESCRIPTION : Page de politique de confidentialité conforme RGPD
+// FONCTIONNALITÉ : Présente les engagements de protection des données personnelles
+// CONFORMITÉ : Respecte les exigences du RGPD et de la CNIL
+
 require_once 'config/session.php';
 
 $pageTitle = "Politique de Confidentialité - Social Media Awards";
@@ -21,6 +26,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
     <main class="privacy-container">
         <div class="container">
             <!-- Breadcrumb -->
+            <!-- FIL D'ARIANE : Navigation hiérarchique pour l'utilisateur -->
             <nav class="breadcrumb">
                 <ol>
                     <li><a href="index.php"><i class="fas fa-home"></i> Accueil</a></li>
@@ -30,6 +36,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
             </nav>
             
             <!-- Header -->
+            <!-- EN-TÊTE : Titre et informations générales de la politique -->
             <div class="privacy-header">
                 <h1><i class="fas fa-shield-alt"></i> Politique de Confidentialité</h1>
                 <p class="privacy-subtitle">Conforme au RGPD - Dernière mise à jour : Novembre 2025</p>
@@ -41,12 +48,14 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
             </div>
             
             <!-- Content -->
+            <!-- CONTENU PRINCIPAL : Sections détaillées de la politique -->
             <div class="privacy-content">
                 <div class="privacy-card">
                     <div class="privacy-intro">
                         <p>Cette politique de confidentialité décrit comment Social Media Awards collecte, utilise et protège vos données personnelles conformément au Règlement Général sur la Protection des Données (RGPD) et à la législation française.</p>
                     </div>
                     
+                    <!-- SECTION 1 : Responsable du traitement -->
                     <div class="privacy-section">
                         <h2><span class="section-number">1</span> Responsable du traitement</h2>
                         <div class="info-box">
@@ -59,6 +68,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
                         </div>
                     </div>
                     
+                    <!-- SECTION 2 : Données collectées -->
                     <div class="privacy-section">
                         <h2><span class="section-number">2</span> Données collectées</h2>
                         <div class="data-table">
@@ -96,6 +106,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
                         </div>
                     </div>
                     
+                    <!-- SECTION 3 : Finalités du traitement -->
                     <div class="privacy-section">
                         <h2><span class="section-number">3</span> Finalités du traitement</h2>
                         <div class="purpose-grid">
@@ -130,6 +141,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
                         </div>
                     </div>
                     
+                    <!-- SECTION 4 : Bases légales (RGPD) -->
                     <div class="privacy-section">
                         <h2><span class="section-number">4</span> Bases légales (RGPD)</h2>
                         <div class="legal-bases">
@@ -152,6 +164,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
                         </div>
                     </div>
                     
+                    <!-- SECTION 5 : Sécurité et anonymat du vote -->
                     <div class="privacy-section">
                         <h2><span class="section-number">5</span> Sécurité et anonymat du vote</h2>
                         <div class="security-features">
@@ -179,6 +192,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
                         <p class="security-note"><i class="fas fa-info-circle"></i> Conforme aux recommandations CNIL 2019-158 sur les systèmes de vote électronique.</p>
                     </div>
                     
+                    <!-- SECTION 6 : Durée de conservation -->
                     <div class="privacy-section">
                         <h2><span class="section-number">6</span> Durée de conservation</h2>
                         <div class="retention-chart">
@@ -213,6 +227,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
                         </div>
                     </div>
                     
+                    <!-- SECTION 7 : Vos droits (RGPD) -->
                     <div class="privacy-section">
                         <h2><span class="section-number">7</span> Vos droits (RGPD)</h2>
                         <div class="rights-grid">
@@ -266,6 +281,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
                         </div>
                     </div>
                     
+                    <!-- SECTION 8 : Transferts de données -->
                     <div class="privacy-section">
                         <h2><span class="section-number">8</span> Transferts de données</h2>
                         <div class="transfer-info">
@@ -280,6 +296,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
                         </div>
                     </div>
                     
+                    <!-- SECTION 9 : Cookies -->
                     <div class="privacy-section">
                         <h2><span class="section-number">9</span> Cookies</h2>
                         <div class="cookies-info">
@@ -297,6 +314,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
                         <p class="cookies-note">Vous pouvez configurer vos préférences cookies dans les paramètres de votre navigateur.</p>
                     </div>
                     
+                    <!-- SECTION 10 : Modifications -->
                     <div class="privacy-section">
                         <h2><span class="section-number">10</span> Modifications</h2>
                         <div class="modification-alert">
@@ -305,6 +323,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
                         </div>
                     </div>
                     
+                    <!-- SECTION CONTACT : Coordonnées du DPO et de la CNIL -->
                     <div class="privacy-contact">
                         <div class="contact-card">
                             <h3><i class="fas fa-headset"></i> Contact et assistance</h3>
@@ -331,6 +350,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
             </div>
             
             <!-- Navigation -->
+            <!-- NAVIGATION : Liens vers les pages connexes -->
             <div class="privacy-navigation">
                 <a href="cgu.php" class="btn btn-outline-primary">
                     <i class="fas fa-file-contract"></i> Voir les Conditions Générales
@@ -344,6 +364,7 @@ $pageTitle = "Politique de Confidentialité - Social Media Awards";
     
     <?php include 'views/partials/footer.php'; ?>
     
+    <!-- SCRIPT : Animations et interactions pour améliorer l'expérience utilisateur -->
     <script>
     // Toggle cookie details
     document.addEventListener('DOMContentLoaded', function() {

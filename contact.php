@@ -1,19 +1,53 @@
+<?php
+/**
+ * FICHIER : contact.php
+ * DESCRIPTION : Page de contact pour les Social Media Awards
+ * 
+ * Cette page permet aux utilisateurs de :
+ * 1. Contacter l'équipe via un formulaire de contact
+ * 2. Consulter les coordonnées de l'organisation
+ * 3. Accéder à une FAQ interactive
+ * 4. Suivre les réseaux sociaux de l'événement
+ * 
+ * STRUCTURE :
+ * - En-tête avec navigation principale
+ * - Section hero avec message d'accueil
+ * - Section contact avec formulaire et informations
+ * - Section FAQ avec questions fréquentes
+ * - Pied de page
+ * 
+ * SÉCURITÉ : Cette version utilise seulement JavaScript pour la validation client.
+ * Une version future devrait implémenter une validation PHP côté serveur
+ * et un système d'envoi d'emails sécurisé.
+ * 
+ * @package SocialMediaAwards
+ * @version 1.0
+ */
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- STYLESHEETS : Chargement des feuilles de style -->
     <link rel="stylesheet" href="assets/css/header.css">
     <link rel="stylesheet" href="assets/css/footer.css">
     <link rel="stylesheet" href="assets/css/contact.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <title>Contact - Social Media Awards 2025</title>
 </head>
 
 <body>
-   <?php require_once 'views/partials/header.php'; ?>
+    <!-- INCLUSION DU HEADER : Chargement de l'en-tête commun -->
+    <?php require_once 'views/partials/header.php'; ?>
 
+    <!-- CONTENU PRINCIPAL DE LA PAGE -->
     <div class="main-content">
+        
+        <!-- SECTION HERO : Introduction et message d'accueil -->
         <section class="contact-hero">
             <div class="container">
                 <h1>Contactez-nous</h1>
@@ -21,24 +55,32 @@
             </div>
         </section>
 
+        <!-- SECTION CONTACT PRINCIPALE -->
         <section class="contact-section">
             <div class="container">
                 <div class="contact-grid">
+                    
+                    <!-- COLONNE GAUCHE : Formulaire de contact -->
                     <div class="contact-form-container">
                         <h2>Envoyez-nous un message</h2>
                         <p class="form-description">Remplissez le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais.</p>
                         
+                        <!-- FORMULAIRE DE CONTACT : ID utilisé pour la validation JS -->
                         <form class="contact-form" id="contactForm">
+                            
+                            <!-- CHAMP NOM COMPLET -->
                             <div class="form-group">
                                 <label for="name">Nom complet *</label>
                                 <input type="text" id="name" name="name" required>
                             </div>
                             
+                            <!-- CHAMP EMAIL -->
                             <div class="form-group">
                                 <label for="email">Adresse email *</label>
                                 <input type="email" id="email" name="email" required>
                             </div>
                             
+                            <!-- CHAMP SUJET : Liste déroulante des catégories -->
                             <div class="form-group">
                                 <label for="subject">Sujet *</label>
                                 <select id="subject" name="subject" required>
@@ -52,11 +94,13 @@
                                 </select>
                             </div>
                             
+                            <!-- CHAMP MESSAGE -->
                             <div class="form-group">
                                 <label for="message">Message *</label>
                                 <textarea id="message" name="message" rows="6" required></textarea>
                             </div>
                             
+                            <!-- BOUTON D'ENVOI -->
                             <button type="submit" class="submit-button">
                                 <i class="fas fa-paper-plane"></i>
                                 Envoyer le message
@@ -64,13 +108,15 @@
                         </form>
                     </div>
 
-
+                    <!-- COLONNE DROITE : Informations de contact -->
                     <div class="contact-info-container">
                         <h2>Nos coordonnées</h2>
                         <p class="info-description">N'hésitez pas à nous contacter par l'un des moyens suivants :</p>
                         
+                        <!-- LISTE DES MÉTHODES DE CONTACT -->
                         <div class="contact-methods">
 
+                            <!-- MÉTHODE 1 : Email -->
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-envelope"></i>
@@ -82,7 +128,7 @@
                                 </div>
                             </div>
                             
-
+                            <!-- MÉTHODE 2 : Téléphone -->
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-phone"></i>
@@ -94,6 +140,7 @@
                                 </div>
                             </div>
                             
+                            <!-- MÉTHODE 3 : Adresse physique -->
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-map-marker-alt"></i>
@@ -105,6 +152,7 @@
                                 </div>
                             </div>
                             
+                            <!-- MÉTHODE 4 : Horaires -->
                             <div class="contact-method">
                                 <div class="method-icon">
                                     <i class="fas fa-clock"></i>
@@ -117,7 +165,7 @@
                             </div>
                         </div>
                         
-
+                        <!-- SECTION RÉSEAUX SOCIAUX -->
                         <div class="social-contact">
                             <h3>Suivez-nous sur les réseaux</h3>
                             <div class="social-links">
@@ -143,11 +191,13 @@
             </div>
         </section>
 
-        <!--  SECTION FAQ-->
+        <!-- SECTION FAQ : Questions Fréquemment Posées -->
         <section class="faq-section">
             <div class="container">
                 <h2>Questions fréquentes</h2>
                 <div class="faq-grid">
+                    
+                    <!-- QUESTION 1 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Comment puis-je participer aux Social Media Awards ?</h3>
@@ -158,7 +208,7 @@
                         </div>
                     </div>
                     
-
+                    <!-- QUESTION 2 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Quelles sont les catégories disponibles ?</h3>
@@ -169,6 +219,7 @@
                         </div>
                     </div>
                     
+                    <!-- QUESTION 3 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Comment sont sélectionnés les gagnants ?</h3>
@@ -179,6 +230,7 @@
                         </div>
                     </div>
                     
+                    <!-- QUESTION 4 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Puis-je devenir partenaire ou sponsor ?</h3>
@@ -189,6 +241,7 @@
                         </div>
                     </div>
 
+                    <!-- QUESTION 5 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Quand seront annoncés les résultats ?</h3>
@@ -199,6 +252,7 @@
                         </div>
                     </div>
 
+                    <!-- QUESTION 6 -->
                     <div class="faq-item">
                         <div class="faq-question">
                             <h3>Comment puis-je assister à la cérémonie ?</h3>
@@ -213,8 +267,11 @@
         </section>
     </div>
 
+    <!-- INCLUSION DU FOOTER : Chargement du pied de page commun -->
     <?php include 'views/partials/footer.php'; ?>
 
+    <!-- SCRIPT JS POUR LA PAGE DE CONTACT -->
+    <!-- Gère : validation du formulaire, interaction FAQ, animations -->
     <script src="assets/js/contact.js"></script>
 </body>
 </html>

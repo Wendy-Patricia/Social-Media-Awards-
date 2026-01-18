@@ -1,43 +1,46 @@
 <?php
 // views/user/user-dashboard.php
+// Tableau de bord principal pour les utilisateurs électeurs
+// Affiche les statistiques, les catégories disponibles et l'historique des votes
+
 require_once '../../config/session.php';
 require_once __DIR__ . '/../../app/Models/UserModel.php';
 require_once __DIR__ . '/../../app/Models/VoteModel.php';
 require_once __DIR__ . '/../../app/Models/CategoryModel.php';
 
-// Verificar autenticação e tipo de usuário usando requireRole
+// Vérifier l'authentification et le type d'utilisateur
 requireRole('voter');
 
-// Obter dados do usuário da sessão
+// Récupérer les données de l'utilisateur depuis la session
 $userId = $_SESSION['user_id'] ?? null;
 $userPseudonyme = $_SESSION['user_pseudonyme'] ?? 'Électeur';
 $userEmail = $_SESSION['user_email'] ?? 'Non défini';
 
-// Instanciar modelos
+// Instancier les modèles nécessaires
 $userModel = new User();
 $voteModel = new Vote();
 $categoryModel = new CategoryModel();
 
-// Obter dados reais do banco de dados INCLUINDO A FOTO
+// Récupérer les données réelles de l'utilisateur depuis la base de données (INCLUANT LA PHOTO)
 $userData = $userModel->getUserById($userId);
 
-// Definir diretório da foto
+// Définir le répertoire des photos de profil
 $upload_dir = 'C:/wamp64/www/Social-Media-Awards-/assets/images/profiles/';
 $web_path = '/Social-Media-Awards-/assets/images/profiles/';
 
-// Estatísticas do usuário
+// Calculer les statistiques de l'utilisateur
 $votesCount = $voteModel->getUserVotesCount($userId);
 $activeElections = $categoryModel->getActiveCategoriesCount() ?? 0;
 $categories = $categoryModel->getAllCategoriesWithNominations() ?? [];
 $availableCategories = $categoryModel->getVotingCategoriesForUser($userId) ?? [];
 
-// Verificar se o usuário já votou em categorias ativas
+// Vérifier si l'utilisateur a déjà voté dans des catégories actives
 $hasVotedInActiveCategories = $voteModel->hasUserVotedInActiveCategories($userId) ?? false;
 
-// Obter iniciais para o avatar (fallback)
+// Générer les initiales pour l'avatar (fallback)
 $initials = strtoupper(substr($userPseudonyme, 0, 2));
 
-// Verificar se tem foto de perfil
+// Vérifier si l'utilisateur a une photo de profil
 $userPhoto = $userData['photo_profil'] ?? null;
 $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
 ?>
@@ -52,6 +55,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        /* Styles pour l'avatar avec photo */
         .avatar-nav.has-photo {
             background: none;
             border: none;
@@ -76,7 +80,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
 </head>
 
 <body>
-    <!-- Header -->
+    <!-- En-tête du tableau de bord -->
     <header class="dashboard-header">
         <div class="header-content">
             <div class="logo-section">
@@ -101,6 +105,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                     </div>
                 </div>
 
+                <!-- Bouton de déconnexion -->
                 <a href="/Social-Media-Awards-/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Déconnexion
@@ -109,10 +114,9 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
         </div>
     </header>
 
-    <!-- Resto do código permanece igual... -->
-
+    <!-- Contenu principal du tableau de bord -->
     <main class="dashboard-container">
-        <!-- Sidebar de Navegação -->
+        <!-- Barre latérale de navigation -->
         <aside class="dashboard-sidebar">
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item active">
@@ -143,7 +147,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
         </aside>
 
         <div class="dashboard-main">
-            <!-- Hero Section -->
+            <!-- Section Héro -->
             <section class="hero-section">
                 <div class="hero-content">
                     <div class="hero-text">
@@ -160,6 +164,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                             </a>
                         </div>
                     </div>
+                    <!-- Statistiques principales -->
                     <div class="hero-stats">
                         <div class="stat-card">
                             <i class="fas fa-vote-yea"></i>
@@ -186,35 +191,32 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                 </div>
             </section>
 
+            <!-- Section État de Vote -->
+            <section class="voting-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-vote-yea"></i> Votre État de Vote</h2>
+                </div>
 
-                <!-- Section de Votação -->
-                <section class="voting-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-vote-yea"></i> Votre État de Vote</h2>
-                    </div>
-
-                    <div class="voting-grid">
-                        <!-- Status de Voto -->
-                        <div class="status-card <?php echo $hasVotedInActiveCategories ? 'voted' : 'not-voted'; ?>">
-                            <div class="status-icon">
-                                <i class="fas <?php echo $hasVotedInActiveCategories ? 'fa-check-circle' : 'fa-clock'; ?>"></i>
-                            </div>
-                            <div class="status-content">
-                                <h3><?php echo $hasVotedInActiveCategories ? 'Participation en cours' : 'Prêt à voter'; ?></h3>
-                                <p><?php echo $hasVotedInActiveCategories ?
-                                        'Vous avez déjà voté dans certaines catégories. Continuez!' :
-                                        'Aucun vote émis. Commencez maintenant!'; ?></p>
-                            </div>
-                            <a href="/Social-Media-Awards-/views/user/Vote.php" class="btn btn-primary">
-                                <?php echo $hasVotedInActiveCategories ? 'Continuer à Voter' : 'Voter Maintenant'; ?>
-                            </a>
+                <div class="voting-grid">
+                    <!-- Carte de statut de vote -->
+                    <div class="status-card <?php echo $hasVotedInActiveCategories ? 'voted' : 'not-voted'; ?>">
+                        <div class="status-icon">
+                            <i class="fas <?php echo $hasVotedInActiveCategories ? 'fa-check-circle' : 'fa-clock'; ?>"></i>
                         </div>
+                        <div class="status-content">
+                            <h3><?php echo $hasVotedInActiveCategories ? 'Participation en cours' : 'Prêt à voter'; ?></h3>
+                            <p><?php echo $hasVotedInActiveCategories ?
+                                    'Vous avez déjà voté dans certaines catégories. Continuez!' :
+                                    'Aucun vote émis. Commencez maintenant!'; ?></p>
+                        </div>
+                        <a href="/Social-Media-Awards-/views/user/Vote.php" class="btn btn-primary">
+                            <?php echo $hasVotedInActiveCategories ? 'Continuer à Voter' : 'Voter Maintenant'; ?>
+                        </a>
                     </div>
-                </section>
+                </div>
             </section>
 
-
-            <!-- Catégories Disponíveis pour Votação -->
+            <!-- Section Catégories Disponibles pour Vote -->
             <section class="categories-section">
                 <div class="section-header">
                     <h2><i class="fas fa-star"></i> Catégories à Voter</h2>
@@ -223,10 +225,11 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                     </a>
                 </div>
 
+                <!-- Grille des catégories -->
                 <div class="categories-grid">
                     <?php if (!empty($availableCategories)): ?>
                         <?php foreach ($availableCategories as $category):
-                            // CORREÇÃO: Usar métodos corretos
+                            // CORRECTION: Utiliser les méthodes correctes
                             $hasVoted = $voteModel->hasUserVotedInCategory($userId, $category['id_categorie']);
                             $categoryId = $category['id_categorie'] ?? 0;
                             $categoryName = $category['nom'] ?? 'Catégorie sans nom';
@@ -235,13 +238,13 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                             $nominationCount = $category['nomination_count'] ?? 0;
                             $dateFin = $category['date_fin_votes'] ?? '';
 
-                            // CORREÇÃO: Determinar status corretamente
+                            // CORRECTION: Déterminer le statut correctement
                             $canVote = !$hasVoted && $nominationCount > 0;
-                            $isActive = true; // Já são categorias ativas
+                            $isActive = true; // Ce sont déjà des catégories actives
 
-                            // DEBUG para verificar valores
-                            error_log("Dashboard - Categoria {$categoryId}:");
-                            error_log("  - Nome: {$categoryName}");
+                            // DEBUG pour vérifier les valeurs
+                            error_log("Dashboard - Categorie {$categoryId}:");
+                            error_log("  - Nom: {$categoryName}");
                             error_log("  - HasVoted: " . ($hasVoted ? 'true' : 'false'));
                             error_log("  - NominationCount: {$nominationCount}");
                             error_log("  - CanVote: " . ($canVote ? 'true' : 'false'));
@@ -251,6 +254,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                                 <div class="category-header">
                                     <div class="category-icon">
                                         <?php
+                                        // Mapper les plateformes aux icônes correspondantes
                                         $icons = [
                                             'Photographe' => 'fa-camera',
                                             'Streamer' => 'fa-gamepad',
@@ -272,6 +276,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                                         <h4><?php echo htmlspecialchars($categoryName); ?></h4>
                                         <span class="platform"><?php echo htmlspecialchars($platform); ?></span>
                                     </div>
+                                    <!-- Badge de statut -->
                                     <?php if ($hasVoted): ?>
                                         <span class="vote-badge voted"><i class="fas fa-check"></i> Voté</span>
                                     <?php elseif ($canVote): ?>
@@ -283,10 +288,12 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                                     <?php endif; ?>
                                 </div>
 
+                                <!-- Description de la catégorie -->
                                 <p class="category-desc">
                                     <?php echo htmlspecialchars(mb_strlen($description) > 100 ? substr($description, 0, 100) . '...' : $description); ?>
                                 </p>
 
+                                <!-- Statistiques de la catégorie -->
                                 <div class="category-stats">
                                     <div class="stat">
                                         <i class="fas fa-users"></i>
@@ -298,6 +305,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                                     </div>
                                 </div>
 
+                                <!-- Actions de la catégorie -->
                                 <div class="category-actions">
                                     <?php if ($canVote && $categoryId > 0): ?>
                                         <a href="/Social-Media-Awards-/views/user/Vote.php?category_id=<?php echo $categoryId; ?>" class="btn btn-primary btn-sm">
@@ -329,6 +337,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
+                        <!-- État vide : aucune catégorie disponible -->
                         <div class="empty-state">
                             <i class="fas fa-calendar-times"></i>
                             <h3>Aucune catégorie disponible</h3>
@@ -339,7 +348,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                 </div>
             </section>
 
-            <!-- Élections Actives -->
+            <!-- Section Élections Actives -->
             <section class="elections-section">
                 <div class="section-header">
                     <h2><i class="fas fa-calendar-alt"></i> Élections Actives</h2>
@@ -347,7 +356,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
 
                 <div class="elections-list">
                     <?php
-                    // Agrupar categorias por edição
+                    // Grouper les catégories par édition
                     $editions = [];
                     foreach ($categories as $category) {
                         if (isset($category['edition_nom']) && isset($category['edition_annee'])) {
@@ -417,6 +426,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
+                        <!-- État vide : aucune élection active -->
                         <div class="empty-state">
                             <i class="fas fa-calendar-alt"></i>
                             <h3>Aucune élection active</h3>
@@ -426,7 +436,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                 </div>
             </section>
 
-            <!-- Derniers Votes -->
+            <!-- Section Derniers Votes -->
             <section class="recent-votes">
                 <div class="section-header">
                     <h2><i class="fas fa-history"></i> Vos Derniers Votes</h2>
@@ -434,6 +444,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
 
                 <div class="votes-list">
                     <?php
+                    // Récupérer les derniers votes de l'utilisateur
                     $recentVotes = $voteModel->getUserRecentVotes($userId, 3);
                     if (!empty($recentVotes)):
                         foreach ($recentVotes as $vote):
@@ -468,6 +479,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                         endforeach;
                     else:
                         ?>
+                        <!-- État vide : aucun vote enregistré -->
                         <div class="empty-state">
                             <i class="fas fa-vote-yea"></i>
                             <h3>Aucun vote enregistré</h3>
@@ -482,7 +494,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
         </div>
     </main>
 
-    <!-- Footer -->
+    <!-- Footer du tableau de bord -->
     <footer class="dashboard-footer">
         <div class="footer-content">
             <div class="footer-links">
@@ -499,10 +511,11 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
         </div>
     </footer>
 
+    <!-- Scripts JavaScript -->
     <script src="/Social-Media-Awards-/assets/js/user-dashboard.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Animações para as cartas
+            // Animations pour les cartes
             const cards = document.querySelectorAll('.category-card, .election-card, .vote-item');
             cards.forEach((card, index) => {
                 card.style.opacity = '0';
@@ -515,7 +528,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                 }, index * 100);
             });
 
-            // Efeito hover nas cartas
+            // Effet hover sur les cartes
             document.querySelectorAll('.category-card:not(.voted) .btn-primary').forEach(btn => {
                 btn.addEventListener('mouseenter', function() {
                     this.style.transform = 'scale(1.05)';
@@ -526,7 +539,7 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
                 });
             });
 
-            // Verificação de sessão
+            // Vérification de session périodique
             setInterval(() => {
                 fetch('/Social-Media-Awards-/views/check_session.php')
                     .then(response => response.json())
@@ -542,5 +555,4 @@ $hasPhoto = $userPhoto && file_exists($upload_dir . $userPhoto);
         });
     </script>
 </body>
-
 </html>

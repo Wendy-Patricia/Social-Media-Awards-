@@ -1,5 +1,12 @@
 <?php
 // cgu.php
+
+/**
+ * Page d'affichage des Conditions Générales d'Utilisation
+ * - Présente les règles contractuelles de la plateforme
+ * - Fournit une interface de navigation structurée
+ * - Inclut des fonctionnalités d'interaction utilisateur
+ */
 require_once 'config/session.php';
 
 $pageTitle = "Conditions Générales d'Utilisation - Social Media Awards";
@@ -22,7 +29,7 @@ $pageTitle = "Conditions Générales d'Utilisation - Social Media Awards";
 
     <main class="cgu-container">
         <div class="container">
-            <!-- Breadcrumb -->
+            <!-- Fil d'Ariane -->
             <nav class="breadcrumb">
                 <ol>
                     <li><a href="index.php"><i class="fas fa-home"></i> Accueil</a></li>
@@ -31,22 +38,25 @@ $pageTitle = "Conditions Générales d'Utilisation - Social Media Awards";
                 </ol>
             </nav>
 
-            <!-- Header -->
+            <!-- En-tête de la page -->
             <div class="cgu-header">
                 <h1><i class="fas fa-file-contract"></i> Conditions Générales d'Utilisation</h1>
                 <p class="cgu-subtitle">Dernière mise à jour : Novembre 2025</p>
             </div>
 
             <div class="cgu-card">
+                <!-- Introduction des CGU -->
                 <div class="cgu-intro">
                     <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'utilisation de la plateforme "Social Media Awards". En créant un compte ou en utilisant nos services, vous acceptez pleinement et sans réserve ces conditions.</p>
                 </div>
 
+                <!-- Article 1 : Objet -->
                 <div class="cgu-article">
                     <h2><span class="article-number">1</span> Objet</h2>
                     <p>Les présentes Conditions Générales d'Utilisation ont pour objet de définir les modalités et conditions dans lesquelles les utilisateurs accèdent et utilisent la plateforme « Social Media Awards », application web permettant l'organisation, la gestion et la participation à un système de vote en ligne destiné à récompenser des créateurs et contenus diffusés sur les réseaux sociaux.</p>
                 </div>
 
+                <!-- Article 2 : Accès et création de compte -->
                 <div class="cgu-article">
                     <h2><span class="article-number">2</span> Accès à la plateforme et création de compte</h2>
                     <p>L'accès à certaines fonctionnalités de la plateforme nécessite la création préalable d'un compte utilisateur. Lors de l'inscription, l'utilisateur s'engage à fournir des informations exactes, complètes et à jour.</p>
@@ -54,6 +64,7 @@ $pageTitle = "Conditions Générales d'Utilisation - Social Media Awards";
                     <p>La plateforme se réserve le droit de suspendre ou de supprimer un compte en cas de non-respect des présentes CGU, de comportement frauduleux, de tentative de manipulation du vote ou d'atteinte à la sécurité du système.</p>
                 </div>
 
+                <!-- Article 3 : Système de vote -->
                 <div class="cgu-article">
                     <h2><span class="article-number">3</span> Système de vote et intégrité du scrutin</h2>
                     <p>La plateforme met en œuvre un système de vote en ligne reposant sur des principes de sécurité, de transparence et d'intégrité. Chaque utilisateur ne peut voter qu'une seule fois par catégorie, selon les règles définies pour chaque édition.</p>
@@ -61,6 +72,7 @@ $pageTitle = "Conditions Générales d'Utilisation - Social Media Awards";
                     <p>En cas d'anomalie ou de suspicion de fraude, la plateforme se réserve le droit de suspendre temporairement le vote ou d'annuler des résultats après vérification.</p>
                 </div>
 
+                <!-- Article 4 : Propriété intellectuelle -->
                 <div class="cgu-article">
                     <h2><span class="article-number">4</span> Propriété intellectuelle</h2>
                     <p>L'ensemble des éléments composant la plateforme Social Media Awards, notamment les textes, graphismes, logos, interfaces, structure du site et bases de données, est protégé par le Code de la propriété intellectuelle. Toute reproduction, représentation, modification ou exploitation non autorisée de ces éléments est strictement interdite.</p>
@@ -68,25 +80,29 @@ $pageTitle = "Conditions Générales d'Utilisation - Social Media Awards";
                     <p>Le candidat garantit être titulaire des droits nécessaires et s'engage à indemniser la plateforme en cas de réclamation d'un tiers fondée sur une atteinte aux droits de propriété intellectuelle.</p>
                 </div>
 
+                <!-- Article 5 : Responsabilité -->
                 <div class="cgu-article">
                     <h2><span class="article-number">5</span> Responsabilité</h2>
                     <p>L'éditeur de la plateforme s'efforce d'assurer un accès continu et sécurisé au service, mais ne peut garantir l'absence d'interruptions, notamment en cas de maintenance, de panne technique ou de force majeure.</p>
                     <p>La responsabilité de l'éditeur ne saurait être engagée en cas de dysfonctionnement temporaire, de perte de données non imputable à une faute de sa part ou d'utilisation non conforme de la plateforme par les utilisateurs.</p>
-                    <p>Les utilisateurs sont seuls responsables des contenus qu'ils publient ou soumettent sur la plateforme. Tout contenu illicite, diffamatoire, portant atteinte aux droits d'un tiers ou contraire à l'ordre public pourra être supprimé sans préavis.</p>
+                    <p>Les utilisateurs sont seuls responsables des contenus qu'ils publien ou soumettent sur la plateforme. Tout contenu illicite, diffamatoire, portant atteinte aux droits d'un tiers ou contraire à l'ordre public pourra être supprimé sans préavis.</p>
                 </div>
 
+                <!-- Article 6 : Modifications -->
                 <div class="cgu-article">
                     <h2><span class="article-number">6</span> Modifications des CGU</h2>
                     <p>Les présentes CGU peuvent être modifiées à tout moment afin de tenir compte de l'évolution de la plateforme, de la réglementation ou des services proposés. Les utilisateurs seront informés de toute modification substantielle par email ou via une notification sur la plateforme.</p>
                     <p>La poursuite de l'utilisation de la plateforme après modification vaut acceptation des nouvelles conditions.</p>
                 </div>
 
+                <!-- Article 7 : Droit applicable -->
                 <div class="cgu-article">
                     <h2><span class="article-number">7</span> Droit applicable et juridiction compétente</h2>
                     <p>Les présentes Conditions Générales d'Utilisation sont soumises au droit français. En cas de litige relatif à leur interprétation ou à leur exécution, les parties s'efforceront de trouver une solution amiable avant toute action judiciaire.</p>
                     <p>À défaut de résolution amiable, les tribunaux compétents seront ceux du ressort du siège de l'éditeur.</p>
                 </div>
 
+                <!-- Section de contact -->
                 <div class="cgu-contact">
                     <div class="contact-card">
                         <h3><i class="fas fa-question-circle"></i> Questions ?</h3>
@@ -99,7 +115,7 @@ $pageTitle = "Conditions Générales d'Utilisation - Social Media Awards";
                 </div>
             </div>
 
-            <!-- Navigation -->
+            <!-- Navigation entre pages -->
             <div class="cgu-navigation">
                 <a href="privacy.php" class="btn btn-outline-primary">
                     <i class="fas fa-shield-alt"></i> Voir la Politique de Confidentialité
@@ -114,10 +130,17 @@ $pageTitle = "Conditions Générales d'Utilisation - Social Media Awards";
     <?php include 'views/partials/footer.php'; ?>
 
     <script>
-        // Highlight current article on scroll
+        /**
+         * Script d'interaction pour les CGU
+         * - Met en surbrillance l'article en cours de lecture
+         * - Gère le défilement fluide vers les ancres
+         */
         document.addEventListener('DOMContentLoaded', function() {
             const articles = document.querySelectorAll('.cgu-article');
 
+            /**
+             * Observateur d'intersection pour la mise en surbrillance
+             */
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -132,7 +155,9 @@ $pageTitle = "Conditions Générales d'Utilisation - Social Media Awards";
 
             articles.forEach(article => observer.observe(article));
 
-            // Smooth scroll for anchor links
+            /**
+             * Gestionnaire de défilement fluide pour les liens d'ancrage
+             */
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -153,3 +178,4 @@ $pageTitle = "Conditions Générales d'Utilisation - Social Media Awards";
 </body>
 
 </html>
+?>

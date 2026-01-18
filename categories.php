@@ -1,13 +1,24 @@
 <?php
-// FICHIER : categories.php
-// DESCRIPTION : Page d'affichage dynamique des catégories avec statistiques
-// FONCTIONNALITÉ : Affiche toutes les catégories depuis la BDD avec leurs stats
+/**
+ * PAGE : categories.php
+ * DESCRIPTION : Page d'affichage dynamique des catégories de compétition avec statistiques
+ * RESPONSABILITÉS :
+ * - Afficher toutes les catégories depuis la base de données
+ * - Filtrer les catégories par plateforme
+ * - Calculer et afficher les statistiques (nominations, votes)
+ * - Gérer les états vides et les erreurs
+ * - Fournir une interface utilisateur interactive
+ */
 
-// CHARGEMENT DES DÉPENDANCES
+// CHARGEMENT DES DÉPENDANCES POUR LA BASE DE DONNÉES ET L'AUTOLOAD
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/app/autoload.php';
 
-// INITIALISATION DE LA CONNEXION PDO
+/**
+ * INITIALISATION DE LA CONNEXION À LA BASE DE DONNÉES
+ * Établit la connexion PDO et configure le mode d'erreur
+ * @throws PDOException Si la connexion échoue
+ */
 try {
     $pdo = new PDO(
         "mysql:host=localhost;dbname=social_media_awards;charset=utf8mb4",
@@ -16,15 +27,20 @@ try {
     );
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Charger le CategoryService
+    // INSTANCIATION DU SERVICE DES CATÉGORIES
     $categoryService = new App\Services\CategoryService($pdo);
     
 } catch (PDOException $e) {
+    // GESTION DES ERREURS DE CONNEXION
     die("Erreur de connexion à la base de données : " . $e->getMessage());
 }
 
 /**
- * Compte le total des nominations pour une édition
+ * Compte le total des nominations pour une édition spécifique
+ * 
+ * @param PDO $pdo Instance de connexion à la base de données
+ * @param int $editionId Identifiant de l'édition
+ * @return int Nombre total de nominations
  */
 function countTotalNominations($pdo, $editionId): int {
     try {
@@ -37,12 +53,17 @@ function countTotalNominations($pdo, $editionId): int {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['total'] ?? 0;
     } catch (Exception $e) {
+        // RETOURNE 0 EN CAS D'ERREUR
         return 0;
     }
 }
 
 /**
- * Compte les votes par catégorie
+ * Compte les votes pour une catégorie spécifique
+ * 
+ * @param PDO $pdo Instance de connexion à la base de données
+ * @param int $categoryId Identifiant de la catégorie
+ * @return int Nombre de votes pour la catégorie
  */
 function countVotesByCategory($pdo, $categoryId): int {
     try {
@@ -55,12 +76,17 @@ function countVotesByCategory($pdo, $categoryId): int {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['total'] ?? 0;
     } catch (Exception $e) {
+        // RETOURNE 0 EN CAS D'ERREUR
         return 0;
     }
 }
 
 /**
- * Formate le nombre de votes (ex: 1500 → 1.5K)
+ * Formate un nombre de votes pour un affichage lisible
+ * Convertit les grands nombres en format abrégé (K, M)
+ * 
+ * @param int $count Nombre de votes à formater
+ * @return string Nombre formaté
  */
 function formatVoteCount($count): string {
     if ($count >= 1000000) {
@@ -72,7 +98,10 @@ function formatVoteCount($count): string {
 }
 
 /**
- * Récupère l'icône selon la plateforme
+ * Récupère l'icône FontAwesome correspondant à une plateforme
+ * 
+ * @param string|null $platform Nom de la plateforme
+ * @return string Classe CSS de l'icône
  */
 function getPlatformIcon($platform): string {
     $icons = [
@@ -86,6 +115,7 @@ function getPlatformIcon($platform): string {
         'x' => 'fab fa-x-twitter'
     ];
     
+    // UTILISE UNE ICÔNE GLOBALE SI AUCUNE PLATEFORME N'EST SPÉCIFIÉE
     if ($platform === null || $platform === '') {
         return 'fas fa-globe';
     }
@@ -95,7 +125,11 @@ function getPlatformIcon($platform): string {
 }
 
 /**
- * Récupère l'icône selon le type de catégorie
+ * Détermine l'icône appropriée selon le nom de la catégorie
+ * Utilise des mots-clés pour associer des icônes spécifiques
+ * 
+ * @param string $categoryName Nom de la catégorie
+ * @return string Classe CSS de l'icône
  */
 function getCategoryIcon($categoryName): string {
     $keywords = [
@@ -119,11 +153,16 @@ function getCategoryIcon($categoryName): string {
         }
     }
     
+    // ICÔNE PAR DÉFAUT POUR LES CATÉGORIES NON RECONNUES
     return 'fas fa-trophy';
 }
 
 /**
- * Génère une description basée sur la catégorie
+ * Génère une description automatique basée sur le nom de la catégorie et la plateforme
+ * 
+ * @param string $categoryName Nom de la catégorie
+ * @param string $platform Plateforme cible
+ * @return string Description générée
  */
 function generateCategoryDescription($categoryName, $platform): string {
     $descriptions = [
@@ -143,18 +182,32 @@ function generateCategoryDescription($categoryName, $platform): string {
         }
     }
     
+    // DESCRIPTION GÉNÉRIQUE POUR LES CATÉGORIES NON RECONNUES
     $platformText = ($platform && $platform !== 'Toutes') ? "sur " . ucfirst($platform) : "dans les médias sociaux";
     return "Catégorie célébrant l'excellence et l'innovation dans la création de contenu " . $platformText;
 }
 
-// RÉCUPÉRATION DES DONNÉES DYNAMIQUES
+/**
+ * RÉCUPÉRATION ET TRAITEMENT DES DONNÉES DYNAMIQUES
+ * Cette section gère la récupération des catégories, plateformes et statistiques
+ */
 try {
-    // Récupérer l'édition active
+    // SERVICE POUR RÉCUPÉRER L'ÉDITION ACTIVE
     $editionService = new class($pdo) {
         private $pdo;
+        
+        /**
+         * Constructeur du service d'édition
+         * @param PDO $pdo Instance de connexion à la base de données
+         */
         public function __construct($pdo) { 
             $this->pdo = $pdo; 
         }
+        
+        /**
+         * Récupère l'édition active actuelle
+         * @return array Informations de l'édition active
+         */
         public function getActiveEdition() {
             $sql = "SELECT * FROM edition WHERE est_active = 1 ORDER BY annee DESC LIMIT 1";
             $stmt = $this->pdo->prepare($sql);
@@ -163,13 +216,14 @@ try {
         }
     };
     
+    // RÉCUPÉRATION DE L'ÉDITION ACTIVE
     $activeEdition = $editionService->getActiveEdition();
     $editionId = $activeEdition['id_edition'];
     
-    // Récupérer toutes les catégories de l'édition active
+    // RÉCUPÉRATION DE TOUTES LES CATÉGORIES DE L'ÉDITION ACTIVE
     $categories = $categoryService->getAllCategoriesByEdition($editionId);
     
-    // Récupérer les plateformes uniques (en utilisant les méthodes getter)
+    // EXTRACTION DES PLATEFORMES UNIQUES POUR LES FILTRES
     $platformsArray = [];
     foreach ($categories as $category) {
         if ($category instanceof App\Models\Categorie) {
@@ -180,7 +234,7 @@ try {
         }
     }
     
-    // Calculer les statistiques de la page
+    // CALCUL DES STATISTIQUES GLOBALES DE LA PAGE
     $pageStats = [
         'categories' => count($categories),
         'platforms' => count($platformsArray),
@@ -188,8 +242,11 @@ try {
     ];
     
 } catch (Exception $e) {
+    /**
+     * GESTION DES ERREURS DE RÉCUPÉRATION DES DONNÉES
+     * En cas d'erreur, initialise les variables avec des valeurs par défaut
+     */
     error_log("Erreur récupération catégories : " . $e->getMessage());
-    // Valeurs par défaut
     $categories = [];
     $platformsArray = [];
     $pageStats = ['categories' => 0, 'platforms' => 0, 'nominees' => 0];
@@ -201,13 +258,18 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- CHARGEMENT DES FEUILLES DE STYLE -->
     <link rel="stylesheet" href="assets/css/header.css">
     <link rel="stylesheet" href="assets/css/footer.css">
     <link rel="stylesheet" href="assets/css/categories.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- TITRE DYNAMIQUE INCLUANT L'ANNÉE DE L'ÉDITION -->
     <title>Catégories - Social Media Awards <?php echo htmlspecialchars($activeEdition['annee'] ?? date('Y')); ?></title>
+    
+    <!-- STYLES POUR L'ÉTAT VIDE (QUAND AUCUNE CATÉGORIE N'EST DISPONIBLE) -->
     <style>
-        /* Styles pour l'état vide */
         .no-categories-message {
             grid-column: 1 / -1;
             text-align: center;
@@ -240,6 +302,7 @@ try {
             margin-bottom: 10px;
         }
         
+        /* ANIMATION D'APPARITION PROGRESSIVE */
         @keyframes fadeInUp {
             to {
                 opacity: 1;
@@ -249,16 +312,18 @@ try {
     </style>
 </head>
 <body>
+    <!-- INCLUSION DE L'EN-TÊTE COMMUNE -->
     <?php require_once 'views/partials/header.php'; ?>
 
+    <!-- CONTENU PRINCIPAL DE LA PAGE -->
     <div class="main-content">
-        <!-- SECTION HÉRO DES CATÉGORIES -->
+        <!-- SECTION HÉRO - INTRODUCTION AVEC STATISTIQUES -->
         <section class="categories-hero">
             <div class="hero-container">
                 <h1>Catégories de Compétition <?php echo htmlspecialchars($activeEdition['annee'] ?? date('Y')); ?></h1>
                 <p>Découvrez les <?php echo htmlspecialchars($pageStats['categories']); ?> catégories qui célèbrent l'excellence à travers toutes les plateformes sociales</p>
                 
-                <!-- STATISTIQUES PRINCIPALES -->
+                <!-- AFFICHAGE DES STATISTIQUES PRINCIPALES -->
                 <div class="hero-stats">
                     <div class="stat">
                         <div class="stat-number"><?php echo htmlspecialchars($pageStats['categories']); ?></div>
@@ -276,9 +341,10 @@ try {
             </div>
         </section>
 
-        <!-- SECTION PRINCIPALE DES CATÉGORIES -->
+        <!-- SECTION PRINCIPALE D'AFFICHAGE DES CATÉGORIES -->
         <section class="categories-section">
             <div class="container">
+                <!-- BARRE DE FILTRAGE PAR PLATEFORME -->
                 <div class="categories-filter">
                     <button class="filter-btn active" data-filter="all">Toutes</button>
                     <?php foreach ($platformsArray as $platform): 
@@ -294,18 +360,21 @@ try {
                 <!-- GRILLE DES CATÉGORIES -->
                 <div class="categories-grid">
                     <?php if (!empty($categories)): ?>
+                        <!-- BOUCLE D'AFFICHAGE DE CHAQUE CATÉGORIE -->
                         <?php foreach ($categories as $category): 
-                            // Vérifier que c'est bien un objet Categorie
+                            // VÉRIFICATION QUE L'OBJET EST BIEN UNE INSTANCE DE CATEGORIE
                             if (!$category instanceof App\Models\Categorie) {
                                 continue;
                             }
                             
+                            // CALCUL DES STATISTIQUES SPÉCIFIQUES À LA CATÉGORIE
                             $categoryId = $category->getIdCategorie();
                             $nomineesCount = $categoryService->countNominationsByCategory($categoryId);
                             $votesCount = countVotesByCategory($pdo, $categoryId);
                             $formattedVotes = formatVoteCount($votesCount);
                         ?>
                         <div class="category-card" data-platform="<?php echo htmlspecialchars($category->getPlateformeCible() ?? 'all'); ?>">
+                            <!-- EN-TÊTE DE LA CARTE AVEC ICÔNE ET TAGS DE PLATEFORME -->
                             <div class="category-header">
                                 <div class="category-icon">
                                     <i class="<?php echo getCategoryIcon($category->getNom()); ?>"></i>
@@ -319,7 +388,10 @@ try {
                                     <?php endif; ?>
                                     
                                     <?php 
-                                    // Ajouter d'autres plateformes si multi-plateformes
+                                    /**
+                                     * AJOUT DE PLATEFORMES SUPPLÉMENTAIRES POUR LES CATÉGORIES MULTI-PLATEFORMES
+                                     * Détecte les catégories contenant "multi" ou "cross" dans leur nom
+                                     */
                                     $additionalPlatforms = [];
                                     $categoryNameLower = strtolower($category->getNom());
                                     if (strpos($categoryNameLower, 'multi') !== false || strpos($categoryNameLower, 'cross') !== false) {
@@ -339,9 +411,15 @@ try {
                                     ?>
                                 </div>
                             </div>
+                            
+                            <!-- NOM ET DESCRIPTION DE LA CATÉGORIE -->
                             <h3><?php echo htmlspecialchars($category->getNom()); ?></h3>
                             <p>
                                 <?php 
+                                /**
+                                 * AFFICHAGE DE LA DESCRIPTION
+                                 * Utilise la description existante ou génère une description automatique
+                                 */
                                 if ($category->getDescription()) {
                                     echo htmlspecialchars($category->getDescription());
                                 } else {
@@ -349,6 +427,8 @@ try {
                                 }
                                 ?>
                             </p>
+                            
+                            <!-- STATISTIQUES DE LA CATÉGORIE (NOMINÉS ET VOTES) -->
                             <div class="category-stats">
                                 <div class="stat">
                                     <div class="stat-number"><?php echo htmlspecialchars($nomineesCount); ?></div>
@@ -359,6 +439,8 @@ try {
                                     <div class="stat-label">Votes</div>
                                 </div>
                             </div>
+                            
+                            <!-- BOUTON POUR ACCÉDER AUX NOMINÉS DE LA CATÉGORIE -->
                             <button class="btn-view-nominees" 
                                     data-category-id="<?php echo htmlspecialchars($categoryId); ?>"
                                     data-category-name="<?php echo htmlspecialchars(urlencode($category->getNom())); ?>">
@@ -367,7 +449,7 @@ try {
                         </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <!-- Message si aucune catégorie -->
+                        <!-- MESSAGE D'ÉTAT VIDE - AFFICHÉ QUAND AUCUNE CATÉGORIE N'EST DISPONIBLE -->
                         <div class="no-categories-message">
                             <div class="empty-state">
                                 <i class="fas fa-folder-open"></i>
@@ -382,37 +464,49 @@ try {
         </section>
     </div>
 
+    <!-- INCLUSION DU PIED DE PAGE COMMUN -->
     <?php include 'views/partials/footer.php'; ?>
     
-    <!-- JavaScript -->
+    <!-- CHARGEMENT DU JAVASCRIPT SPÉCIFIQUE À LA PAGE -->
     <script src="assets/js/categories.js"></script>
     
+    <!-- SCRIPT D'INTERACTIVITÉ EN LIGNE -->
     <script>
+    /**
+     * GESTIONNAIRE D'ÉVÉNEMENTS AU CHARGEMENT DE LA PAGE
+     * Configure les interactions utilisateur et les animations
+     */
     document.addEventListener('DOMContentLoaded', function() {
-        // Gestionnaire pour le bouton "Voir les Nominés"
+        /**
+         * GESTION DES CLICS SUR LES BOUTONS "VOIR LES NOMINÉS"
+         * Redirige vers la page des nominés avec les paramètres appropriés
+         */
         document.querySelectorAll('.btn-view-nominees').forEach(button => {
             button.addEventListener('click', function() {
                 const categoryId = this.getAttribute('data-category-id');
                 const categoryName = this.getAttribute('data-category-name');
                 
                 if (categoryId && categoryId !== '0') {
-                    // Animation de clic
+                    // ANIMATION DE CHARGEMENT SUR LE BOUTON
                     const originalText = this.innerHTML;
                     this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
                     this.disabled = true;
                     
-                    // Redirection après un délai
+                    // REDIRECTION APRÈS UN DÉLAI POUR PERMETTRE L'ANIMATION
                     setTimeout(() => {
                         window.location.href = `nominees.php?category=${categoryId}&name=${categoryName}`;
                     }, 500);
                 } else {
-                    // Fallback vers la page générale
+                    // REDIRECTION VERS LA PAGE GÉNÉRALE DES NOMINÉS EN CAS D'ERREUR
                     window.location.href = 'nominees.php';
                 }
             });
         });
         
-        // Animation des cartes
+        /**
+         * ANIMATION D'APPARITION PROGRESSIVE DES CARTES DE CATÉGORIES
+         * Applique un effet de fondu et de translation verticale
+         */
         const categoryCards = document.querySelectorAll('.category-card');
         categoryCards.forEach((card, index) => {
             card.style.opacity = '0';
@@ -425,7 +519,10 @@ try {
             }, index * 100);
         });
         
-        // Vérifier s'il y a un message d'état vide
+        /**
+         * GESTION DE L'ANIMATION DU MESSAGE D'ÉTAT VIDE
+         * S'assure que le message apparaît avec une animation
+         */
         const emptyMessage = document.querySelector('.no-categories-message');
         if (emptyMessage) {
             setTimeout(() => {

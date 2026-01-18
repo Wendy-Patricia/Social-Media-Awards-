@@ -1,11 +1,19 @@
 <?php
-// app/Services/VoteService.php - VERSÃO COMPLETA CORRIGIDA
+// app/Services/VoteService.php
 
+/**
+ * Service de gestion des votes
+ * Gère la logique métier liée au processus de vote
+ */
 class VoteService
 {
     private $voteModel;
     private $userModel;
 
+    /**
+     * Constructeur du service de vote
+     * Initialise les modèles nécessaires
+     */
     public function __construct()
     {
         require_once __DIR__ . '/../Models/VoteModel.php';
@@ -15,41 +23,48 @@ class VoteService
         $this->userModel = new User();
     }
 
-    // Método getter para acessar o voteModel
+    /**
+     * Méthode getter pour accéder au modèle de vote
+     * 
+     * @return Vote Modèle de vote
+     */
     public function getVoteModel()
     {
         return $this->voteModel;
     }
 
     /**
-     * Obter categorias disponíveis para o usuário
-     * VERSÃO CORRIGIDA - Mostra todas as categorias ativas
+     * Obtenir les catégories disponibles pour l'utilisateur
+     * VERSION CORRIGÉE - Affiche toutes les catégories actives
+     * 
+     * @param int $userId ID de l'utilisateur
+     * @return array Catégories disponibles avec informations de vote
      */
     public function getAvailableCategoriesForUser($userId)
     {
         try {
             error_log("=== DEBUG getAvailableCategoriesForUser ===");
-            error_log("Usuário ID: " . $userId);
+            error_log("Utilisateur ID: " . $userId);
 
-            // 1. Obter edição ativa
+            // 1. Obtenir l'édition active
             $activeEdition = $this->getActiveEdition();
 
             if (!$activeEdition) {
-                error_log("DEBUG: Nenhuma edição ativa encontrada!");
+                error_log("DEBUG: Aucune édition active trouvée!");
                 return [];
             }
 
-            error_log("DEBUG: Edição ativa ID: " . $activeEdition['id_edition']);
+            error_log("DEBUG: Édition active ID: " . $activeEdition['id_edition']);
 
-            // 2. Obter TODAS as categorias da edição ativa
+            // 2. Obtenir TOUTES les catégories de l'édition active
             $categories = $this->getCategoriesForEdition($activeEdition['id_edition']);
 
             if (empty($categories)) {
-                error_log("DEBUG: Nenhuma categoria encontrada para a edição!");
+                error_log("DEBUG: Aucune catégorie trouvée pour l'édition!");
                 return [];
             }
 
-            error_log("DEBUG: Total categorias da edição: " . count($categories));
+            error_log("DEBUG: Total catégories de l'édition: " . count($categories));
 
             $available = [];
             $now = date('Y-m-d H:i:s');
@@ -61,27 +76,27 @@ class VoteService
                     continue;
                 }
 
-                error_log("--- Processando categoria ID: {$categoryId} ---");
+                error_log("--- Traitement catégorie ID: {$categoryId} ---");
 
-                // 3. Verificar se está no período de votação
+                // 3. Vérifier si elle est dans la période de vote
                 $isActive = $this->isCategoryInVotingPeriod($category, $activeEdition);
 
                 if (!$isActive) {
-                    error_log("Categoria {$categoryId} não está ativa (fora do período)");
+                    error_log("Catégorie {$categoryId} n'est pas active (hors période)");
                     continue;
                 }
 
-                // 4. Contar nominações
+                // 4. Compter les nominations
                 $nominations = $this->voteModel->getNominationsForCategory($categoryId);
                 $nominationCount = count($nominations);
 
-                // 5. Verificar se usuário já votou
+                // 5. Vérifier si l'utilisateur a déjà voté
                 $hasVoted = $this->voteModel->hasUserVoted($userId, $categoryId);
 
-                // 6. Determinar se pode votar agora
+                // 6. Déterminer si peut voter maintenant
                 $canVoteNow = !$hasVoted && $nominationCount > 0;
 
-                // 7. Adicionar informações
+                // 7. Ajouter les informations
                 $category['nomination_count'] = $nominationCount;
                 $category['has_voted'] = $hasVoted;
                 $category['is_active'] = true;
@@ -89,7 +104,7 @@ class VoteService
                 $category['has_nominations'] = $nominationCount > 0;
                 $category['nominations'] = $nominations;
 
-                // 8. Adicionar datas formatadas para display
+                // 8. Ajouter les dates formatées pour l'affichage
                 if ($category['date_debut_votes'] && $category['date_fin_votes']) {
                     $category['vote_start_formatted'] = date('d/m/Y', strtotime($category['date_debut_votes']));
                     $category['vote_end_formatted'] = date('d/m/Y', strtotime($category['date_fin_votes']));
@@ -100,25 +115,27 @@ class VoteService
 
                 $available[] = $category;
 
-                error_log("✓ Categoria {$categoryId} '{$category['nom']}' adicionada");
-                error_log("  - Nomeações: {$nominationCount}");
-                error_log("  - Já votou: " . ($hasVoted ? 'SIM' : 'NÃO'));
-                error_log("  - Pode votar agora: " . ($canVoteNow ? 'SIM' : 'NÃO'));
-                error_log("  - Tem nominações: " . ($nominationCount > 0 ? 'SIM' : 'NÃO'));
+                error_log("✓ Catégorie {$categoryId} '{$category['nom']}' ajoutée");
+                error_log("  - Nominations: {$nominationCount}");
+                error_log("  - Déjà voté: " . ($hasVoted ? 'OUI' : 'NON'));
+                error_log("  - Peut voter maintenant: " . ($canVoteNow ? 'OUI' : 'NON'));
+                error_log("  - A des nominations: " . ($nominationCount > 0 ? 'OUI' : 'NON'));
             }
 
-            error_log("=== FIM getAvailableCategoriesForUser ===");
-            error_log("Categorias disponíveis: " . count($available));
+            error_log("=== FIN getAvailableCategoriesForUser ===");
+            error_log("Catégories disponibles: " . count($available));
 
             return $available;
         } catch (Exception $e) {
-            error_log("ERRO em getAvailableCategoriesForUser: " . $e->getMessage());
+            error_log("ERREUR dans getAvailableCategoriesForUser: " . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * Obter edição ativa
+     * Obtenir l'édition active
+     * 
+     * @return array|null Informations de l'édition active ou null
      */
     private function getActiveEdition()
     {
@@ -134,13 +151,16 @@ class VoteService
 
             return $stmt->fetch();
         } catch (Exception $e) {
-            error_log("ERRO em getActiveEdition: " . $e->getMessage());
+            error_log("ERREUR dans getActiveEdition: " . $e->getMessage());
             return null;
         }
     }
 
     /**
-     * Obter categorias para uma edição
+     * Obtenir les catégories pour une édition
+     * 
+     * @param int $editionId ID de l'édition
+     * @return array Liste des catégories de l'édition
      */
     private function getCategoriesForEdition($editionId)
     {
@@ -158,26 +178,30 @@ class VoteService
             $stmt->execute([':edition_id' => $editionId]);
             return $stmt->fetchAll();
         } catch (Exception $e) {
-            error_log("ERRO em getCategoriesForEdition: " . $e->getMessage());
+            error_log("ERREUR dans getCategoriesForEdition: " . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * Verificar se categoria está no período de votação
+     * Vérifier si la catégorie est dans la période de vote
+     * 
+     * @param array $category Informations de la catégorie
+     * @param array $edition Informations de l'édition
+     * @return bool True si dans la période de vote
      */
     private function isCategoryInVotingPeriod($category, $edition)
     {
         $now = date('Y-m-d H:i:s');
 
-        // Se a categoria tem datas específicas, usar elas
+        // Si la catégorie a des dates spécifiques, les utiliser
         if ($category['date_debut_votes'] && $category['date_fin_votes']) {
             $start = $category['date_debut_votes'];
             $end = $category['date_fin_votes'];
             return ($now >= $start && $now <= $end);
         }
 
-        // Se não, usar datas da edição
+        // Sinon, utiliser les dates de l'édition
         if ($edition['date_debut'] && $edition['date_fin']) {
             $start = $edition['date_debut'];
             $end = $edition['date_fin'];
@@ -188,18 +212,22 @@ class VoteService
     }
 
     /**
-     * Iniciar processo de votação para uma categoria
+     * Démarrer le processus de vote pour une catégorie
+     * 
+     * @param int $userId ID de l'utilisateur
+     * @param int $categoryId ID de la catégorie
+     * @return array Résultat du démarrage du vote
      */
     public function startVotingProcess($userId, $categoryId)
     {
         error_log("=== DEBUG startVotingProcess ===");
-        error_log("Usuário: {$userId}, Categoria: {$categoryId}");
+        error_log("Utilisateur: {$userId}, Catégorie: {$categoryId}");
 
-        // 1. Verificar se pode votar
+        // 1. Vérifier si peut voter
         $canVote = $this->canUserVoteSimple($userId, $categoryId);
 
         if (!$canVote['can_vote']) {
-            error_log("DEBUG: Usuário NÃO pode votar. Razão: " . $canVote['reason']);
+            error_log("DEBUG: Utilisateur NE PEUT PAS voter. Raison: " . $canVote['reason']);
             return [
                 'success' => false,
                 'message' => $canVote['reason'],
@@ -207,33 +235,33 @@ class VoteService
             ];
         }
 
-        error_log("DEBUG: Usuário PODE votar");
+        error_log("DEBUG: Utilisateur PEUT voter");
 
-        // 2. Verificar se há nominações
+        // 2. Vérifier s'il y a des nominations
         $nominations = $this->voteModel->getNominationsForCategory($categoryId);
 
         if (empty($nominations)) {
-            error_log("DEBUG: Nenhuma nomeação encontrada para categoria {$categoryId}");
+            error_log("DEBUG: Aucune nomination trouvée pour catégorie {$categoryId}");
             return [
                 'success' => false,
                 'message' => 'Aucune nomination disponible pour cette catégorie'
             ];
         }
 
-        error_log("DEBUG: Encontradas " . count($nominations) . " nomeações");
+        error_log("DEBUG: Trouvées " . count($nominations) . " nominations");
 
-        // 3. Gerar token anônimo
+        // 3. Générer le token anonyme
         $token = $this->voteModel->generateToken($userId, $categoryId);
 
         if (!$token) {
-            error_log("DEBUG: Falha ao gerar token");
+            error_log("DEBUG: Échec de génération du token");
             return [
                 'success' => false,
                 'message' => 'Erreur lors de la génération du token'
             ];
         }
 
-        error_log("DEBUG: Token gerado com sucesso: " . substr($token, 0, 20) . "...");
+        error_log("DEBUG: Token généré avec succès: " . substr($token, 0, 20) . "...");
 
         return [
             'success' => true,
@@ -246,19 +274,23 @@ class VoteService
     }
 
     /**
-     * Verificação SIMPLIFICADA se usuário pode votar
+     * Vérification SIMPLIFIÉE si l'utilisateur peut voter
+     * 
+     * @param int $userId ID de l'utilisateur
+     * @param int $categoryId ID de la catégorie
+     * @return array Résultat de la vérification
      */
     public function canUserVoteSimple($userId, $categoryId)
     {
         try {
             error_log("=== DEBUG canUserVoteSimple ===");
-            error_log("Usuário: {$userId}, Categoria: {$categoryId}");
+            error_log("Utilisateur: {$userId}, Catégorie: {$categoryId}");
 
-            // 1. Obter informações da categoria
+            // 1. Obtenir les informations de la catégorie
             $categoryInfo = $this->voteModel->getCategoryInfo($categoryId);
 
             if (!$categoryInfo) {
-                error_log("DEBUG: Categoria não encontrada");
+                error_log("DEBUG: Catégorie non trouvée");
                 return [
                     'can_vote' => false,
                     'reason' => 'Catégorie non trouvée',
@@ -266,11 +298,11 @@ class VoteService
                 ];
             }
 
-            // 2. Obter edição ativa
+            // 2. Obtenir l'édition active
             $activeEdition = $this->getActiveEdition();
 
             if (!$activeEdition) {
-                error_log("DEBUG: Nenhuma edição ativa encontrada");
+                error_log("DEBUG: Aucune édition active trouvée");
                 return [
                     'can_vote' => false,
                     'reason' => 'Aucune édition active',
@@ -278,11 +310,11 @@ class VoteService
                 ];
             }
 
-            // 3. Verificar se categoria está ativa (PERÍODO DE VOTAÇÃO)
+            // 3. Vérifier si la catégorie est active (PÉRIODE DE VOTE)
             $isActive = $this->isCategoryInVotingPeriod($categoryInfo, $activeEdition);
 
             if (!$isActive) {
-                error_log("DEBUG: Categoria não está no período de votação");
+                error_log("DEBUG: Catégorie n'est pas dans la période de vote");
                 return [
                     'can_vote' => false,
                     'reason' => 'Les votes ne sont pas ouverts pour cette catégorie',
@@ -290,11 +322,11 @@ class VoteService
                 ];
             }
 
-            // 4. Verificar se já votou
+            // 4. Vérifier si a déjà voté
             $hasVoted = $this->voteModel->hasUserVoted($userId, $categoryId);
 
             if ($hasVoted) {
-                error_log("DEBUG: Usuário já votou nesta categoria");
+                error_log("DEBUG: Utilisateur a déjà voté dans cette catégorie");
                 return [
                     'can_vote' => false,
                     'reason' => 'Vous avez déjà voté dans cette catégorie',
@@ -302,11 +334,11 @@ class VoteService
                 ];
             }
 
-            // 5. Verificar se tem nominações
+            // 5. Vérifier s'il y a des nominations
             $nominations = $this->voteModel->getNominationsForCategory($categoryId);
 
             if (empty($nominations)) {
-                error_log("DEBUG: Categoria não tem nominações");
+                error_log("DEBUG: Catégorie n'a pas de nominations");
                 return [
                     'can_vote' => false,
                     'reason' => 'Aucune nomination disponible',
@@ -314,14 +346,14 @@ class VoteService
                 ];
             }
 
-            error_log("DEBUG: Usuário PODE votar!");
+            error_log("DEBUG: Utilisateur PEUT voter!");
             return [
                 'can_vote' => true,
                 'reason' => 'Peut voter',
                 'already_voted' => false
             ];
         } catch (Exception $e) {
-            error_log("ERRO em canUserVoteSimple: " . $e->getMessage());
+            error_log("ERREUR dans canUserVoteSimple: " . $e->getMessage());
             return [
                 'can_vote' => false,
                 'reason' => 'Erreur technique: ' . $e->getMessage(),
@@ -331,18 +363,21 @@ class VoteService
     }
 
     /**
-     * Obter status de votação do usuário
+     * Obtenir le statut de vote de l'utilisateur
+     * 
+     * @param int $userId ID de l'utilisateur
+     * @return array Statut de vote par catégorie
      */
     public function getUserVotingStatus($userId)
     {
         try {
             error_log("=== DEBUG getUserVotingStatus ===");
 
-            // Obter categorias disponíveis
+            // Obtenir les catégories disponibles
             $categories = $this->getAvailableCategoriesForUser($userId);
 
             if (empty($categories)) {
-                error_log("DEBUG: Nenhuma categoria disponível para status");
+                error_log("DEBUG: Aucune catégorie disponible pour le statut");
                 return [];
             }
 
@@ -364,19 +399,24 @@ class VoteService
                     'vote_period' => $category['vote_start_formatted'] . ' - ' . $category['vote_end_formatted']
                 ];
 
-                error_log("Status categoria {$categoryId}: Votou={$hasVoted}, Nomeações={$hasNominations}");
+                error_log("Statut catégorie {$categoryId}: Voté={$hasVoted}, Nominations={$hasNominations}");
             }
 
-            error_log("DEBUG: Status retornado para {$userId}: " . count($status) . " categorias");
+            error_log("DEBUG: Statut retourné pour {$userId}: " . count($status) . " catégories");
             return $status;
         } catch (Exception $e) {
-            error_log("ERRO em getUserVotingStatus: " . $e->getMessage());
+            error_log("ERREUR dans getUserVotingStatus: " . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * Processar voto
+     * Traiter le vote
+     * 
+     * @param string $token Token anonyme
+     * @param int $nominationId ID de la nomination
+     * @param int $userId ID de l'utilisateur
+     * @return array Résultat du traitement du vote
      */
     public function processVote($token, $nominationId, $userId)
     {
@@ -385,34 +425,34 @@ class VoteService
             error_log("Token: " . substr($token, 0, 20) . "...");
             error_log("Nomination: {$nominationId}, User: {$userId}");
 
-            // 1. Verificar se token ainda é válido
+            // 1. Vérifier si le token est toujours valide
             if (!$this->isTokenValid($token)) {
-                error_log("DEBUG: Token inválido ou expirado");
+                error_log("DEBUG: Token invalide ou expiré");
                 return [
                     'success' => false,
                     'message' => 'Token de vote invalide ou expiré'
                 ];
             }
 
-            // 2. Criptografar voto
+            // 2. Crypter le vote
             $encryptedVote = $this->voteModel->encryptVote($nominationId, $userId);
-            error_log("DEBUG: Voto criptografado: " . substr($encryptedVote, 0, 50) . "...");
+            error_log("DEBUG: Vote crypté: " . substr($encryptedVote, 0, 50) . "...");
 
-            // 3. Registrar voto via stored procedure
+            // 3. Enregistrer le vote via procédure stockée
             $voteId = $this->voteModel->castVote($token, $encryptedVote, $nominationId);
 
             if ($voteId) {
-                error_log("DEBUG: Voto registrado com ID: {$voteId}");
+                error_log("DEBUG: Vote enregistré avec ID: {$voteId}");
 
-                // 4. Tentar obter certificado
+                // 4. Essayer d'obtenir le certificat
                 try {
                     $categoryId = $this->getCategoryIdFromToken($token);
                     if ($categoryId) {
                         $certificate = $this->voteModel->getParticipationCertificate($userId, $categoryId);
-                        error_log("DEBUG: Certificado obtido: " . ($certificate ? 'SIM' : 'NÃO'));
+                        error_log("DEBUG: Certificat obtenu: " . ($certificate ? 'OUI' : 'NON'));
                     }
                 } catch (Exception $e) {
-                    error_log("AVISO: Não foi possível obter certificado: " . $e->getMessage());
+                    error_log("AVERTISSEMENT: Impossible d'obtenir le certificat: " . $e->getMessage());
                     $certificate = null;
                 }
 
@@ -423,14 +463,14 @@ class VoteService
                     'message' => 'Votre vote a été enregistré avec succès!'
                 ];
             } else {
-                error_log("ERRO: Falha ao registrar voto");
+                error_log("ERREUR: Échec de l'enregistrement du vote");
                 return [
                     'success' => false,
                     'message' => 'Erreur lors de l\'enregistrement du vote'
                 ];
             }
         } catch (Exception $e) {
-            error_log("ERRO CRÍTICO em processVote: " . $e->getMessage());
+            error_log("ERREUR CRITIQUE dans processVote: " . $e->getMessage());
             return [
                 'success' => false,
                 'message' => 'Une erreur technique est survenue: ' . $e->getMessage()
@@ -439,7 +479,10 @@ class VoteService
     }
 
     /**
-     * Verificar se token é válido
+     * Vérifier si le token est valide
+     * 
+     * @param string $token Token à vérifier
+     * @return bool True si le token est valide
      */
     private function isTokenValid($token)
     {
@@ -456,13 +499,16 @@ class VoteService
             $stmt->execute([':token' => $token]);
             return $stmt->fetch() !== false;
         } catch (Exception $e) {
-            error_log("ERRO em isTokenValid: " . $e->getMessage());
+            error_log("ERREUR dans isTokenValid: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Helper: obter ID da categoria a partir do token
+     * Helper: obtenir l'ID de la catégorie à partir du token
+     * 
+     * @param string $token Token anonyme
+     * @return int|null ID de la catégorie ou null
      */
     private function getCategoryIdFromToken($token)
     {
@@ -476,13 +522,17 @@ class VoteService
 
             return $result ? $result['id_categorie'] : null;
         } catch (Exception $e) {
-            error_log("ERRO em getCategoryIdFromToken: " . $e->getMessage());
+            error_log("ERREUR dans getCategoryIdFromToken: " . $e->getMessage());
             return null;
         }
     }
 
     /**
-     * Verificar status de voto em tempo real
+     * Vérifier le statut de vote en temps réel
+     * 
+     * @param int $userId ID de l'utilisateur
+     * @param int|null $categoryId ID de la catégorie (optionnel)
+     * @return array Statut de vote
      */
     public function checkVotingStatus($userId, $categoryId = null)
     {
@@ -507,7 +557,7 @@ class VoteService
                 ];
             }
         } catch (Exception $e) {
-            error_log("ERRO em checkVotingStatus: " . $e->getMessage());
+            error_log("ERREUR dans checkVotingStatus: " . $e->getMessage());
             return ['authenticated' => false];
         }
     }

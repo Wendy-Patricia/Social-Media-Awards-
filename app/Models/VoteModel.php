@@ -1,24 +1,45 @@
 <?php
 // app/Models/Vote.php
+
 require_once __DIR__ . '/../../config/database.php';
 
+/**
+ * Modèle gérant toutes les opérations liées au système de vote
+ * - Génération de tokens anonymes
+ * - Enregistrement des votes
+ * - Vérification des droits de vote
+ * - Récupération des statistiques
+ */
 class Vote
 {
     private $db;
 
+    /**
+     * Constructeur du modèle Vote
+     * Initialise la connexion à la base de données
+     */
     public function __construct()
     {
         $database = Database::getInstance();
         $this->db = $database->getConnection();
     }
 
+    /**
+     * Obtient l'instance de la base de données
+     * 
+     * @return PDO Instance de connexion à la base de données
+     */
     public function getDb()
     {
         return $this->db;
     }
 
     /**
-     * Gerar token anônimo para um usuário em uma categoria
+     * Génère un token anonyme pour un utilisateur dans une catégorie
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @param int $categoryId ID de la catégorie
+     * @return string|null Token généré ou null en cas d'erreur
      */
     public function generateToken($userId, $categoryId)
     {
@@ -29,7 +50,7 @@ class Vote
                 ':id_categorie' => $categoryId
             ]);
 
-            // Obter o token gerado
+            // Obtient le token généré
             $stmt = $this->db->query("SELECT @token_value as token_value");
             $result = $stmt->fetch();
 
@@ -41,7 +62,12 @@ class Vote
     }
 
     /**
-     * Registrar um voto
+     * Enregistre un vote dans le système
+     * 
+     * @param string $token Token anonyme de l'utilisateur
+     * @param string $encryptedVote Vote chiffré
+     * @param int $nominationId ID de la nomination votée
+     * @return int|false ID du vote enregistré ou false en cas d'erreur
      */
     public function castVote($token, $encryptedVote, $nominationId)
     {
@@ -53,7 +79,7 @@ class Vote
                 ':id_nomination' => $nominationId
             ]);
 
-            // Obter ID do voto registrado
+            // Obtient l'ID du vote enregistré
             $stmt = $this->db->query("SELECT @id_vote as id_vote");
             $result = $stmt->fetch();
 
@@ -65,7 +91,11 @@ class Vote
     }
 
     /**
-     * Verificar se usuário já votou em uma categoria
+     * Vérifie si un utilisateur a déjà voté dans une catégorie
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @param int $categoryId ID de la catégorie
+     * @return bool True si l'utilisateur a déjà voté
      */
     public function hasUserVoted($userId, $categoryId)
     {
@@ -90,7 +120,10 @@ class Vote
     }
 
     /**
-     * Obter categorias disponíveis para votação
+     * Obtient les catégories disponibles pour le vote
+     * Prend en compte les périodes de vote des catégories et de l'édition
+     * 
+     * @return array Liste des catégories disponibles
      */
     public function getVotingCategories()
     {
@@ -122,6 +155,12 @@ class Vote
         }
     }
 
+    /**
+     * Obtient les nominations approuvées pour une catégorie
+     * 
+     * @param int $categoryId ID de la catégorie
+     * @return array Liste des nominations avec le compte de votes
+     */
     public function getNominationsForCategory($categoryId)
     {
         try {
@@ -141,18 +180,22 @@ class Vote
             return $nominations;
         } catch (Exception $e) {
             error_log("Erreur récupération nominations: " . $e->getMessage());
-            return []; // Retorna array vazio, NÃO placeholders
+            return []; // Retourne un tableau vide, PAS de placeholders
         }
     }
 
-    // Se quiser manter o método mas corrigi-lo:
+    // Méthode privée pour obtenir des placeholders (désactivée)
     private function getNominationPlaceholders($categoryId)
     {
-        return []; // Retorna array vazio, não placeholders
+        return []; // Retourne un tableau vide, pas de placeholders
     }
 
     /**
-     * Obter certificado de participação
+     * Obtient le certificat de participation d'un utilisateur pour une catégorie
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @param int $categoryId ID de la catégorie
+     * @return array|null Certificat de participation ou null
      */
     public function getParticipationCertificate($userId, $categoryId)
     {
@@ -178,7 +221,10 @@ class Vote
     }
 
     /**
-     * Obter histórico de votos do usuário (apenas informações anônimas)
+     * Obtient l'historique de votes d'un utilisateur (informations anonymes)
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @return array Historique des votes
      */
     public function getUserVotingHistory($userId)
     {
@@ -203,7 +249,10 @@ class Vote
     }
 
     /**
-     * Verificar se categoria está ativa para votação
+     * Vérifie si une catégorie est active pour le vote
+     * 
+     * @param int $categoryId ID de la catégorie
+     * @return bool True si la catégorie est active
      */
     public function isCategoryActive($categoryId)
     {
@@ -238,12 +287,16 @@ class Vote
     }
 
     /**
-     * Criptografar voto (simulação - em produção usar método mais seguro)
+     * Chiffre un vote (simulation - en production utiliser une méthode plus sécurisée)
+     * 
+     * @param int $nominationId ID de la nomination
+     * @param int $userId ID de l'utilisateur
+     * @return string Vote chiffré en base64
      */
     public function encryptVote($nominationId, $userId)
     {
-        // Em produção, usar criptografia assimétrica
-        // Aqui usamos uma simulação para demonstração
+        // En production, utiliser le chiffrement asymétrique
+        // Ici, nous utilisons une simulation pour la démonstration
         $data = [
             'nomination_id' => $nominationId,
             'timestamp' => time(),
@@ -254,7 +307,10 @@ class Vote
     }
 
     /**
-     * Obter ID da categoria de uma nomeação
+     * Obtient l'ID de la catégorie d'une nomination
+     * 
+     * @param int $nominationId ID de la nomination
+     * @return int|null ID de la catégorie ou null
      */
     public function getCategoryIdFromNomination($nominationId)
     {
@@ -275,7 +331,10 @@ class Vote
     }
 
     /**
-     * Obter informações de uma categoria
+     * Obtient les informations d'une catégorie
+     * 
+     * @param int $categoryId ID de la catégorie
+     * @return array|null Informations de la catégorie ou null
      */
     public function getCategoryInfo($categoryId)
     {
@@ -296,7 +355,12 @@ class Vote
     }
 
     /**
-     * Verificar se token é válido
+     * Valide un token anonyme
+     * 
+     * @param string $token Token à valider
+     * @param int $userId ID de l'utilisateur
+     * @param int $categoryId ID de la catégorie
+     * @return bool True si le token est valide
      */
     public function validateToken($token, $userId, $categoryId)
     {
@@ -324,31 +388,34 @@ class Vote
     }
 
     /**
-     * Obter estatísticas de votação
+     * Obtient les statistiques de vote
+     * 
+     * @param int|null $userId ID de l'utilisateur (optionnel)
+     * @return array Statistiques de vote
      */
     public function getVotingStatistics($userId = null)
     {
         try {
             $stats = [];
 
-            // Total de categorias
+            // Total des catégories
             $stmt = $this->db->query("SELECT COUNT(*) as total FROM CATEGORIE");
             $result = $stmt->fetch();
             $stats['total_categories'] = $result['total'] ?? 0;
 
-            // Total de nomeações
+            // Total des nominations
             $stmt = $this->db->query("SELECT COUNT(*) as total FROM NOMINATION");
             $result = $stmt->fetch();
             $stats['total_nominations'] = $result['total'] ?? 0;
 
-            // Total de votos
+            // Total des votes
             $stmt = $this->db->query("SELECT COUNT(*) as total FROM VOTE");
             $result = $stmt->fetch();
             $stats['total_votes'] = $result['total'] ?? 0;
 
-            // Estatísticas do usuário se fornecido
+            // Statistiques de l'utilisateur si fourni
             if ($userId) {
-                // Votos do usuário
+                // Votes de l'utilisateur
                 $stmt = $this->db->prepare("
                     SELECT COUNT(DISTINCT cp.id_categorie) as voted_categories
                     FROM CONTROLE_PRESENCE cp
@@ -358,7 +425,7 @@ class Vote
                 $result = $stmt->fetch();
                 $stats['user_voted_categories'] = $result['voted_categories'] ?? 0;
 
-                // Certificados do usuário
+                // Certificats de l'utilisateur
                 $stmt = $this->db->prepare("
                     SELECT COUNT(*) as certificates
                     FROM CERTIFICAT_PARTICIPATION
@@ -375,6 +442,13 @@ class Vote
             return [];
         }
     }
+
+    /**
+     * Obtient le nombre de votes d'un utilisateur
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @return int Nombre de votes
+     */
     public function getUserVotesCount($userId)
     {
         try {
@@ -395,6 +469,13 @@ class Vote
         }
     }
 
+    /**
+     * Vérifie si un utilisateur a voté dans une catégorie spécifique
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @param int $categoryId ID de la catégorie
+     * @return bool True si l'utilisateur a voté dans cette catégorie
+     */
     public function hasUserVotedInCategory($userId, $categoryId)
     {
         try {
@@ -420,6 +501,12 @@ class Vote
         }
     }
 
+    /**
+     * Vérifie si un utilisateur a voté dans des catégories actives
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @return bool True si l'utilisateur a voté dans des catégories actives
+     */
     public function hasUserVotedInActiveCategories($userId)
     {
         try {
@@ -443,6 +530,13 @@ class Vote
         }
     }
 
+    /**
+     * Obtient les votes récents d'un utilisateur
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @param int $limit Nombre maximum de votes à récupérer
+     * @return array Liste des votes récents
+     */
     public function getUserRecentVotes($userId, $limit = 5)
     {
         try {
@@ -473,6 +567,16 @@ class Vote
         }
     }
 
+    /**
+     * Vérifie si un utilisateur peut voter dans une catégorie
+     * - Vérifie si la période de vote est ouverte
+     * - Vérifie si l'utilisateur n'a pas déjà voté
+     * - Vérifie s'il y a des nominations disponibles
+     * 
+     * @param int $userId ID du compte utilisateur
+     * @param int $categoryId ID de la catégorie
+     * @return array Résultat de la vérification avec informations détaillées
+     */
     public function canVoteInCategory($userId, $categoryId)
     {
         try {
@@ -562,10 +666,12 @@ class Vote
             ];
         }
     }
+
     /**
-     * Conta quantas categorias o usuário já votou
-     * @param int $userId ID do eleitor
-     * @return int Número de categorias votadas
+     * Compte le nombre de catégories dans lesquelles un utilisateur a voté
+     * 
+     * @param int $userId ID de l'électeur
+     * @return int Nombre de catégories votées
      */
     public function getCategoriesVotedCount($userId)
     {
@@ -583,6 +689,13 @@ class Vote
         }
     }
 
+    /**
+     * Obtient les nominations pour une catégorie avec les images des candidats
+     * Retourne un placeholder si aucune nomination n'est approuvée
+     * 
+     * @param int $categoryId ID de la catégorie
+     * @return array Liste des nominations avec images
+     */
     public function getNominationsForCategoryWithImages($categoryId)
     {
         try {
@@ -601,7 +714,7 @@ class Vote
             $stmt->execute([':id_categorie' => $categoryId]);
             $nominations = $stmt->fetchAll();
 
-            // Se não houver nominações, criar um placeholder
+            // Si aucune nomination, créer un placeholder
             if (empty($nominations)) {
                 return [
                     [

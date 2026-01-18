@@ -3,7 +3,6 @@
 require_once 'app/Controllers/UserController.php';
 require_once 'config/session.php';
 
-// Se já estiver autenticado, redirecionar
 if (isAuthenticated()) {
     $redirect = match (getUserType()) {
         'admin' => '/Social-Media-Awards-/admin/admin-dashboard.php',
@@ -18,8 +17,7 @@ if (isAuthenticated()) {
 $controller = new UserController();
 $result = $controller->handleRegistration();
 
-// Se registro for bem-sucedido, já será redirecionado pelo controller
-// Se chegou aqui, é porque houve erro ou é a primeira carga da página
+
 $errors = $result['errors'] ?? [];
 $data = $result['data'] ?? [];
 ?>

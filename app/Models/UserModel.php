@@ -1,17 +1,43 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
 
+/**
+ * Modèle gérant les opérations de base de données pour les utilisateurs
+ * - Authentification
+ * - Création de compte
+ * - Récupération et mise à jour des profils
+ * - Vérifications d'unicité
+ */
 class User {
     private $db;
 
+    /**
+     * Constructeur du modèle utilisateur
+     * Initialise la connexion à la base de données
+     */
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
     }
 
+    /**
+     * Obtient l'instance de connexion à la base de données
+     * 
+     * @return PDO Instance de connexion à la base de données
+     */
     public function getDb() {
         return $this->db;
     }
 
+    /**
+     * Authentifie un utilisateur par email et mot de passe
+     * - Vérifie les identifiants
+     * - Détermine le rôle de l'utilisateur
+     * - Retourne les informations utilisateur en cas de succès
+     * 
+     * @param string $email Adresse email de l'utilisateur
+     * @param string $password Mot de passe en clair
+     * @return array Résultat de l'authentification
+     */
     public function authenticate($email, $password) {
         try {
             $stmt = $this->db->prepare("
@@ -53,18 +79,38 @@ class User {
         }
     }
 
+    /**
+     * Récupère un utilisateur par son adresse email
+     * 
+     * @param string $email Adresse email à rechercher
+     * @return array|false Données de l'utilisateur ou false si non trouvé
+     */
     public function getUserByEmail($email) {
         $stmt = $this->db->prepare("SELECT * FROM compte WHERE email = :email");
         $stmt->execute([':email' => $email]);
         return $stmt->fetch();
     }
 
+    /**
+     * Récupère un utilisateur par son pseudonyme
+     * 
+     * @param string $pseudonyme Pseudonyme à rechercher
+     * @return array|false Données de l'utilisateur ou false si non trouvé
+     */
     public function getUserByPseudonyme($pseudonyme) {
         $stmt = $this->db->prepare("SELECT * FROM compte WHERE pseudonyme = :pseudonyme");
         $stmt->execute([':pseudonyme' => $pseudonyme]);
         return $stmt->fetch();
     }
 
+    /**
+     * Crée un nouvel utilisateur dans la base de données
+     * - Insère les informations de base dans la table 'compte'
+     * - Retourne l'ID du nouvel utilisateur
+     * 
+     * @param array $data Données de l'utilisateur à créer
+     * @return int|false ID du nouvel utilisateur ou false en cas d'erreur
+     */
     public function createUser($data) {
         try {
             $stmt = $this->db->prepare("
@@ -81,6 +127,13 @@ class User {
         }
     }
 
+    /**
+     * Récupère un utilisateur par son ID avec son rôle
+     * - Joint les tables de rôles pour déterminer le type d'utilisateur
+     * 
+     * @param int $userId ID de l'utilisateur à rechercher
+     * @return array|false Données complètes de l'utilisateur ou false si non trouvé
+     */
     public function getUserById($userId) {
         try {
             $stmt = $this->db->prepare("
@@ -108,6 +161,15 @@ class User {
         }
     }
 
+    /**
+     * Met à jour le profil d'un utilisateur
+     * - Met à jour uniquement les champs fournis
+     * - Gère les mises à jour partielles
+     * 
+     * @param int $userId ID de l'utilisateur à mettre à jour
+     * @param array $data Données à mettre à jour
+     * @return bool Succès de la mise à jour
+     */
     public function updateUserProfile($userId, $data) {
         try {
             $fields = [];
@@ -158,6 +220,14 @@ class User {
         }
     }
 
+    /**
+     * Vérifie si un email est déjà utilisé
+     * - Optionnellement exclut un utilisateur spécifique (pour les mises à jour)
+     * 
+     * @param string $email Email à vérifier
+     * @param int|null $excludeUserId ID de l'utilisateur à exclure de la vérification
+     * @return bool True si l'email est déjà utilisé
+     */
     public function isEmailTaken($email, $excludeUserId = null) {
         try {
             $sql = "SELECT COUNT(*) as count FROM compte WHERE email = :email";
@@ -180,6 +250,14 @@ class User {
         }
     }
 
+    /**
+     * Vérifie si un pseudonyme est déjà utilisé
+     * - Optionnellement exclut un utilisateur spécifique (pour les mises à jour)
+     * 
+     * @param string $pseudonyme Pseudonyme à vérifier
+     * @param int|null $excludeUserId ID de l'utilisateur à exclure de la vérification
+     * @return bool True si le pseudonyme est déjà utilisé
+     */
     public function isPseudonymeTaken($pseudonyme, $excludeUserId = null) {
         try {
             $sql = "SELECT COUNT(*) as count FROM compte WHERE pseudonyme = :pseudonyme";
