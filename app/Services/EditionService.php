@@ -318,22 +318,22 @@ class EditionService
     }
 
 
-    public function updateAllEditionStatus(): bool
-    {
-        try {
-            $sql = "UPDATE edition 
+public function updateAllEditionStatus(): bool
+{
+    try {
+        $sql = "UPDATE edition 
                 SET est_active = CASE 
                     WHEN NOW() >= date_debut_candidatures AND NOW() <= date_fin THEN 1 
                     ELSE 0 
                 END";
-
-            $stmt = $this->pdo->prepare($sql);
-            return $stmt->execute();
-        } catch (\Exception $e) {
-            error_log("Erro ao atualizar status das edições: " . $e->getMessage());
-            return false;
-        }
+        
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute();
+    } catch (\Exception $e) {
+        error_log("Erro ao atualizar status das edições: " . $e->getMessage());
+        return false;
     }
+}
     /**
      * Vérifie si une édition est active.
      *
