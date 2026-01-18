@@ -17,7 +17,6 @@ $pdo = Database::getInstance()->getConnection();
 $candidatService = new CandidatService($pdo);
 $candidatureService = new CandidatureService($pdo);
 
-// Obter dados do candidato
 $candidat = $candidatService->getCandidatById($_SESSION['user_id']);
 
 if (!$candidat) {
@@ -26,10 +25,8 @@ if (!$candidat) {
     exit;
 }
 
-// Obter estatísticas do candidato
 $stats = $candidatService->getCandidatStats($_SESSION['user_id']);
 
-// Obter últimas candidaturas
 $stmt = $pdo->prepare("
     SELECT c.*, cat.nom as categorie_nom
     FROM candidature c
@@ -41,10 +38,8 @@ $stmt = $pdo->prepare("
 $stmt->execute([':user_id' => $_SESSION['user_id']]);
 $lastCandidatures = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Formatar dados
 $dateInscription = date('d/m/Y', strtotime($candidat['date_creation']));
 
-// Status colors
 $statusColors = [
     'En attente' => 'warning',
     'Approuvée' => 'success',
@@ -65,12 +60,11 @@ $statusClass = $statusColors[$candidat['statut'] ?? 'En attente'] ?? 'secondary'
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Custom CSS -->
+
     <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/candidat.css">
     
     <style>
-        /* Estilos adicionais para a página de perfil */
+
         .profile-card {
             border: none;
             border-radius: 15px;
@@ -636,7 +630,6 @@ $statusClass = $statusColors[$candidat['statut'] ?? 'En attente'] ?? 'secondary'
         </div>
     </footer>
 
-    <!-- Edit Profile Modal -->
     <div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content modal-profile">
@@ -648,7 +641,7 @@ $statusClass = $statusColors[$candidat['statut'] ?? 'En attente'] ?? 'secondary'
                 </div>
                 <form method="post" action="update-profile.php" enctype="multipart/form-data" id="editProfileForm">
                     <div class="modal-body">
-                        <!-- Mensagens de sucesso/erro -->
+
                         <?php if (isset($_SESSION['success'])): ?>
                             <div class="alert alert-success">
                                 <i class="fas fa-check-circle"></i> <?= $_SESSION['success'] ?>
@@ -719,8 +712,7 @@ $statusClass = $statusColors[$candidat['statut'] ?? 'En attente'] ?? 'secondary'
                                     <option value="Autre" <?= ($candidat['genre'] ?? '') == 'Autre' ? 'selected' : '' ?>>Autre</option>
                                 </select>
                             </div>
-                            
-                            <!-- Foto de perfil -->
+
                             <div class="col-12">
                                 <label class="form-label">Photo de profil</label>
                                 <div class="file-upload-profile" onclick="document.getElementById('photoInput').click()">
@@ -744,7 +736,6 @@ $statusClass = $statusColors[$candidat['statut'] ?? 'En attente'] ?? 'secondary'
                                     </div>
                                 <?php endif; ?>
                                 
-                                <!-- Preview da nova imagem -->
                                 <div id="photoPreview" class="mt-3" style="display: none;">
                                     <small class="text-muted">Nouvelle photo :</small>
                                     <img id="previewImage" src="" alt="Aperçu" 

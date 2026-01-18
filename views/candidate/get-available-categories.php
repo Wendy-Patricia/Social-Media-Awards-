@@ -4,7 +4,6 @@ session_start();
 
 header('Content-Type: application/json');
 
-// Verificar se o usuário está logado
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'candidate') {
     echo json_encode(['error' => 'Non autorisé']);
     exit;
@@ -27,8 +26,7 @@ if ($userId !== $_SESSION['user_id']) {
 
 try {
     $categories = $candidatService->getAvailableCategoriesForCandidature($userId);
-    
-    // Filtrar categorias onde já tem candidatura
+
     $filteredCategories = array_filter($categories, function($category) use ($candidatService, $userId) {
         return !$candidatService->hasCandidatureInCategoryForPlatform($userId, $category['id_categorie'], $category['plateforme_cible']);
     });

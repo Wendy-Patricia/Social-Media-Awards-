@@ -825,9 +825,6 @@ $canEditProfile = $candidatService->canEditProfile($userId);
                                     <a href="share-nomination.php" class="btn btn-success w-100 mb-2">
                                         <i class="fas fa-share-alt me-2"></i> Kit promotionnel
                                     </a>
-                                    <a href="status-votes.php" class="btn btn-info w-100 mb-2">
-                                        <i class="fas fa-chart-line me-2"></i> Statut des votes
-                                    </a>
                                     <a href="reglement.php" class="btn btn-warning w-100">
                                         <i class="fas fa-book me-2"></i> Règlement complet
                                     </a>

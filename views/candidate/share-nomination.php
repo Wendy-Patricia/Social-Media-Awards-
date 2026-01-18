@@ -1,14 +1,10 @@
 <?php
-// views/candidate/share-nomination.php
 session_start();
-
-// Verificar se o usuário está logado como candidato
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'candidate') {
     header('Location: /Social-Media-Awards/views/login.php');
     exit;
 }
 
-// Incluir configurações
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/session.php';
 require_once __DIR__ . '/../../app/autoload.php';
@@ -17,15 +13,12 @@ use App\Services\CandidatService;
 use App\Services\CategoryService;
 use App\Services\EditionService;
 
-// Inicializar conexão
 $pdo = Database::getInstance()->getConnection();
 
-// Inicializar serviços
 $candidatService = new CandidatService($pdo);
 $categoryService = new CategoryService($pdo);
 $editionService = new EditionService($pdo);
 
-// Verificar se é nomeado
 $userId = $_SESSION['user_id'];
 $isNominee = $candidatService->isNominee($userId);
 
@@ -35,7 +28,6 @@ if (!$isNominee) {
     exit;
 }
 
-// Obter nomeações ativas
 $nominations = $candidatService->getActiveNominations($userId);
 if (empty($nominations)) {
     $_SESSION['error'] = "Aucune nomination active trouvée.";
@@ -46,7 +38,6 @@ if (empty($nominations)) {
 $nomination = $nominations[0];
 $publicProfileUrl = "https://" . $_SERVER['HTTP_HOST'] . "/Social-Media-Awards/nominee.php?id=" . $nomination['id_nomination'];
 
-// Textos pré-gerados
 $shareTexts = [
     'twitter' => "Votez pour moi aux Social Media Awards 2025 🏆\n\nJe suis nominé dans la catégorie \"" . $nomination['categorie_nom'] . "\" !\n\n" . $publicProfileUrl . "\n\n#SocialMediaAwards2025 #VotezPourMoi",
     'instagram' => "🏆 JE SUIS NOMINÉ ! 🏆\n\nJe participe aux Social Media Awards 2025 dans la catégorie \"" . $nomination['categorie_nom'] . "\" !\n\nAidez-moi à gagner en votant pour moi via le lien dans ma bio ⬆️\n\nMerci pour votre soutien ! ❤️\n\n" . $publicProfileUrl . "\n\n#SocialMediaAwards2025 #Nomination #Vote",
@@ -67,7 +58,6 @@ $shareTexts = [
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Estilos personalizados -->
     <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/candidat.css">
     
     <style>
@@ -266,12 +256,6 @@ $shareTexts = [
                                     Partagez ce lien partout : bio Instagram/TikTok, stories, emails...
                                 </small>
                             </div>
-                            <div class="col-md-3 text-center">
-                                <div class="qr-code-placeholder bg-light p-3 rounded">
-                                    <i class="fas fa-qrcode fa-3x text-muted"></i>
-                                    <small class="d-block mt-2">QR Code (bientôt disponible)</small>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -431,47 +415,7 @@ $shareTexts = [
                             </div>
                         </div>
                         
-                        <!-- Timeline de promoção -->
-                        <div class="mt-4">
-                            <h6 class="mb-3">Calendrier suggéré :</h6>
-                            <div class="timeline">
-                                <div class="timeline-item">
-                                    <div class="timeline-badge bg-primary">J-3</div>
-                                    <div class="timeline-content">
-                                        <strong>Annonce de la nomination</strong>
-                                        <p>Partagez la nouvelle avec votre communauté</p>
-                                    </div>
-                                </div>
-                                <div class="timeline-item">
-                                    <div class="timeline-badge bg-success">J-1</div>
-                                    <div class="timeline-content">
-                                        <strong>Rappel avant les votes</strong>
-                                        <p>Préparez votre audience pour le début des votes</p>
-                                    </div>
-                                </div>
-                                <div class="timeline-item">
-                                    <div class="timeline-badge bg-info">Jour J</div>
-                                    <div class="timeline-content">
-                                        <strong>Début des votes</strong>
-                                        <p>Postez le lien de vote partout</p>
-                                    </div>
-                                </div>
-                                <div class="timeline-item">
-                                    <div class="timeline-badge bg-warning">Mi-parcours</div>
-                                    <div class="timeline-content">
-                                        <strong>Rappel mi-parcours</strong>
-                                        <p>Relancez vos supporters</p>
-                                    </div>
-                                </div>
-                                <div class="timeline-item">
-                                    <div class="timeline-badge bg-danger">Dernier jour</div>
-                                    <div class="timeline-content">
-                                        <strong>Dernier appel</strong>
-                                        <p>Dernière chance pour voter</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        
                     </div>
                 </div>
             </div>

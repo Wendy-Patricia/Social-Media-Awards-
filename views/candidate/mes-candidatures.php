@@ -1,14 +1,12 @@
 <?php
-// views/candidate/mes-candidatures.php
+
 session_start();
 
-// Verificar se o usuário está logado como candidato
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'candidate') {
     header('Location: /Social-Media-Awards-/views/login.php');
     exit;
 }
 
-// Incluir configurações
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/session.php';
 require_once __DIR__ . '/../../app/autoload.php';
@@ -17,15 +15,12 @@ use App\Services\CandidatService;
 use App\Services\CategoryService;
 use App\Services\EditionService;
 
-// Inicializar conexão
 $pdo = Database::getInstance()->getConnection();
 
-// Inicializar serviços
 $candidatService = new CandidatService($pdo);
 $categoryService = new CategoryService($pdo);
 $editionService = new EditionService($pdo);
 
-// Obter candidaturas do usuário
 $userId = $_SESSION['user_id'];
 $candidatures = $candidatService->getUserCandidatures($userId);
 $stats = $candidatService->getCandidatStats($userId);
@@ -43,7 +38,7 @@ $stats = $candidatService->getCandidatStats($userId);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Estilos personalizados -->
+
     <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/candidat.css">
 </head>
 
@@ -70,14 +65,12 @@ $stats = $candidatService->getCandidatStats($userId);
 
     <div class="container-fluid mt-4">
         <div class="row">
-            <!-- Sidebar -->
+
             <div class="col-md-3">
                 <?php include __DIR__ . '/../partials/sidebar-candidat.php'; ?>
             </div>
 
-            <!-- Conteúdo principal -->
             <div class="col-md-9">
-                <!-- Cabeçalho -->
                 <div class="page-header-candidatures">
                     <h1>
                         <i class="fas fa-file-alt me-2"></i>
@@ -85,8 +78,6 @@ $stats = $candidatService->getCandidatStats($userId);
                     </h1>
                     <p class="text-muted">Suivez l'état de toutes vos candidatures</p>
                 </div>
-
-                <!-- Alertas -->
                 <?php if (isset($_SESSION['success'])): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <?= $_SESSION['success'] ?>
@@ -103,7 +94,6 @@ $stats = $candidatService->getCandidatStats($userId);
                 <?php unset($_SESSION['error']);
                 endif; ?>
 
-                <!-- Estatísticas -->
                 <div class="stats-candidatures">
                     <div class="stat-card-candidature total">
                         <div class="stat-content">
@@ -137,8 +127,6 @@ $stats = $candidatService->getCandidatStats($userId);
                         </div>
                     </div>
                 </div>
-
-                <!-- Lista de candidaturas -->
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">

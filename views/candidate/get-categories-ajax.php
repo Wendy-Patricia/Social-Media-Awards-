@@ -1,5 +1,5 @@
 <?php
-// views/candidate/get-categories-ajax.php
+
 
 session_start();
 

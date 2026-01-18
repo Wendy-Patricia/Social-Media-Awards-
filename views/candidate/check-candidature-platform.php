@@ -1,5 +1,4 @@
 <?php
-// views/candidate/check-candidature-platform.php
 session_start();
 
 header('Content-Type: application/json');
@@ -25,14 +24,13 @@ if (!$categoryId || !$platform) {
     exit;
 }
 
-// Verificar se já tem candidatura na categoria para esta plataforma
 $hasCandidature = $candidatService->hasCandidatureInCategoryForPlatform(
     $_SESSION['user_id'], 
     $categoryId, 
     $platform
 );
 
-// Obter plataformas já usadas nesta categoria
+
 $existingCandidatures = $candidatService->getCandidaturesInCategory(
     $_SESSION['user_id'], 
     $categoryId
