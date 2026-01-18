@@ -2,16 +2,30 @@
 namespace App\Services;
 
 use PDO;
+use App\Models\Candidature;
 
+/**
+ * Service de gestion des candidatures.
+ */
 class CandidatureService
 {
     private PDO $pdo;
 
+    /**
+     * Constructeur du service.
+     *
+     * @param PDO $pdo Connexion à la base de données.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
 
+    /**
+     * Récupère toutes les candidatures.
+     *
+     * @return Candidature[] Liste des candidatures sous forme d'objets Candidature.
+     */
     public function getAllCandidatures(): array
     {
         $sql = "
@@ -28,10 +42,21 @@ class CandidatureService
             ORDER BY ca.date_soumission DESC
         ";
         $stmt = $this->pdo->query($sql);
-        return $stmt->fetchAll();
+        $data = $stmt->fetchAll();
+        $candidatures = [];
+        foreach ($data as $row) {
+            $candidatures[] = new Candidature($row);
+        }
+        return $candidatures;
     }
 
-    public function getCandidatureById(int $id): ?array
+    /**
+     * Récupère une candidature par ID.
+     *
+     * @param int $id ID de la candidature.
+     * @return Candidature|null Objet Candidature ou null si non trouvée.
+     */
+    public function getCandidatureById(int $id): ?Candidature
     {
         $sql = "
             SELECT 
@@ -48,9 +73,17 @@ class CandidatureService
         ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
-        return $stmt->fetch() ?: null;
+        $data = $stmt->fetch();
+        return $data ? new Candidature($data) : null;
     }
 
+    /**
+     * Met à jour le statut d'une candidature.
+     *
+     * @param int $id ID de la candidature.
+     * @param string $statut Nouveau statut.
+     * @return bool Succès de l'opération.
+     */
     public function updateStatus(int $id, string $statut): bool
     {
         $sql = "UPDATE candidature SET statut = :statut WHERE id_candidature = :id";
@@ -58,11 +91,17 @@ class CandidatureService
         return $stmt->execute(['statut' => $statut, 'id' => $id]);
     }
 
+    /**
+     * Supprime une candidature.
+     *
+     * @param int $id ID de la candidature.
+     * @return bool Succès de l'opération.
+     */
     public function deleteCandidature(int $id): bool
     {
         $candidature = $this->getCandidatureById($id);
-        if ($candidature && $candidature['image'] && file_exists(__DIR__ . '/../../public/' . $candidature['image'])) {
-            unlink(__DIR__ . '/../../public/' . $candidature['image']);
+        if ($candidature && $candidature->getImage() && file_exists(__DIR__ . '/../../public/' . $candidature->getImage())) {
+            unlink(__DIR__ . '/../../public/' . $candidature->getImage());
         }
 
         $sql = "DELETE FROM candidature WHERE id_candidature = :id";
@@ -70,6 +109,12 @@ class CandidatureService
         return $stmt->execute(['id' => $id]);
     }
 
+    /**
+     * Obtient les statistiques des candidatures pour un utilisateur.
+     *
+     * @param int $userId ID de l'utilisateur.
+     * @return array Statistiques.
+     */
     public function getCandidatureStats(int $userId): array
     {
         $sql = "SELECT 
@@ -92,19 +137,35 @@ class CandidatureService
         ];
     }
 
+    /**
+     * Récupère les candidatures par catégorie.
+     *
+     * @param int $categoryId ID de la catégorie.
+     * @return Candidature[] Liste des candidatures.
+     */
     public function getCandidaturesByCategory(int $categoryId): array
     {
         $sql = "SELECT c.*, co.pseudonyme
                 FROM candidature c
                 JOIN compte co ON c.id_compte = co.id_compte
-                WHERE c.id_categorie = :categoryId
-                ORDER BY c.date_soumission DESC";
-        
+                WHERE c.id_categorie = :categoryId";
+
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([':categoryId' => $categoryId]);
-        return $stmt->fetchAll();
+        $data = $stmt->fetchAll();
+        $candidatures = [];
+        foreach ($data as $row) {
+            $candidatures[] = new Candidature($row);
+        }
+        return $candidatures;
     }
 
+    /**
+     * Récupère les candidatures par statut.
+     *
+     * @param string $status Statut.
+     * @return Candidature[] Liste des candidatures.
+     */
     public function getCandidaturesByStatus(string $status): array
     {
         $sql = "SELECT c.*, co.pseudonyme, cat.nom as categorie_nom
@@ -116,9 +177,21 @@ class CandidatureService
         
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([':status' => $status]);
-        return $stmt->fetchAll();
+        $data = $stmt->fetchAll();
+        $candidatures = [];
+        foreach ($data as $row) {
+            $candidatures[] = new Candidature($row);
+        }
+        return $candidatures;
     }
 
+    /**
+     * Approuve une candidature.
+     *
+     * @param int $candidatureId ID de la candidature.
+     * @param int $adminId ID de l'admin.
+     * @return bool Succès de l'opération.
+     */
     public function approveCandidature(int $candidatureId, int $adminId): bool
     {
         $sql = "UPDATE candidature 
@@ -130,6 +203,13 @@ class CandidatureService
         return $stmt->execute([':id' => $candidatureId]);
     }
 
+    /**
+     * Rejette une candidature.
+     *
+     * @param int $candidatureId ID de la candidature.
+     * @param int $adminId ID de l'admin.
+     * @return bool Succès de l'opération.
+     */
     public function rejectCandidature(int $candidatureId, int $adminId): bool
     {
         $sql = "UPDATE candidature 
@@ -142,7 +222,11 @@ class CandidatureService
     }
 
     /**
-     * Verifica se candidato já tem candidatura na categoria
+     * Vérifie si le candidat a déjà une candidature dans la catégorie.
+     *
+     * @param int $userId ID du candidat.
+     * @param int $categoryId ID de la catégorie.
+     * @return bool
      */
     public function hasCandidatureInCategory(int $userId, int $categoryId): bool
     {
@@ -163,7 +247,10 @@ class CandidatureService
     }
 
     /**
-     * Obtém total de candidaturas por edição
+     * Obtient les candidatures par édition.
+     *
+     * @param int $editionId ID de l'édition.
+     * @return Candidature[] Liste des candidatures.
      */
     public function getCandidaturesByEdition(int $editionId): array
     {
@@ -176,11 +263,19 @@ class CandidatureService
         
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([':editionId' => $editionId]);
-        return $stmt->fetchAll();
+        $data = $stmt->fetchAll();
+        $candidatures = [];
+        foreach ($data as $row) {
+            $candidatures[] = new Candidature($row);
+        }
+        return $candidatures;
     }
 
     /**
-     * Obtém estatísticas de candidaturas por edição
+     * Obtient les statistiques par édition.
+     *
+     * @param int $editionId ID de l'édition.
+     * @return array Statistiques.
      */
     public function getEditionStats(int $editionId): array
     {
@@ -199,4 +294,7 @@ class CandidatureService
         return $stmt->fetch();
     }
 
+
+    
 }
+

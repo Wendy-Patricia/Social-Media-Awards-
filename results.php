@@ -1,4 +1,3 @@
-
 <?php
 // FICHIER : results.php  
 // DESCRIPTION : Page affichant les résultats dynamiques des Social Media Awards
@@ -18,7 +17,6 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // Créer le service ResultsService
-    require_once __DIR__ . '/app/Services/ResultsService.php';
     $resultsService = new App\Services\ResultsService($pdo);
     
 } catch (PDOException $e) {
@@ -32,12 +30,22 @@ try {
     $editionId = $latestEdition['id_edition'] ?? 1;
     $editionYear = $latestEdition['annee'] ?? date('Y');
     
+    // Récupérer les dates de l'édition
+    $sqlDates = "SELECT date_debut_votes, date_fin_votes FROM edition WHERE id_edition = ?";
+    $stmtDates = $pdo->prepare($sqlDates);
+    $stmtDates->execute([$editionId]);
+    $editionDates = $stmtDates->fetch(PDO::FETCH_ASSOC);
+    
+    // Dates par défaut si non définies
+    $dateDebut = $editionDates['date_debut_votes'] ?? null;
+    $dateFin = $editionDates['date_fin_votes'] ?? null;
+    
     // Vérifier le paramètre GET pour l'édition
     if (isset($_GET['edition']) && is_numeric($_GET['edition'])) {
         $requestedEditionId = (int)$_GET['edition'];
         $availableEditions = $resultsService->getFinishedEditions();
         
-        // Vérifier si l'édition demandée est valide et terminée
+        // Vérifier si l'édition demandée est valide
         $isValid = false;
         foreach ($availableEditions as $edition) {
             if ($edition['id_edition'] == $requestedEditionId) {
@@ -49,6 +57,12 @@ try {
                 $stmt->execute([':editionId' => $editionId]);
                 $latestEdition = $stmt->fetch(PDO::FETCH_ASSOC);
                 $editionYear = $latestEdition['annee'];
+                
+                // Récupérer les dates de cette édition
+                $stmtDates->execute([$editionId]);
+                $editionDates = $stmtDates->fetch(PDO::FETCH_ASSOC);
+                $dateDebut = $editionDates['date_debut_votes'] ?? null;
+                $dateFin = $editionDates['date_fin_votes'] ?? null;
                 break;
             }
         }
@@ -58,6 +72,12 @@ try {
             $latestEdition = $resultsService->getLatestEdition();
             $editionId = $latestEdition['id_edition'];
             $editionYear = $latestEdition['annee'];
+            
+            // Récupérer les dates
+            $stmtDates->execute([$editionId]);
+            $editionDates = $stmtDates->fetch(PDO::FETCH_ASSOC);
+            $dateDebut = $editionDates['date_debut_votes'] ?? null;
+            $dateFin = $editionDates['date_fin_votes'] ?? null;
         }
     }
     
@@ -79,9 +99,15 @@ try {
             'total_voters' => 0
         ];
         
-        $votePeriodMessage = $isEditionActive 
-            ? "Les votes sont en cours jusqu'au " . date('d/m/Y à H:i', strtotime($editionStatus['date_fin']))
-            : "Les votes ne sont pas encore commencés";
+        // Messages par défaut
+        $votePeriodMessage = "";
+        if ($isEditionActive && $dateFin) {
+            $votePeriodMessage = "Les votes sont en cours jusqu'au " . date('d/m/Y à H:i', strtotime($dateFin));
+        } elseif (!$isEditionActive && !$votesFinished && $dateDebut) {
+            $votePeriodMessage = "Les votes commenceront le " . date('d/m/Y à H:i', strtotime($dateDebut));
+        } else {
+            $votePeriodMessage = "Informations sur les votes non disponibles";
+        }
         
     } else {
         // Édition terminée, on récupère tous les résultats
@@ -100,6 +126,8 @@ try {
     $isEditionActive = false;
     $votesFinished = true;
     $latestEdition = ['annee' => date('Y'), 'nom' => 'Social Media Awards'];
+    $dateDebut = null;
+    $dateFin = null;
     $grandWinners = [];
     $categoryResults = [];
     $globalStats = [
@@ -130,6 +158,13 @@ try {
         <?php endif; ?> - Social Media Awards
     </title>
     
+    <style>
+        /* Styles pour les dates non définies */
+        .date-unavailable {
+            color: #888;
+            font-style: italic;
+        }
+    </style>
 
 </head>
 <body class="<?php 
@@ -154,9 +189,17 @@ try {
                 
                 <p>
                     <?php if ($isEditionActive): ?>
-                        Les votes sont ouverts. Revenez après le <?php echo date('d/m/Y', strtotime($editionStatus['date_fin'])); ?> pour découvrir les résultats.
+                        <?php if ($dateFin): ?>
+                            Les votes sont ouverts. Revenez après le <?php echo date('d/m/Y', strtotime($dateFin)); ?> pour découvrir les résultats.
+                        <?php else: ?>
+                            Les votes sont ouverts. Date de fin non définie.
+                        <?php endif; ?>
                     <?php elseif (!$votesFinished && !$isEditionActive): ?>
-                        Les votes commenceront le <?php echo date('d/m/Y', strtotime($editionStatus['date_debut'])); ?>.
+                        <?php if ($dateDebut): ?>
+                            Les votes commenceront le <?php echo date('d/m/Y', strtotime($dateDebut)); ?>.
+                        <?php else: ?>
+                            Les dates de vote seront annoncées prochainement.
+                        <?php endif; ?>
                     <?php else: ?>
                         Découvrez les gagnants de cette édition des Social Media Awards
                     <?php endif; ?>
@@ -209,14 +252,24 @@ try {
                     <h2>Les votes sont en cours !</h2>
                     <p>Les résultats seront disponibles après la période de vote.</p>
                     <div class="countdown" id="countdownTimer">
-                        Fin des votes le <?php echo date('d/m/Y à H:i', strtotime($editionStatus['date_fin'])); ?>
+                        <?php if ($dateFin): ?>
+                            Fin des votes le <?php echo date('d/m/Y à H:i', strtotime($dateFin)); ?>
+                        <?php else: ?>
+                            Date de fin des votes non définie
+                        <?php endif; ?>
                     </div>
                 </div>
                 <?php elseif (!$votesFinished && !$isEditionActive): ?>
                 <div class="vote-not-started" id="voteNotStarted">
                     <i class="fas fa-calendar-alt"></i>
                     <h2>Les votes n'ont pas encore commencé</h2>
-                    <p>Les votes débuteront le <?php echo date('d/m/Y à H:i', strtotime($editionStatus['date_debut'])); ?></p>
+                    <p>
+                        <?php if ($dateDebut): ?>
+                            Les votes débuteront le <?php echo date('d/m/Y à H:i', strtotime($dateDebut)); ?>
+                        <?php else: ?>
+                            Les dates de vote seront annoncées prochainement
+                        <?php endif; ?>
+                    </p>
                     <p>Revenez à cette date pour participer !</p>
                 </div>
                 <?php endif; ?>
@@ -310,7 +363,13 @@ try {
                         </div>
                         <div class="stat-content">
                             <div class="stat-number">Votes ouverts</div>
-                            <div class="stat-label">Jusqu'au <?php echo date('d/m/Y', strtotime($editionStatus['date_fin'])); ?></div>
+                            <div class="stat-label">
+                                <?php if ($dateFin): ?>
+                                    Jusqu'au <?php echo date('d/m/Y', strtotime($dateFin)); ?>
+                                <?php else: ?>
+                                    Date non définie
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     
@@ -351,7 +410,13 @@ try {
                         </div>
                         <div class="stat-content">
                             <div class="stat-number">À venir</div>
-                            <div class="stat-label">Début le <?php echo date('d/m/Y', strtotime($editionStatus['date_debut'])); ?></div>
+                            <div class="stat-label">
+                                <?php if ($dateDebut): ?>
+                                    Début le <?php echo date('d/m/Y', strtotime($dateDebut)); ?>
+                                <?php else: ?>
+                                    Date non définie
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     
@@ -469,9 +534,9 @@ try {
         }
         
         // Compteur à rebours si vote en cours
-        <?php if ($isEditionActive && isset($editionStatus['date_fin'])): ?>
+        <?php if ($isEditionActive && $dateFin): ?>
         function updateCountdown() {
-            const endDate = new Date("<?php echo $editionStatus['date_fin']; ?>".replace(' ', 'T'));
+            const endDate = new Date("<?php echo $dateFin; ?>".replace(' ', 'T'));
             const now = new Date();
             const distance = endDate - now;
             

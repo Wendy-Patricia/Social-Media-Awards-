@@ -1,6 +1,4 @@
 <?php
-// app/Controllers/VoteController.php - VERSÃO COMPLETA CORRIGIDA
-
 class VoteController {
     private $voteService;
 

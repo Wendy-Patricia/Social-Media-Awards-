@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Interfaces;
+namespace app\Interfaces;
+use app\Models\Candidature;
 
 /**
  * Interface pour le contrôleur administratif des candidatures.
@@ -23,7 +24,7 @@ interface AdminCandidatureControllerInterface
      * @param int $id Identifiant de la candidature
      * @return array|null Données de la candidature ou null si non trouvée
      */
-    public function getCandidatureById(int $id): ?array;
+    public function getCandidatureById(int $id): ?Candidature;
 
     /**
      * Met à jour le statut d'une candidature (ex: en_attente, acceptée, refusée).

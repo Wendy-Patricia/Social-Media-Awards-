@@ -11,7 +11,6 @@ if ($id <= 0) {
     exit;
 }
 
-
 $candidature = $candidatureController->getCandidatureById($id);
 
 if (!$candidature) {
@@ -48,7 +47,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
     <div class="admin-page-header">
         <div class="page-title">
             <h1><i class="fas fa-eye"></i> Détails de la Candidature #<?= $id ?></h1>
-            <p><?= htmlspecialchars($candidature['libelle']) ?></p>
+            <p><?= htmlspecialchars($candidature->getLibelle()) ?></p>
         </div>
         <div class="header-actions">
             <a href="manage-candidature.php" class="btn btn-secondary">
@@ -74,46 +73,46 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
             <div class="info-card">
                 <div class="card-header">
                     <h3><i class="fas fa-info-circle"></i> Informations Générales</h3>
-                    <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $candidature['statut'])) ?>">
-                        <i class="fas fa-circle"></i> <?= $candidature['statut'] ?>
+                    <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $candidature->getStatut())) ?>">
+                        <i class="fas fa-circle"></i> <?= $candidature->getStatut() ?>
                     </span>
                 </div>
                 <div class="card-body">
                     <div class="info-item">
                         <strong><i class="fas fa-user"></i> Candidat :</strong>
                         <div class="info-content">
-                            <span class="candidate-name"><?= htmlspecialchars($candidature['candidat_pseudonyme']) ?></span>
-                            <span class="candidate-email"><?= htmlspecialchars($candidature['candidat_email']) ?></span>
+                            <span class="candidate-name"><?= htmlspecialchars($candidature->getCandidatPseudonyme() ?? '') ?></span>
+                            <span class="candidate-email"><?= htmlspecialchars($candidature->getCandidatEmail() ?? '') ?></span>
                         </div>
                     </div>
                     
                     <div class="info-item">
                         <strong><i class="fas fa-globe"></i> Plateforme :</strong>
-                        <span class="platform-badge platform-<?= strtolower($candidature['plateforme']) ?>">
-                            <?= htmlspecialchars($candidature['plateforme']) ?>
+                        <span class="platform-badge platform-<?= strtolower($candidature->getPlateforme()) ?>">
+                            <?= htmlspecialchars($candidature->getPlateforme()) ?>
                         </span>
                     </div>
                     
                     <div class="info-item">
                         <strong><i class="fas fa-link"></i> Lien :</strong>
-                        <a href="<?= htmlspecialchars($candidature['url_contenu']) ?>" target="_blank" class="content-link">
+                        <a href="<?= htmlspecialchars($candidature->getUrlContenu()) ?>" target="_blank" class="content-link">
                             <i class="fas fa-external-link-alt"></i> Ouvrir le contenu
                         </a>
                     </div>
                     
                     <div class="info-item">
                         <strong><i class="fas fa-tag"></i> Catégorie :</strong>
-                        <span class="category-tag"><?= htmlspecialchars($candidature['categorie_nom']) ?></span>
+                        <span class="category-tag"><?= htmlspecialchars($candidature->getCategorieNom() ?? '') ?></span>
                     </div>
                     
                     <div class="info-item">
                         <strong><i class="fas fa-trophy"></i> Édition :</strong>
-                        <?= htmlspecialchars($candidature['edition_nom']) ?>
+                        <?= htmlspecialchars($candidature->getEditionNom() ?? '') ?>
                     </div>
                     
                     <div class="info-item">
                         <strong><i class="fas fa-calendar-alt"></i> Soumission :</strong>
-                        <?= date('d/m/Y à H:i', strtotime($candidature['date_soumission'])) ?>
+                        <?= date('d/m/Y à H:i', strtotime($candidature->getDateSoumission())) ?>
                     </div>
                 </div>
             </div>
@@ -124,29 +123,29 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                 </div>
                 <div class="card-body">
                     <div class="argumentaire-content">
-                        <?= nl2br(htmlspecialchars($candidature['argumentaire'])) ?>
+                        <?= nl2br(htmlspecialchars($candidature->getArgumentaire())) ?>
                     </div>
                 </div>
             </div>
 
-            <?php if ($candidature['image']): ?>
+            <?php if ($candidature->getImage()): ?>
             <div class="info-card full-width">
                 <div class="card-header">
                     <h3><i class="fas fa-image"></i> Image soumise</h3>
                 </div>
                 <div class="card-body text-center">
                     <div class="image-container">
-                        <img src="../../../public/<?= htmlspecialchars($candidature['image']) ?>" 
+                        <img src="../../../public/<?= htmlspecialchars($candidature->getImage()) ?>" 
                              alt="Image candidature" 
                              class="submitted-image"
                              onerror="this.src='../../../assets/images/default-image.jpg'">
                         <div class="image-actions">
-                            <a href="../../../public/<?= htmlspecialchars($candidature['image']) ?>" 
+                            <a href="../../../public/<?= htmlspecialchars($candidature->getImage()) ?>" 
                                target="_blank" 
                                class="btn btn-sm btn-primary">
                                 <i class="fas fa-expand"></i> Agrandir
                             </a>
-                            <button onclick="downloadImage('<?= htmlspecialchars($candidature['image']) ?>')" 
+                            <button onclick="downloadImage('<?= htmlspecialchars($candidature->getImage()) ?>')" 
                                     class="btn btn-sm btn-secondary">
                                 <i class="fas fa-download"></i> Télécharger
                             </button>
@@ -158,11 +157,11 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
         </div>
 
         <div class="form-actions">
-            <?php if ($candidature['statut'] === 'En attente'): ?>
-            <button class="btn btn-success" onclick="openProcessModal(<?= $id ?>, '<?= addslashes($candidature['libelle']) ?>', 'approve')">
+            <?php if ($candidature->getStatut() === 'En attente'): ?>
+            <button class="btn btn-success" onclick="openProcessModal(<?= $id ?>, '<?= addslashes($candidature->getLibelle()) ?>', 'approve')">
                 <i class="fas fa-check"></i> Approuver
             </button>
-            <button class="btn btn-danger" onclick="openProcessModal(<?= $id ?>, '<?= addslashes($candidature['libelle']) ?>', 'reject')">
+            <button class="btn btn-danger" onclick="openProcessModal(<?= $id ?>, '<?= addslashes($candidature->getLibelle()) ?>', 'reject')">
                 <i class="fas fa-times"></i> Rejeter
             </button>
             <?php else: ?>
@@ -171,7 +170,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
             </div>
             <?php endif; ?>
             
-            <button onclick="openDeleteModal(<?= $id ?>, '<?= addslashes($candidature['libelle']) ?>')" class="btn btn-outline-danger">
+            <button onclick="openDeleteModal(<?= $id ?>, '<?= addslashes($candidature->getLibelle()) ?>')" class="btn btn-outline-danger">
                 <i class="fas fa-trash"></i> Supprimer
             </button>
         </div>

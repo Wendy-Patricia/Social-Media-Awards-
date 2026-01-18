@@ -5,8 +5,6 @@ require_once __DIR__ . '/../../../config/permissions.php';
 requireAdmin();
 require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 
-
-
 $candidatures = $candidatureController->getAllCandidatures();
 
 $stats = [
@@ -17,7 +15,7 @@ $stats = [
 ];
 
 foreach ($candidatures as $c) {
-    switch ($c['statut']) {
+    switch ($c->getStatut()) { // Use object getter method
         case 'En attente': $stats['pending']++; break;
         case 'Approuvée': $stats['approved']++; break;
         case 'Rejetée': $stats['rejected']++; break;
@@ -127,7 +125,11 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                     <?php
                     $categories = $categoryController->getAllCategories();
                     foreach ($categories as $cat): ?>
-                    <option value="<?= htmlspecialchars($cat['nom']) ?>"><?= htmlspecialchars($cat['nom']) ?></option>
+                    <?php if ($cat instanceof \App\Models\Categorie): ?>
+                    <option value="<?= htmlspecialchars($cat->getNom()) ?>"><?= htmlspecialchars($cat->getNom()) ?></option>
+                    <?php else: ?>
+                    <option value="<?= htmlspecialchars($cat['nom'] ?? '') ?>"><?= htmlspecialchars($cat['nom'] ?? '') ?></option>
+                    <?php endif; ?>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -154,11 +156,11 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                     </tr>
                     <?php else: ?>
                     <?php foreach ($candidatures as $c): ?>
-                    <tr data-status="<?= $c['statut'] ?>" data-category="<?= htmlspecialchars($c['categorie_nom']) ?>">
-                        <td class="id-column">#<?= $c['id_candidature'] ?></td>
+                    <tr data-status="<?= $c->getStatut() ?>" data-category="<?= htmlspecialchars($c->getCategorieNom() ?? '') ?>">
+                        <td class="id-column">#<?= $c->getIdCandidature() ?></td>
                         <td>
-                            <strong><?= htmlspecialchars($c['libelle']) ?></strong><br>
-                            <small class="text-muted">Édition: <?= htmlspecialchars($c['edition_nom']) ?></small>
+                            <strong><?= htmlspecialchars($c->getLibelle()) ?></strong><br>
+                            <small class="text-muted">Édition: <?= htmlspecialchars($c->getEditionNom() ?? '') ?></small>
                         </td>
                         <td>
                             <div class="candidate-info">
@@ -166,44 +168,51 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div>
-                                    <strong><?= htmlspecialchars($c['candidat_pseudonyme']) ?></strong><br>
-                                    <small><?= htmlspecialchars($c['candidat_email']) ?></small>
+                                    <strong><?= htmlspecialchars($c->getCandidatPseudonyme() ?? '') ?></strong><br>
+                                    <small><?= htmlspecialchars($c->getCandidatEmail() ?? '') ?></small>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <span class="platform-badge platform-<?= strtolower($c['plateforme']) ?>">
-                                <i class="fab fa-<?= strtolower($c['plateforme']) == 'instagram' ? 'instagram' : 
-                                                  (strtolower($c['plateforme']) == 'tiktok' ? 'tiktok' : 
-                                                  (strtolower($c['plateforme']) == 'youtube' ? 'youtube' : 'globe')) ?>"></i>
-                                <?= htmlspecialchars($c['plateforme']) ?>
+                            <span class="platform-badge platform-<?= strtolower($c->getPlateforme()) ?>">
+                                <?php 
+                                $platform = strtolower($c->getPlateforme());
+                                $icon = 'globe';
+                                if ($platform == 'instagram') $icon = 'instagram';
+                                elseif ($platform == 'tiktok') $icon = 'tiktok';
+                                elseif ($platform == 'youtube') $icon = 'youtube';
+                                elseif ($platform == 'facebook') $icon = 'facebook';
+                                elseif ($platform == 'x') $icon = 'x-twitter';
+                                ?>
+                                <i class="fab fa-<?= $icon ?>"></i>
+                                <?= htmlspecialchars($c->getPlateforme()) ?>
                             </span>
                         </td>
                         <td>
-                            <span class="category-tag"><?= htmlspecialchars($c['categorie_nom']) ?></span>
+                            <span class="category-tag"><?= htmlspecialchars($c->getCategorieNom() ?? '') ?></span>
                         </td>
                         <td>
                             <div class="date-info">
-                                <div><?= date('d/m/Y', strtotime($c['date_soumission'])) ?></div>
-                                <small><?= date('H:i', strtotime($c['date_soumission'])) ?></small>
+                                <div><?= date('d/m/Y', strtotime($c->getDateSoumission())) ?></div>
+                                <small><?= date('H:i', strtotime($c->getDateSoumission())) ?></small>
                             </div>
                         </td>
                         <td>
-                            <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $c['statut'])) ?>">
+                            <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $c->getStatut())) ?>">
                                 <i class="fas fa-circle"></i>
-                                <?= $c['statut'] ?>
+                                <?= $c->getStatut() ?>
                             </span>
                         </td>
                         <td class="actions-cell">
                             <div class="action-buttons">
-                                <a href="view-candidature.php?id=<?= $c['id_candidature'] ?>" class="action-btn view" title="Voir détails">
+                                <a href="view-candidature.php?id=<?= $c->getIdCandidature() ?>" class="action-btn view" title="Voir détails">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <?php if ($c['statut'] === 'En attente'): ?>
-                                <button class="action-btn process" onclick="openProcessModal(<?= $c['id_candidature'] ?>, '<?= addslashes($c['libelle']) ?>', 'approve')" title="Approuver">
+                                <?php if ($c->getStatut() === 'En attente'): ?>
+                                <button class="action-btn process" onclick="openProcessModal(<?= $c->getIdCandidature() ?>, '<?= addslashes($c->getLibelle()) ?>', 'approve')" title="Approuver">
                                     <i class="fas fa-check"></i>
                                 </button>
-                                <button class="action-btn reject" onclick="openProcessModal(<?= $c['id_candidature'] ?>, '<?= addslashes($c['libelle']) ?>', 'reject')" title="Rejeter">
+                                <button class="action-btn reject" onclick="openProcessModal(<?= $c->getIdCandidature() ?>, '<?= addslashes($c->getLibelle()) ?>', 'reject')" title="Rejeter">
                                     <i class="fas fa-times"></i>
                                 </button>
                                 <?php else: ?>
@@ -211,7 +220,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                                     <i class="fas fa-check-double"></i>
                                 </button>
                                 <?php endif; ?>
-                                <button onclick="openDeleteModal(<?= $c['id_candidature'] ?>, '<?= addslashes($c['libelle']) ?>')" class="action-btn delete" title="Supprimer">
+                                <button onclick="openDeleteModal(<?= $c->getIdCandidature() ?>, '<?= addslashes($c->getLibelle()) ?>')" class="action-btn delete" title="Supprimer">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -282,51 +291,6 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
 <script src="../../../assets/js/admin-candidatures.js"></script>
 <script>
 function openProcessModal(id, libelle, action) {
-    const modal = document.getElementById('processModal');
-    const title = document.getElementById('processModalTitle');
-    const processId = document.getElementById('processId');
-    const processAction = document.getElementById('processAction');
-    
-    processId.value = id;
-    processAction.value = action;
-    
-    if (action === 'approve') {
-        title.innerHTML = `Approuver la candidature: <strong>"${libelle}"</strong>`;
-        document.getElementById('confirmProcessBtn').className = 'btn btn-success';
-        document.getElementById('confirmProcessBtn').innerHTML = '<i class="fas fa-check"></i> Approuver';
-    } else {
-        title.innerHTML = `Rejeter la candidature: <strong>"${libelle}"</strong>`;
-        document.getElementById('confirmProcessBtn').className = 'btn btn-danger';
-        document.getElementById('confirmProcessBtn').innerHTML = '<i class="fas fa-times"></i> Rejeter';
-    }
-    
-    modal.style.display = 'flex';
-}
-
-function openDeleteModal(id, libelle) {
-    const modal = document.getElementById('deleteModal');
-    const text = document.getElementById('deleteModalText');
-    const link = document.getElementById('confirmDeleteLink');
-    
-    text.innerHTML = `Êtes-vous sûr de vouloir supprimer définitivement la candidature <strong>"${libelle}"</strong> ?`;
-    link.href = `manage-candidatures.php?delete=${id}`;
-    
-    modal.style.display = 'flex';
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('confirmProcessBtn').addEventListener('click', function() {
-        document.getElementById('processForm').submit();
-    });
-    
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.style.display = 'none';
-            });
-        });
-    });
-});function openProcessModal(id, libelle, action) {
     const modal = document.getElementById('processModal');
     const title = document.getElementById('processModalTitle');
     const processId = document.getElementById('processId');

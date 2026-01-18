@@ -11,7 +11,7 @@ if ($id <= 0) {
     exit;
 }
 
-
+// This returns a Categorie object, not an array
 $category = $categoryController->getCategoryById($id);
 $editions = $editionController->getEditionsList();
 
@@ -22,14 +22,16 @@ if (!$category) {
 
 $error = '';
 $success = '';
+
+// Use object getter methods instead of array access
 $formData = [
-    'nom' => $_POST['nom'] ?? $category['nom'],
-    'description' => $_POST['description'] ?? $category['description'],
-    'plateforme_cible' => $_POST['plateforme_cible'] ?? $category['plateforme_cible'],
-    'date_debut_votes' => $_POST['date_debut_votes'] ?? $category['date_debut_votes'],
-    'date_fin_votes' => $_POST['date_fin_votes'] ?? $category['date_fin_votes'],
-    'id_edition' => $_POST['id_edition'] ?? $category['id_edition'],
-    'limite_nomines' => $_POST['limite_nomines'] ?? $category['limite_nomines']
+    'nom' => $_POST['nom'] ?? $category->getNom(),
+    'description' => $_POST['description'] ?? $category->getDescription(),
+    'plateforme_cible' => $_POST['plateforme_cible'] ?? $category->getPlateformeCible(),
+    'date_debut_votes' => $_POST['date_debut_votes'] ?? $category->getDateDebutVotes(),
+    'date_fin_votes' => $_POST['date_fin_votes'] ?? $category->getDateFinVotes(),
+    'id_edition' => $_POST['id_edition'] ?? $category->getIdEdition(),
+    'limite_nomines' => $_POST['limite_nomines'] ?? $category->getLimiteNomines()
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -95,7 +97,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
     <div class="admin-page-header">
         <div class="page-title">
             <h1><i class="fas fa-edit"></i> Modifier la catégorie</h1>
-            <p>Mettez à jour les informations de "<?= htmlspecialchars($category['nom']) ?>"</p>
+            <p>Mettez à jour les informations de "<?= htmlspecialchars($category->getNom()) ?>"</p>
         </div>
         <div class="header-actions">
             <a href="gerer-categories.php" class="btn btn-secondary">
@@ -104,7 +106,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
             <button id="deleteBtn" 
                     class="btn btn-danger"
                     data-category-id="<?= $id ?>"
-                    data-category-name="<?= htmlspecialchars($category['nom']) ?>">
+                    data-category-name="<?= htmlspecialchars($category->getNom()) ?>">
                 <i class="fas fa-trash"></i> Supprimer
             </button>
         </div>
@@ -119,17 +121,17 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
         <?php endif; ?>
 
         <!-- Current Image Preview -->
-        <?php if ($category['image']): ?>
+        <?php if ($category->getImage()): ?>
         <div class="current-image-section" style="margin-bottom: 2rem; padding: 1.5rem; background: #f8fafc; border-radius: var(--border-radius);">
             <h3 style="margin-bottom: 1rem; color: var(--dark-color); font-size: 1.1rem;">
                 <i class="fas fa-image"></i> Image actuelle
             </h3>
             <div id="currentImageContainer" style="text-align: center;">
-                <img src="../../../public/<?= htmlspecialchars($category['image']) ?>" 
-                     alt="<?= htmlspecialchars($category['nom']) ?>" 
+                <img src="../../../public/<?= htmlspecialchars($category->getImage()) ?>" 
+                     alt="<?= htmlspecialchars($category->getNom()) ?>" 
                      style="max-width: 100%; max-height: 300px; border-radius: var(--border-radius); border: 2px solid #e2e8f0;">
                 <div style="margin-top: 0.5rem; color: #64748b; font-size: 0.875rem;">
-                    Chemin: <?= htmlspecialchars($category['image']) ?>
+                    Chemin: <?= htmlspecialchars($category->getImage()) ?>
                 </div>
                 <div style="margin-top: 0.25rem;">
                     <label style="display: inline-flex; align-items: center; gap: 0.5rem; color: #64748b; font-size: 0.875rem; cursor: pointer;">

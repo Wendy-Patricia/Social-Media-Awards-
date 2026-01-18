@@ -295,33 +295,33 @@ function generateNomineeDescription($categoryName, $platform, $nomineeName): str
                 <?php if (!empty($nominees)): ?>
                 <div class="nominees-grid">
                     <?php foreach ($nominees as $nominee): 
-                        $votesCount = $nominationService->countVotesForNomination($nominee['id_nomination']);
-                        $categoryInfo = $nominationService->getCategoryById($nominee['id_categorie']);
+                        $votesCount = $nominationService->countVotesForNomination($nominee->getIdNomination());
+                        $categoryInfo = $nominationService->getCategoryById($nominee->getIdCategorie());
                     ?>
                     <div class="nominee-card" 
                          data-category="<?php echo htmlspecialchars($categoryInfo['nom'] ?? ''); ?>"
-                         data-platform="<?php echo htmlspecialchars($nominee['plateforme'] ?? ''); ?>"
-                         data-name="<?php echo htmlspecialchars(strtolower($nominee['libelle'])); ?>">
+                         data-platform="<?php echo htmlspecialchars($nominee->getPlateforme() ?? ''); ?>"
+                         data-name="<?php echo htmlspecialchars(strtolower($nominee->getLibelle())); ?>">
                         
                         <div class="nominee-image">
-                            <?php if (!empty($nominee['url_image'])): ?>
-                            <img src="<?php echo htmlspecialchars($nominee['url_image']); ?>" 
-                                 alt="<?php echo htmlspecialchars($nominee['libelle']); ?>"
+                            <?php if (!empty($nominee->getUrlImage())): ?>
+                            <img src="<?php echo htmlspecialchars($nominee->getUrlImage()); ?>" 
+                                 alt="<?php echo htmlspecialchars($nominee->getLibelle()); ?>"
                                  onerror="this.src='assets/images/default-nominee.jpg'">
                             <?php else: ?>
                             <img src="assets/images/default-nominee.jpg" 
-                                 alt="<?php echo htmlspecialchars($nominee['libelle']); ?>">
+                                 alt="<?php echo htmlspecialchars($nominee->getLibelle()); ?>">
                             <?php endif; ?>
                             
-                            <?php if (!empty($nominee['plateforme'])): ?>
-                            <div class="platform-badge <?php echo htmlspecialchars($nominee['plateforme']); ?>">
-                                <i class="<?php echo getPlatformIcon($nominee['plateforme']); ?>"></i>
+                            <?php if (!empty($nominee->getPlateforme())): ?>
+                            <div class="platform-badge <?php echo htmlspecialchars($nominee->getPlateforme()); ?>">
+                                <i class="<?php echo getPlatformIcon($nominee->getPlateforme()); ?>"></i>
                             </div>
                             <?php endif; ?>
                         </div>
                         
                         <div class="nominee-info">
-                            <h3><?php echo htmlspecialchars($nominee['libelle']); ?></h3>
+                            <h3><?php echo htmlspecialchars($nominee->getLibelle()); ?></h3>
                             
                             <?php if (!empty($categoryInfo)): ?>
                             <p class="nominee-category">
@@ -332,13 +332,13 @@ function generateNomineeDescription($categoryName, $platform, $nomineeName): str
                             
                             <p class="nominee-description">
                                 <?php 
-                                if (!empty($nominee['argumentaire'])) {
-                                    echo htmlspecialchars(substr($nominee['argumentaire'], 0, 120)) . '...';
+                                if (!empty($nominee->getArgumentaire())) {
+                                    echo htmlspecialchars(substr($nominee->getArgumentaire(), 0, 120)) . '...';
                                 } else {
                                     echo generateNomineeDescription(
                                         $categoryInfo['nom'] ?? 'Catégorie',
-                                        $nominee['plateforme'] ?? 'plateforme',
-                                        $nominee['libelle']
+                                        $nominee->getPlateforme() ?? 'plateforme',
+                                        $nominee->getLibelle()
                                     );
                                 }
                                 ?>
@@ -351,18 +351,18 @@ function generateNomineeDescription($categoryName, $platform, $nomineeName): str
                                     <span class="stat-label">Votes</span>
                                 </div>
                                 
-                                <?php if (!empty($nominee['plateforme'])): ?>
+                                <?php if (!empty($nominee->getPlateforme())): ?>
                                 <div class="nominee-stat">
-                                    <i class="<?php echo getPlatformIcon($nominee['plateforme']); ?>"></i>
-                                    <span class="stat-label"><?php echo ucfirst(htmlspecialchars($nominee['plateforme'])); ?></span>
+                                    <i class="<?php echo getPlatformIcon($nominee->getPlateforme()); ?>"></i>
+                                    <span class="stat-label"><?php echo ucfirst(htmlspecialchars($nominee->getPlateforme())); ?></span>
                                 </div>
                                 <?php endif; ?>
                             </div>
                             
                             <!-- BOUTON DE VOTE ADAPTATIF -->
-                            <a href="<?php echo getVoteButtonLink($nominee['id_nomination'], $nominee['id_categorie']); ?>" 
+                            <a href="<?php echo getVoteButtonLink($nominee->getIdNomination(), $nominee->getIdCategorie()); ?>" 
                                class="<?php echo getVoteButtonClass(); ?>"
-                               onclick="return handleVoteClick(this, event, '<?php echo htmlspecialchars($nominee['libelle']); ?>')">
+                               onclick="return handleVoteClick(this, event, '<?php echo htmlspecialchars($nominee->getLibelle()); ?>')">
                                 <i class="fas fa-vote-yea"></i>
                                 <?php echo getVoteButtonText(); ?>
                             </a>

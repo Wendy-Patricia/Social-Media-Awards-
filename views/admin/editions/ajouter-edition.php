@@ -31,159 +31,118 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $validationErrors = [];
 
+    // Validación básica
     if ($data['annee'] < 2000 || $data['annee'] > 2100) {
         $validationErrors[] = "L'année doit être entre 2000 et 2100.";
     }
     if (empty($data['nom'])) {
-        $validationErrors[] = "Le nom de l'édition est requis.";
+        $validationErrors[] = "Le nom de l'édition est obligatoire.";
     }
-    if (
-        empty($data['date_debut_candidatures']) || empty($data['date_fin_candidatures']) ||
-        empty($data['date_debut']) || empty($data['date_fin'])
-    ) {
-        $validationErrors[] = "Toutes les dates sont obligatoires.";
-    } else {
-        if (
-            strtotime($data['date_debut_candidatures']) >= strtotime($data['date_fin_candidatures']) ||
-            strtotime($data['date_fin_candidatures']) >= strtotime($data['date_debut']) ||
-            strtotime($data['date_debut']) >= strtotime($data['date_fin'])
-        ) {
-            $validationErrors[] = "Les dates doivent être dans l'ordre logique: Début candidatures < Fin candidatures < Début édition < Fin édition.";
+    if (empty($data['date_debut_candidatures']) || empty($data['date_fin_candidatures'])) {
+        $validationErrors[] = "Les dates de candidatures sont obligatoires.";
+    }
+    if (empty($data['date_debut']) || empty($data['date_fin'])) {
+        $validationErrors[] = "Les dates de votes sont obligatoires.";
+    }
+
+    // Validación de fechas
+    if (!empty($data['date_debut_candidatures']) && !empty($data['date_fin_candidatures'])) {
+        $debutCandidatures = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_debut_candidatures']);
+        $finCandidatures = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_fin_candidatures']);
+        
+        if ($debutCandidatures && $finCandidatures) {
+            if ($finCandidatures <= $debutCandidatures) {
+                $validationErrors[] = "La date de fin des candidatures doit être après la date de début.";
+            }
         }
+    }
+
+    if (!empty($data['date_debut']) && !empty($data['date_fin'])) {
+        $debutVotes = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_debut']);
+        $finVotes = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_fin']);
         
-        // Vérifier s'il y a déjà une édition active pendant cette période
-        $now = date('Y-m-d H:i:s');
-        $debut = $data['date_debut'];
-        $fin = $data['date_fin'];
+        if ($debutVotes && $finVotes) {
+            if ($finVotes <= $debutVotes) {
+                $validationErrors[] = "La date de fin des votes doit être après la date de début.";
+            }
+        }
+    }
+
+    // Validación de que la fecha de inicio de votos debe ser después del fin de candidaturas
+    if (!empty($data['date_fin_candidatures']) && !empty($data['date_debut'])) {
+        $finCandidatures = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_fin_candidatures']);
+        $debutVotes = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_debut']);
         
-        // Vérifier si les dates chevauchent une édition existante
-        $checkOverlapSql = "SELECT COUNT(*) as count FROM edition 
-                           WHERE (date_debut <= :fin AND date_fin >= :debut)
-                           OR (date_debut >= :debut2 AND date_fin <= :fin2)";
-        $checkStmt = $pdo->prepare($checkOverlapSql);
-        $checkStmt->execute([
-            ':debut' => $debut,
-            ':fin' => $fin,
-            ':debut2' => $debut,
-            ':fin2' => $fin
-        ]);
-        $overlapCount = $checkStmt->fetch()['count'];
-        
-        if ($overlapCount > 0) {
-            $validationErrors[] = "Une édition existe déjà pendant cette période. Les éditions ne peuvent pas se chevaucher.";
+        if ($finCandidatures && $debutVotes) {
+            if ($debutVotes <= $finCandidatures) {
+                $validationErrors[] = "La date de début des votes doit être après la date de fin des candidatures.";
+            }
         }
     }
 
     if (empty($validationErrors)) {
-        $image = $_FILES['image'] ?? null;
-        try {
-            if ($editionController->createEdition($data, $image)) {
-                header("Location: gerer-editions.php?success=1");
-                exit;
-            } else {
-                $error = "Erreur lors de la création de l'édition.";
-            }
-        } catch (Exception $e) {
-            $error = $e->getMessage();
+        $success = $editionController->createEdition($data, $_FILES['image'] ?? null);
+        if ($success) {
+            header("Location: gerer-editions.php?success=1");
+            exit;
+        } else {
+            $error = "Erreur lors de la création de l'édition.";
         }
     } else {
-        $error = implode("<br>", $validationErrors);
+        $error = implode('<br>', $validationErrors);
     }
 }
-
-$existingYears = [];
-try {
-    $sql = "SELECT annee FROM edition ORDER BY annee DESC";
-    $stmt = $pdo->query($sql);
-    $existingYears = $stmt->fetchAll(PDO::FETCH_COLUMN);
-} catch (Exception $e) {
-}
-
-require_once __DIR__ . '/../../../views/partials/admin-header.php';
 ?>
-
-<link rel="stylesheet" href="../../../assets/css/admin-add-edition.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-<div class="admin-main-content admin-edition-form-page">
+<link rel="stylesheet" href="../../../assets/css/admin-editions.css">
+<div class="admin-main-content">
     <div class="admin-page-header">
-        <div class="page-title">
-            <h1><i class="fas fa-plus-circle"></i> Créer une nouvelle édition</h1>
-            <p>Ajoutez une nouvelle édition aux Social Media Awards</p>
-        </div>
-        <a href="gerer-editions.php" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Retour
-        </a>
+        <h1><i class="fas fa-plus-circle"></i> Nouvelle Édition</h1>
     </div>
 
-    <div class="form-container">
+    <div class="admin-content">
         <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                <?= htmlspecialchars($error) ?>
-            </div>
+        <div class="alert alert-danger"><?= $error ?></div>
         <?php endif; ?>
-        
-        <?php if (!empty($existingYears)): ?>
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
-                Années déjà utilisées: <strong><?= implode(', ', $existingYears) ?></strong>
-            </div>
-        <?php endif; ?>
-        
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i>
-            <strong>Note importante:</strong> Une édition est automatiquement active si la date actuelle est comprise entre sa date de début et sa date de fin. Les éditions ne peuvent pas se chevaucher.
-        </div>
 
-        <form method="POST" enctype="multipart/form-data" class="edition-form">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="nom" class="form-label required">Nom de l'édition</label>
-                    <input type="text" name="nom" id="nom" class="form-control" required maxlength="100"
-                        value="<?= htmlspecialchars($formData['nom']) ?>" placeholder="Ex: Social Media Awards <?= date('Y') + 1 ?>">
-                </div>
-                <div class="form-group">
-                    <label for="annee" class="form-label required">Année</label>
-                    <input type="number" name="annee" id="annee" class="form-control" required min="2000" max="2100"
-                        value="<?= htmlspecialchars($formData['annee']) ?>">
-                    <small class="form-text">Choisissez une année qui n'est pas déjà utilisée</small>
-                </div>
+        <form method="POST" enctype="multipart/form-data" class="admin-form">
+            <div class="form-group">
+                <label class="form-label">Année</label>
+                <input type="number" name="annee" required min="2000" max="2100" value="<?= htmlspecialchars($formData['annee']) ?>">
             </div>
 
             <div class="form-group">
-                <label for="description" class="form-label">Description</label>
-                <textarea name="description" id="description" class="form-control" rows="4"><?= htmlspecialchars($formData['description']) ?></textarea>
+                <label class="form-label">Nom de l'édition</label>
+                <input type="text" name="nom" required value="<?= htmlspecialchars($formData['nom']) ?>">
             </div>
 
             <div class="form-group">
-                <label for="theme" class="form-label">Thème</label>
-                <input type="text" name="theme" id="theme" class="form-control"
-                    value="<?= htmlspecialchars($formData['theme']) ?>" placeholder="Ex: L'innovation digitale">
+                <label class="form-label">Description</label>
+                <textarea name="description"><?= htmlspecialchars($formData['description']) ?></textarea>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label required">Période des candidatures</label>
-                    <div class="date-picker-group">
-                        <input type="datetime-local" name="date_debut_candidatures" required
-                            value="<?= htmlspecialchars($formData['date_debut_candidatures']) ?>">
-                        <span class="date-separator">à</span>
-                        <input type="datetime-local" name="date_fin_candidatures" required
-                            value="<?= htmlspecialchars($formData['date_fin_candidatures']) ?>">
-                    </div>
+            <div class="form-group">
+                <label class="form-label">Thème</label>
+                <input type="text" name="theme" value="<?= htmlspecialchars($formData['theme']) ?>">
+            </div>
+
+            <div class="form-group date-range">
+                <label class="form-label">Période des candidatures</label>
+                <div class="date-inputs">
+                    <input type="datetime-local" name="date_debut_candidatures" required value="<?= htmlspecialchars($formData['date_debut_candidatures']) ?>">
+                    <span class="date-separator">à</span>
+                    <input type="datetime-local" name="date_fin_candidatures" required value="<?= htmlspecialchars($formData['date_fin_candidatures']) ?>">
                 </div>
-                <div class="form-group">
-                    <label class="form-label required">Période de l'édition (votes)</label>
-                    <div class="date-picker-group">
-                        <input type="datetime-local" name="date_debut" required
-                            value="<?= htmlspecialchars($formData['date_debut']) ?>">
-                        <span class="date-separator">à</span>
-                        <input type="datetime-local" name="date_fin" required
-                            value="<?= htmlspecialchars($formData['date_fin']) ?>">
-                    </div>
-                    <small class="form-text">L'édition sera active automatiquement pendant cette période</small>
+            </div>
+
+            <div class="form-group date-range">
+                <label class="form-label">Période des votes</label>
+                <div class="date-inputs">
+                    <input type="datetime-local" name="date_debut" required value="<?= htmlspecialchars($formData['date_debut']) ?>">
+                    <span class="date-separator">à</span>
+                    <input type="datetime-local" name="date_fin" required value="<?= htmlspecialchars($formData['date_fin']) ?>">
                 </div>
+                <small class="form-text">L'édition sera active entre le début des candidatures et la fin des votes</small>
+                <small class="form-text text-warning">⚠️ La date de début des votes doit être après la date de fin des candidatures</small>
             </div>
 
             <div class="form-group">

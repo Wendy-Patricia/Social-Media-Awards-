@@ -13,46 +13,44 @@ class CategoryModel
 
     public function getActiveCategoriesCount()
     {
-        try {
-            $stmt = $this->db->prepare("
-                SELECT COUNT(*) as count
-                FROM CATEGORIE
-                WHERE date_fin_votes > NOW()
-            ");
-            
-            $stmt->execute();
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            return $result['count'] ?? 0;
-        } catch (PDOException $e) {
-            error_log("Erreur getActiveCategoriesCount: " . $e->getMessage());
-            return 0;
-        }
+        $sql = "
+        SELECT COUNT(*) as count
+        FROM categorie c
+        JOIN edition e ON c.id_edition = e.id_edition
+        WHERE 
+            -- Usa datas da categoria se existirem, senão usa da edição
+            COALESCE(c.date_fin_votes, e.date_fin) > NOW()
+            AND COALESCE(c.date_debut_votes, e.date_debut) <= NOW()
+    ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result['count'] ?? 0;
     }
 
     public function getAllCategoriesWithNominations()
     {
-        try {
-            $stmt = $this->db->prepare("
-                SELECT 
-                    c.*,
-                    e.nom as edition_nom,
-                    e.annee as edition_annee,
-                    COUNT(n.id_nomination) as nomination_count
-                FROM CATEGORIE c
-                JOIN EDITION e ON c.id_edition = e.id_edition
-                LEFT JOIN NOMINATION n ON c.id_categorie = n.id_categorie
-                WHERE c.date_fin_votes > NOW()
-                GROUP BY c.id_categorie
-                ORDER BY c.date_fin_votes ASC
-            ");
-            
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Erreur getAllCategoriesWithNominations: " . $e->getMessage());
-            return [];
-        }
+        $sql = "
+        SELECT 
+            c.*,
+            e.nom as edition_nom,
+            e.annee as edition_annee,
+            COUNT(n.id_nomination) as nomination_count
+        FROM categorie c
+        JOIN edition e ON c.id_edition = e.id_edition
+        LEFT JOIN nomination n ON c.id_categorie = n.id_categorie
+        WHERE 
+            COALESCE(c.date_fin_votes, e.date_fin) > NOW()
+            AND COALESCE(c.date_debut_votes, e.date_debut) <= NOW()
+        GROUP BY c.id_categorie
+        ORDER BY COALESCE(c.date_fin_votes, e.date_fin) ASC
+    ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getVotingCategoriesForUser($userId)
@@ -78,7 +76,7 @@ class CategoryModel
                 GROUP BY c.id_categorie
                 ORDER BY c.date_fin_votes ASC
             ");
-            
+
             $stmt->execute([':id_compte' => $userId]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -96,7 +94,7 @@ class CategoryModel
                 JOIN EDITION e ON c.id_edition = e.id_edition
                 WHERE c.id_categorie = :id_categorie
             ");
-            
+
             $stmt->execute([':id_categorie' => $categoryId]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -114,7 +112,7 @@ class CategoryModel
                 JOIN EDITION e ON c.id_edition = e.id_edition
                 ORDER BY c.date_fin_votes DESC
             ");
-            
+
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -134,7 +132,7 @@ class CategoryModel
                 GROUP BY c.id_categorie
                 ORDER BY c.nom
             ");
-            
+
             $stmt->execute([':id_edition' => $editionId]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -143,4 +141,3 @@ class CategoryModel
         }
     }
 }
-?>

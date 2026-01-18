@@ -8,6 +8,11 @@ require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 $categories = $categoryController->getAllCategories();
 $editions = $editionController->getEditionsList();
 
+$editionsById = [];
+foreach ($editions as $editionData) {
+    $editionsById[$editionData['id_edition']] = new \App\Models\Edition($editionData);
+}
+
 require_once __DIR__ . '/../../../views/partials/admin-header.php';
 ?>
 
@@ -48,18 +53,18 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
             <?php
             $now = time();
             $active = array_filter($categories, function($cat) use ($now) {
-                $end = strtotime($cat['date_fin_votes'] ?? '');
-                $start = strtotime($cat['date_debut_votes'] ?? '');
+                $end = strtotime($cat->getDateFinVotes() ?? '');
+                $start = strtotime($cat->getDateDebutVotes() ?? '');
                 return $end && $now <= $end && $now >= $start;
             });
             
             $upcoming = array_filter($categories, function($cat) use ($now) {
-                $start = strtotime($cat['date_debut_votes'] ?? '');
+                $start = strtotime($cat->getDateDebutVotes() ?? '');
                 return $start && $now < $start;
             });
             
             $ended = array_filter($categories, function($cat) use ($now) {
-                $end = strtotime($cat['date_fin_votes'] ?? '');
+                $end = strtotime($cat->getDateFinVotes() ?? '');
                 return $end && $now > $end;
             });
             ?>
@@ -91,6 +96,7 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                     <option value="Instagram">Instagram</option>
                     <option value="YouTube">YouTube</option>
                     <option value="Twitch">Twitch</option>
+                    <option value="Spotify">Spotify</option>
                     <option value="Facebook">Facebook</option>
                     <option value="X">X (Twitter)</option>
                     <option value="Autre">Autre</option>
@@ -146,9 +152,10 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                     </thead>
                     <tbody>
                         <?php foreach ($categories as $cat): 
+                            $edition = $editionsById[$cat->getIdEdition()] ?? null;
                             $now = time();
-                            $start = strtotime($cat['date_debut_votes'] ?? '');
-                            $end = strtotime($cat['date_fin_votes'] ?? '');
+                            $start = strtotime($cat->getDateDebutVotes() ?? '');
+                            $end = strtotime($cat->getDateFinVotes() ?? '');
                             
                             $status = '';
                             if ($end && $now > $end) {
@@ -165,24 +172,24 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                                 $status_text = 'Non défini';
                             }
                             
-                            $platform_class = 'platform-' . strtolower(str_replace([' ', '-'], '', $cat['plateforme_cible']));
-                            $percentage = $cat['limite_nomines'] > 0 ? 
-                                min(100, ($cat['nb_nominations'] / $cat['limite_nomines']) * 100) : 0;
+                            $platform_class = 'platform-' . strtolower(str_replace([' ', '-'], '', $cat->getPlateformeCible()));
+                            $percentage = $cat->getLimiteNomines() > 0 ? 
+                                min(100, ($cat->getNbNominations() / $cat->getLimiteNomines()) * 100) : 0;
                         ?>
-                        <tr data-id="<?= $cat['id_categorie'] ?>"
-                            data-platform="<?= htmlspecialchars($cat['plateforme_cible']) ?>"
-                            data-edition="<?= $cat['id_edition'] ?>"
+                        <tr data-id="<?= $cat->getIdCategorie() ?>"
+                            data-platform="<?= htmlspecialchars($cat->getPlateformeCible()) ?>"
+                            data-edition="<?= $cat->getIdEdition() ?>"
                             data-status="<?= $status ?>"
-                            data-candidatures="<?= $cat['nb_candidatures'] ?>"
-                            data-nominations="<?= $cat['nb_nominations'] ?>"
-                            data-limite="<?= $cat['limite_nomines'] ?>"
-                            data-debut="<?= $cat['date_debut_votes'] ?>"
-                            data-fin="<?= $cat['date_fin_votes'] ?>">
+                            data-candidatures="<?= $cat->getNbCandidatures() ?>"
+                            data-nominations="<?= $cat->getNbNominations() ?>"
+                            data-limite="<?= $cat->getLimiteNomines() ?>"
+                            data-debut="<?= $cat->getDateDebutVotes() ?>"
+                            data-fin="<?= $cat->getDateFinVotes() ?>">
                             <td>
                                 <div class="category-name">
-                                    <?php if ($cat['image']): ?>
-                                        <img src="../../../public/<?= htmlspecialchars($cat['image']) ?>" 
-                                             alt="<?= htmlspecialchars($cat['nom']) ?>" 
+                                    <?php if ($cat->getImage()): ?>
+                                        <img src="../../../public/<?= htmlspecialchars($cat->getImage()) ?>" 
+                                             alt="<?= htmlspecialchars($cat->getNom()) ?>" 
                                              class="category-image">
                                     <?php else: ?>
                                         <div class="category-image" style="background: #f0f2f5; display: flex; align-items: center; justify-content: center; color: #7f8c8d;">
@@ -190,10 +197,10 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                                         </div>
                                     <?php endif; ?>
                                     <div class="category-info">
-                                        <h4><?= htmlspecialchars($cat['nom']) ?></h4>
-                                        <?php if ($cat['description']): ?>
-                                            <div class="description" title="<?= htmlspecialchars($cat['description']) ?>">
-                                                <?= htmlspecialchars(substr($cat['description'], 0, 60)) ?>...
+                                        <h4><?= htmlspecialchars($cat->getNom()) ?></h4>
+                                        <?php if ($cat->getDescription()): ?>
+                                            <div class="description" title="<?= htmlspecialchars($cat->getDescription()) ?>">
+                                                <?= htmlspecialchars(substr($cat->getDescription(), 0, 60)) ?>...
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -201,36 +208,36 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                             </td>
                             <td>
                                 <span class="platform-badge <?= $platform_class ?>">
-                                    <?= htmlspecialchars($cat['plateforme_cible']) ?>
+                                    <?= htmlspecialchars($cat->getPlateformeCible()) ?>
                                 </span>
                             </td>
                             <td>
-                                <strong><?= htmlspecialchars($cat['edition_nom'] ?? 'Non définie') ?></strong>
-                                <?php if ($cat['edition_annee'] ?? ''): ?>
-                                    <br><small style="color: #7f8c8d;"><?= $cat['edition_annee'] ?></small>
+                                <strong><?= htmlspecialchars($edition ? $edition->getNom() : 'Non définie') ?></strong>
+                                <?php if ($edition && $edition->getAnnee()): ?>
+                                    <br><small style="color: #7f8c8d;"><?= $edition->getAnnee() ?></small>
                                 <?php endif; ?>
                             </td>
                             <td class="numbers-cell">
                                 <div style="font-weight: 600; color: var(--dark-color);">
-                                    <?= $cat['nb_candidatures'] ?> candidatures
+                                    <?= $cat->getNbCandidatures() ?> candidatures
                                 </div>
                                 <div style="font-size: 13px; color: var(--success-color);">
-                                    <?= $cat['nb_nominations'] ?> nominés
+                                    <?= $cat->getNbNominations() ?> nominés
                                 </div>
-                                <?php if ($cat['limite_nomines'] > 0): ?>
+                                <?php if ($cat->getLimiteNomines() > 0): ?>
                                 <div class="progress-bar">
                                     <div class="progress-fill" style="width: <?= $percentage ?>%;"></div>
                                 </div>
                                 <small style="color: var(--secondary-color);">
-                                    <?= $cat['nb_nominations'] ?>/<?= $cat['limite_nomines'] ?> places
+                                    <?= $cat->getNbNominations() ?>/<?= $cat->getLimiteNomines() ?> places
                                 </small>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php if ($cat['date_debut_votes'] && $cat['date_fin_votes']): ?>
+                                <?php if ($cat->getDateDebutVotes() && $cat->getDateFinVotes()): ?>
                                     <div style="font-size: 13px;">
-                                        <div>Début: <?= date('d/m/Y', strtotime($cat['date_debut_votes'])) ?></div>
-                                        <div>Fin: <?= date('d/m/Y', strtotime($cat['date_fin_votes'])) ?></div>
+                                        <div>Début: <?= date('d/m/Y', strtotime($cat->getDateDebutVotes())) ?></div>
+                                        <div>Fin: <?= date('d/m/Y', strtotime($cat->getDateFinVotes())) ?></div>
                                     </div>
                                     <span class="vote-status status-<?= $status ?>">
                                         <?= $status_text ?>
@@ -242,13 +249,13 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                                 <?php endif; ?>
                             </td>
                             <td class="actions-cell">
-                                <a href="modifier-categorie.php?id=<?= $cat['id_categorie'] ?>" 
+                                <a href="modifier-categorie.php?id=<?= $cat->getIdCategorie() ?>" 
                                    class="action-btn edit" 
                                    title="Modifier">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <a href="#" 
-                                   onclick="return confirmDelete(<?= $cat['id_categorie'] ?>, '<?= addslashes($cat['nom']) ?>')"
+                                   onclick="return confirmDelete(<?= $cat->getIdCategorie() ?>, '<?= addslashes($cat->getNom()) ?>')"
                                    class="action-btn delete" 
                                    title="Supprimer">
                                     <i class="fas fa-trash"></i>

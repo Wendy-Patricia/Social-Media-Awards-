@@ -1,20 +1,21 @@
 <?php
 
-namespace App\Controllers;
+namespace app\Controllers;
 
-use App\Services\NominationService;
+use app\Services\NominationService;
 use Database;
 use PDO;
+use App\Models\Nomination;
 
 /**
- * Contrôleur gérant les nominations (nominações) dans l'administration
+ * Contrôleur gérant les nominations dans l'administration.
  */
 class NominationController
 {
     private NominationService $service;
 
     /**
-     * Constructeur du contrôleur de nominations
+     * Constructeur du contrôleur de nominations.
      *
      * @param PDO               $pdo              Connexion à la base de données
      * @param NominationService|null $nominationService Service optionnel (pour tests/injection)
@@ -26,7 +27,7 @@ class NominationController
     }
 
     /**
-     * Retourne le service de nominations utilisé par ce contrôleur
+     * Retourne le service de nominations utilisé par ce contrôleur.
      *
      * @return NominationService
      */
@@ -36,7 +37,7 @@ class NominationController
     }
 
     /**
-     * Crée une nomination à partir d'une candidature validée par un administrateur
+     * Crée une nomination à partir d'une candidature validée par un administrateur.
      *
      * @param int $candidatureId ID de la candidature à transformer en nomination
      * @param int $adminId       ID de l'administrateur qui valide
@@ -48,7 +49,7 @@ class NominationController
     }
 
     /**
-     * Affiche la liste de toutes les nominations (interface d'administration)
+     * Affiche la liste de toutes les nominations (interface d'administration).
      *
      * @return void
      */
@@ -65,14 +66,15 @@ class NominationController
     }
 
     /**
-     * Affiche le formulaire d'édition d'une nomination existante
+     * Affiche le formulaire d'édition d'une nomination existante.
      *
      * @param int $id Identifiant de la nomination à modifier
      * @return void
      */
     public function edit(int $id)
     {
-        $nomination = $this->service->getNominationById($id);
+        $nominationData = $this->service->getNominationById($id);
+        $nomination = $nominationData ? new Nomination($nominationData) : null;
         
         if (!$nomination) {
             $_SESSION['error'] = "Nomination non trouvée.";
@@ -87,7 +89,7 @@ class NominationController
     }
 
     /**
-     * Traite la mise à jour d'une nomination existante
+     * Traite la mise à jour d'une nomination existante.
      *
      * @param int $id Identifiant de la nomination à mettre à jour
      * @return void
@@ -125,7 +127,7 @@ class NominationController
     }
 
     /**
-     * Supprime une nomination
+     * Supprime une nomination.
      *
      * @param int $id Identifiant de la nomination à supprimer
      * @return void
@@ -143,7 +145,7 @@ class NominationController
     }
 
     /**
-     * Récupère la liste de toutes les catégories disponibles
+     * Récupère la liste de toutes les catégories disponibles.
      *
      * @return array Liste des catégories (id_categorie + nom)
      */

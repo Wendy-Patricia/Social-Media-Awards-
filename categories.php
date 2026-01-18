@@ -17,7 +17,6 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // Charger le CategoryService
-    require_once __DIR__ . '/app/Services/CategoryService.php';
     $categoryService = new App\Services\CategoryService($pdo);
     
 } catch (PDOException $e) {
@@ -83,9 +82,16 @@ function getPlatformIcon($platform): string {
         'twitter' => 'fab fa-twitter',
         'facebook' => 'fab fa-facebook',
         'spotify' => 'fab fa-spotify',
-        'twitch' => 'fab fa-twitch'
+        'twitch' => 'fab fa-twitch',
+        'x' => 'fab fa-x-twitter'
     ];
-    return $icons[strtolower($platform)] ?? 'fas fa-globe';
+    
+    if ($platform === null || $platform === '') {
+        return 'fas fa-globe';
+    }
+    
+    $platformLower = strtolower($platform);
+    return $icons[$platformLower] ?? 'fas fa-globe';
 }
 
 /**
@@ -137,7 +143,8 @@ function generateCategoryDescription($categoryName, $platform): string {
         }
     }
     
-    return "Catégorie célébrant l'excellence et l'innovation dans la création de contenu sur " . ucfirst($platform);
+    $platformText = ($platform && $platform !== 'Toutes') ? "sur " . ucfirst($platform) : "dans les médias sociaux";
+    return "Catégorie célébrant l'excellence et l'innovation dans la création de contenu " . $platformText;
 }
 
 // RÉCUPÉRATION DES DONNÉES DYNAMIQUES
@@ -162,18 +169,30 @@ try {
     // Récupérer toutes les catégories de l'édition active
     $categories = $categoryService->getAllCategoriesByEdition($editionId);
     
+    // Récupérer les plateformes uniques (en utilisant les méthodes getter)
+    $platformsArray = [];
+    foreach ($categories as $category) {
+        if ($category instanceof App\Models\Categorie) {
+            $platform = $category->getPlateformeCible();
+            if ($platform && !in_array($platform, $platformsArray)) {
+                $platformsArray[] = $platform;
+            }
+        }
+    }
+    
     // Calculer les statistiques de la page
     $pageStats = [
         'categories' => count($categories),
-        'platforms' => count(array_unique(array_column($categories, 'plateforme_cible'))),
-        'nominees' => countTotalNominations($pdo, $editionId) // CORRIGÉ : utilisation de la fonction
+        'platforms' => count($platformsArray),
+        'nominees' => countTotalNominations($pdo, $editionId)
     ];
     
 } catch (Exception $e) {
     error_log("Erreur récupération catégories : " . $e->getMessage());
     // Valeurs par défaut
     $categories = [];
-    $pageStats = ['categories' => '0', 'platforms' => '0', 'nominees' => '0'];
+    $platformsArray = [];
+    $pageStats = ['categories' => 0, 'platforms' => 0, 'nominees' => 0];
 }
 ?>
 
@@ -262,63 +281,57 @@ try {
             <div class="container">
                 <div class="categories-filter">
                     <button class="filter-btn active" data-filter="all">Toutes</button>
-                    <?php
-                    // Récupérer les plateformes uniques
-                    $platforms = [];
-                    foreach ($categories as $cat) {
-                        if (!empty($cat['plateforme_cible']) && !in_array($cat['plateforme_cible'], $platforms)) {
-                            $platforms[] = $cat['plateforme_cible'];
-                        }
-                    }
-                    
-                    foreach ($platforms as $platform):
-                        if (!empty($platform) && $platform !== 'all'):
-                    ?>
+                    <?php foreach ($platformsArray as $platform): 
+                        if ($platform && $platform !== 'Toutes' && $platform !== 'all'): ?>
                     <button class="filter-btn" data-filter="<?php echo htmlspecialchars($platform); ?>">
                         <i class="<?php echo getPlatformIcon($platform); ?>"></i>
-                        <?php echo ucfirst(htmlspecialchars($platform)); ?>
+                        <?php echo htmlspecialchars($platform); ?>
                     </button>
-                    <?php 
-                        endif;
-                    endforeach; 
-                    ?>
+                    <?php endif; 
+                    endforeach; ?>
                 </div>
 
                 <!-- GRILLE DES CATÉGORIES -->
                 <div class="categories-grid">
                     <?php if (!empty($categories)): ?>
                         <?php foreach ($categories as $category): 
-                            $categoryId = $category['id_categorie'];
+                            // Vérifier que c'est bien un objet Categorie
+                            if (!$category instanceof App\Models\Categorie) {
+                                continue;
+                            }
+                            
+                            $categoryId = $category->getIdCategorie();
                             $nomineesCount = $categoryService->countNominationsByCategory($categoryId);
                             $votesCount = countVotesByCategory($pdo, $categoryId);
                             $formattedVotes = formatVoteCount($votesCount);
                         ?>
-                        <div class="category-card" data-platform="<?php echo htmlspecialchars($category['plateforme_cible'] ?? 'all'); ?>">
+                        <div class="category-card" data-platform="<?php echo htmlspecialchars($category->getPlateformeCible() ?? 'all'); ?>">
                             <div class="category-header">
                                 <div class="category-icon">
-                                    <i class="<?php echo getCategoryIcon($category['nom']); ?>"></i>
+                                    <i class="<?php echo getCategoryIcon($category->getNom()); ?>"></i>
                                 </div>
                                 <div class="platform-tags">
-                                    <?php if (!empty($category['plateforme_cible'])): ?>
-                                    <span class="platform-tag <?php echo htmlspecialchars($category['plateforme_cible']); ?>">
-                                        <i class="<?php echo getPlatformIcon($category['plateforme_cible']); ?>"></i>
-                                        <?php echo ucfirst(htmlspecialchars($category['plateforme_cible'])); ?>
+                                    <?php if ($category->getPlateformeCible() && $category->getPlateformeCible() !== 'Toutes'): ?>
+                                    <span class="platform-tag <?php echo htmlspecialchars(strtolower($category->getPlateformeCible())); ?>">
+                                        <i class="<?php echo getPlatformIcon($category->getPlateformeCible()); ?>"></i>
+                                        <?php echo htmlspecialchars($category->getPlateformeCible()); ?>
                                     </span>
                                     <?php endif; ?>
                                     
                                     <?php 
                                     // Ajouter d'autres plateformes si multi-plateformes
                                     $additionalPlatforms = [];
-                                    if (strpos(strtolower($category['nom']), 'multi') !== false) {
-                                        $additionalPlatforms = ['instagram', 'tiktok', 'youtube'];
+                                    $categoryNameLower = strtolower($category->getNom());
+                                    if (strpos($categoryNameLower, 'multi') !== false || strpos($categoryNameLower, 'cross') !== false) {
+                                        $additionalPlatforms = ['Instagram', 'TikTok', 'YouTube', 'Facebook'];
                                     }
                                     
                                     foreach ($additionalPlatforms as $platform):
-                                        if ($platform !== $category['plateforme_cible']):
+                                        if ($platform !== $category->getPlateformeCible()):
                                     ?>
-                                    <span class="platform-tag <?php echo htmlspecialchars($platform); ?>">
+                                    <span class="platform-tag <?php echo htmlspecialchars(strtolower($platform)); ?>">
                                         <i class="<?php echo getPlatformIcon($platform); ?>"></i>
-                                        <?php echo ucfirst(htmlspecialchars($platform)); ?>
+                                        <?php echo htmlspecialchars($platform); ?>
                                     </span>
                                     <?php 
                                         endif;
@@ -326,13 +339,13 @@ try {
                                     ?>
                                 </div>
                             </div>
-                            <h3><?php echo htmlspecialchars($category['nom']); ?></h3>
+                            <h3><?php echo htmlspecialchars($category->getNom()); ?></h3>
                             <p>
                                 <?php 
-                                if (!empty($category['description'])) {
-                                    echo htmlspecialchars($category['description']);
+                                if ($category->getDescription()) {
+                                    echo htmlspecialchars($category->getDescription());
                                 } else {
-                                    echo generateCategoryDescription($category['nom'], $category['plateforme_cible'] ?? 'les réseaux sociaux');
+                                    echo generateCategoryDescription($category->getNom(), $category->getPlateformeCible() ?? 'les réseaux sociaux');
                                 }
                                 ?>
                             </p>
@@ -348,7 +361,7 @@ try {
                             </div>
                             <button class="btn-view-nominees" 
                                     data-category-id="<?php echo htmlspecialchars($categoryId); ?>"
-                                    data-category-name="<?php echo htmlspecialchars(urlencode($category['nom'])); ?>">
+                                    data-category-name="<?php echo htmlspecialchars(urlencode($category->getNom())); ?>">
                                 Voir les Nominés
                             </button>
                         </div>

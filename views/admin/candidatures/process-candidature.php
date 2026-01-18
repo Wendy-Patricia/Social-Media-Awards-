@@ -28,7 +28,8 @@ if (!$candidature) {
     exit;
 }
 
-if ($candidature['statut'] !== 'En attente') {
+// Use object getter method instead of array access
+if ($candidature->getStatut() !== 'En attente') {
     header("Location: view-candidature.php?id=$id&error=3");
     exit;
 }
@@ -81,14 +82,14 @@ try {
 
             $stmtNomination = $pdo->prepare($sqlNomination);
             $stmtNomination->execute([
-                'libelle'        => $candidature['libelle'],
-                'plateforme'     => $candidature['plateforme'],
-                'url_content'    => $candidature['url_contenu'],
-                'url_image'      => $candidature['image'],
-                'argumentaire'   => $candidature['argumentaire'] . ($comment ? "\n\nNote admin : $comment" : ''),
+                'libelle'        => $candidature->getLibelle(), // Use getter
+                'plateforme'     => $candidature->getPlateforme(), // Use getter
+                'url_content'    => $candidature->getUrlContenu(), // Use getter
+                'url_image'      => $candidature->getImage(), // Use getter
+                'argumentaire'   => $candidature->getArgumentaire() . ($comment ? "\n\nNote admin : $comment" : ''), // Use getter
                 'id_candidature' => $id,
-                'id_categorie'   => $candidature['id_categorie'],
-                'id_compte'      => $candidature['id_compte'],
+                'id_categorie'   => $candidature->getIdCategorie(), // Use getter
+                'id_compte'      => $candidature->getIdCompte(), // Use getter
                 'id_admin'       => $_SESSION['admin_id'] ?? $_SESSION['user_id']
             ]);
         }
@@ -99,7 +100,7 @@ try {
              SET est_nomine = 1 
              WHERE id_compte = :id_compte"
         );
-        $stmt->execute(['id_compte' => $candidature['id_compte']]);
+        $stmt->execute(['id_compte' => $candidature->getIdCompte()]); // Use getter
 
         $pdo->commit();
 
@@ -143,7 +144,7 @@ try {
     }
 
 } catch (Throwable $e) {
-    if ($pdo && $pdo->inTransaction()) {
+    if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
 

@@ -12,7 +12,6 @@ if ($id <= 0) {
 }
 
 $edition = $editionController->getEditionById($id);
-
 if (!$edition) {
     header("Location: gerer-editions.php");
     exit;
@@ -20,19 +19,19 @@ if (!$edition) {
 
 $error = '';
 $formData = [
-    'annee' => $_POST['annee'] ?? $edition['annee'],
-    'nom' => $_POST['nom'] ?? $edition['nom'],
-    'description' => $_POST['description'] ?? ($edition['description'] ?? ''),
-    'theme' => $_POST['theme'] ?? ($edition['theme'] ?? ''),
-    'date_debut_candidatures' => $_POST['date_debut_candidatures'] ?? $edition['date_debut_candidatures'],
-    'date_fin_candidatures' => $_POST['date_fin_candidatures'] ?? $edition['date_fin_candidatures'],
-    'date_debut' => $_POST['date_debut'] ?? $edition['date_debut'],
-    'date_fin' => $_POST['date_fin'] ?? $edition['date_fin']
+    'annee' => $_POST['annee'] ?? $edition->getAnnee(),
+    'nom' => $_POST['nom'] ?? $edition->getNom(),
+    'description' => $_POST['description'] ?? ($edition->getDescription() ?? ''),
+    'theme' => $_POST['theme'] ?? ($edition->getTheme() ?? ''),
+    'date_debut_candidatures' => $_POST['date_debut_candidatures'] ?? $edition->getDateDebutCandidatures(),
+    'date_fin_candidatures' => $_POST['date_fin_candidatures'] ?? $edition->getDateFinCandidatures(),
+    'date_debut' => $_POST['date_debut'] ?? $edition->getDateDebut(),
+    'date_fin' => $_POST['date_fin'] ?? $edition->getDateFin()
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = [
-        'annee' => (int)($_POST['annee'] ?? $edition['annee']),
+        'annee' => (int)($_POST['annee'] ?? $edition->getAnnee()),
         'nom' => trim($_POST['nom'] ?? ''),
         'description' => trim($_POST['description'] ?? ''),
         'theme' => trim($_POST['theme'] ?? ''),
@@ -44,149 +43,118 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $validationErrors = [];
 
+    // Validación básica
     if ($data['annee'] < 2000 || $data['annee'] > 2100) {
         $validationErrors[] = "L'année doit être entre 2000 et 2100.";
     }
     if (empty($data['nom'])) {
-        $validationErrors[] = "Le nom est requis.";
+        $validationErrors[] = "Le nom de l'édition est obligatoire.";
     }
-    if (empty($data['date_debut_candidatures']) || empty($data['date_fin_candidatures']) ||
-        empty($data['date_debut']) || empty($data['date_fin'])) {
-        $validationErrors[] = "Toutes les dates sont obligatoires.";
-    } else {
-        if (strtotime($data['date_debut_candidatures']) >= strtotime($data['date_fin_candidatures']) ||
-            strtotime($data['date_fin_candidatures']) >= strtotime($data['date_debut']) ||
-            strtotime($data['date_debut']) >= strtotime($data['date_fin'])) {
-            $validationErrors[] = "Les dates doivent être dans l'ordre logique: Début candidatures < Fin candidatures < Début édition < Fin édition.";
+    if (empty($data['date_debut_candidatures']) || empty($data['date_fin_candidatures'])) {
+        $validationErrors[] = "Les dates de candidatures sont obligatoires.";
+    }
+    if (empty($data['date_debut']) || empty($data['date_fin'])) {
+        $validationErrors[] = "Les dates de votes sont obligatoires.";
+    }
+
+    // Validación de fechas
+    if (!empty($data['date_debut_candidatures']) && !empty($data['date_fin_candidatures'])) {
+        $debutCandidatures = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_debut_candidatures']);
+        $finCandidatures = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_fin_candidatures']);
+        
+        if ($debutCandidatures && $finCandidatures) {
+            if ($finCandidatures <= $debutCandidatures) {
+                $validationErrors[] = "La date de fin des candidatures doit être après la date de début.";
+            }
         }
+    }
+
+    if (!empty($data['date_debut']) && !empty($data['date_fin'])) {
+        $debutVotes = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_debut']);
+        $finVotes = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_fin']);
         
-        // Vérifier s'il y a déjà une édition active pendant cette période (exclure l'édition actuelle)
-        $debut = $data['date_debut'];
-        $fin = $data['date_fin'];
+        if ($debutVotes && $finVotes) {
+            if ($finVotes <= $debutVotes) {
+                $validationErrors[] = "La date de fin des votes doit être après la date de début.";
+            }
+        }
+    }
+
+    // Validación de que la fecha de inicio de votos debe ser después del fin de candidaturas
+    if (!empty($data['date_fin_candidatures']) && !empty($data['date_debut'])) {
+        $finCandidatures = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_fin_candidatures']);
+        $debutVotes = DateTime::createFromFormat('Y-m-d\TH:i', $data['date_debut']);
         
-        $checkOverlapSql = "SELECT COUNT(*) as count FROM edition 
-                           WHERE id_edition != :id 
-                           AND ((date_debut <= :fin AND date_fin >= :debut)
-                           OR (date_debut >= :debut2 AND date_fin <= :fin2))";
-        $checkStmt = $pdo->prepare($checkOverlapSql);
-        $checkStmt->execute([
-            ':id' => $id,
-            ':debut' => $debut,
-            ':fin' => $fin,
-            ':debut2' => $debut,
-            ':fin2' => $fin
-        ]);
-        $overlapCount = $checkStmt->fetch()['count'];
-        
-        if ($overlapCount > 0) {
-            $validationErrors[] = "Une autre édition existe déjà pendant cette période. Les éditions ne peuvent pas se chevaucher.";
+        if ($finCandidatures && $debutVotes) {
+            if ($debutVotes <= $finCandidatures) {
+                $validationErrors[] = "La date de début des votes doit être après la date de fin des candidatures.";
+            }
         }
     }
 
     if (empty($validationErrors)) {
-        $image = $_FILES['image'] ?? null;
-        $removeImage = isset($_POST['remove_image']) && $_POST['remove_image'] == 1;
-        
-        if ($editionController->updateEdition($id, $data, $image, $removeImage)) {
+        $success = $editionController->updateEdition($id, $data, $_FILES['image'] ?? null, isset($_POST['remove_image']));
+        if ($success) {
             header("Location: gerer-editions.php?success=1");
             exit;
         } else {
-            $error = "Erreur lors de la mise à jour.";
+            $error = "Erreur lors de la mise à jour de l'édition.";
         }
     } else {
-        $error = implode("<br>", $validationErrors);
+        $error = implode('<br>', $validationErrors);
     }
 }
-
-require_once __DIR__ . '/../../../views/partials/admin-header.php';
 ?>
-
-<link rel="stylesheet" href="../../../assets/css/admin-add-edition.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-<div class="admin-main-content admin-edition-form-page">
+<link rel="stylesheet" href="../../../assets/css/admin-editions.css">
+<div class="admin-main-content">
     <div class="admin-page-header">
-        <div class="page-title">
-            <h1><i class="fas fa-edit"></i> Modifier l'édition</h1>
-            <p><?= htmlspecialchars($edition['nom']) ?> (<?= $edition['annee'] ?>)</p>
-        </div>
-        <div class="header-actions">
-            <a href="gerer-editions.php" class="btn btn-secondary">Retour</a>
-            <button type="button" class="btn btn-danger" id="deleteBtn"
-                    data-id="<?= $id ?>" data-name="<?= htmlspecialchars($edition['nom']) ?>">
-                <i class="fas fa-trash"></i> Supprimer
-            </button>
-        </div>
+        <h1><i class="fas fa-edit"></i> Modifier l'Édition</h1>
     </div>
 
-    <div class="form-container">
+    <div class="admin-content">
         <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                <?= $error ?>
-            </div>
-        <?php endif; ?>
-        
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i>
-            <strong>Note:</strong> Une édition est automatiquement active si la date actuelle est comprise entre sa date de début et sa date de fin. Les éditions ne peuvent pas se chevaucher.
-        </div>
-
-        <?php if ($edition['image']): ?>
-        <div class="current-image-section">
-            <h3>Image actuelle</h3>
-            <img src="../../../public/<?= htmlspecialchars($edition['image']) ?>" alt="Image actuelle" style="max-height:300px; border-radius:8px; margin-bottom: 15px;">
-            <label><input type="checkbox" name="remove_image" value="1"> Supprimer l'image</label>
-        </div>
+        <div class="alert alert-danger"><?= $error ?></div>
         <?php endif; ?>
 
-        <form method="POST" enctype="multipart/form-data" class="edition-form">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="nom" class="form-label required">Nom de l'édition</label>
-                    <input type="text" name="nom" id="nom" class="form-control" required maxlength="100"
-                           value="<?= htmlspecialchars($formData['nom']) ?>">
-                </div>
-                <div class="form-group">
-                    <label for="annee" class="form-label required">Année</label>
-                    <input type="number" name="annee" id="annee" class="form-control" required min="2000" max="2100"
-                           value="<?= htmlspecialchars($formData['annee']) ?>">
-                </div>
+        <form method="POST" enctype="multipart/form-data" class="admin-form">
+            <div class="form-group">
+                <label class="form-label">Année</label>
+                <input type="number" name="annee" required min="2000" max="2100" value="<?= htmlspecialchars($formData['annee']) ?>">
             </div>
 
             <div class="form-group">
-                <label for="description" class="form-label">Description</label>
-                <textarea name="description" id="description" class="form-control" rows="4"><?= htmlspecialchars($formData['description']) ?></textarea>
+                <label class="form-label">Nom de l'édition</label>
+                <input type="text" name="nom" required value="<?= htmlspecialchars($formData['nom']) ?>">
             </div>
 
             <div class="form-group">
-                <label for="theme" class="form-label">Thème</label>
-                <input type="text" name="theme" id="theme" class="form-control"
-                       value="<?= htmlspecialchars($formData['theme']) ?>">
+                <label class="form-label">Description</label>
+                <textarea name="description"><?= htmlspecialchars($formData['description']) ?></textarea>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label required">Période des candidatures</label>
-                    <div class="date-picker-group">
-                        <input type="datetime-local" name="date_debut_candidatures" required
-                               value="<?= htmlspecialchars($formData['date_debut_candidatures']) ?>">
-                        <span class="date-separator">à</span>
-                        <input type="datetime-local" name="date_fin_candidatures" required
-                               value="<?= htmlspecialchars($formData['date_fin_candidatures']) ?>">
-                    </div>
+            <div class="form-group">
+                <label class="form-label">Thème</label>
+                <input type="text" name="theme" value="<?= htmlspecialchars($formData['theme']) ?>">
+            </div>
+
+            <div class="form-group date-range">
+                <label class="form-label">Période des candidatures</label>
+                <div class="date-inputs">
+                    <input type="datetime-local" name="date_debut_candidatures" required value="<?= htmlspecialchars(date('Y-m-d\TH:i', strtotime($formData['date_debut_candidatures']))) ?>">
+                    <span class="date-separator">à</span>
+                    <input type="datetime-local" name="date_fin_candidatures" required value="<?= htmlspecialchars(date('Y-m-d\TH:i', strtotime($formData['date_fin_candidatures']))) ?>">
                 </div>
-                <div class="form-group">
-                    <label class="form-label required">Période de l'édition (votes)</label>
-                    <div class="date-picker-group">
-                        <input type="datetime-local" name="date_debut" required
-                               value="<?= htmlspecialchars($formData['date_debut']) ?>">
-                        <span class="date-separator">à</span>
-                        <input type="datetime-local" name="date_fin" required
-                               value="<?= htmlspecialchars($formData['date_fin']) ?>">
-                    </div>
-                    <small class="form-text">L'édition sera active automatiquement pendant cette période</small>
+            </div>
+
+            <div class="form-group date-range">
+                <label class="form-label">Période des votes</label>
+                <div class="date-inputs">
+                    <input type="datetime-local" name="date_debut" required value="<?= htmlspecialchars(date('Y-m-d\TH:i', strtotime($formData['date_debut']))) ?>">
+                    <span class="date-separator">à</span>
+                    <input type="datetime-local" name="date_fin" required value="<?= htmlspecialchars(date('Y-m-d\TH:i', strtotime($formData['date_fin']))) ?>">
                 </div>
+                <small class="form-text">L'édition sera active entre le début des candidatures et la fin des votes</small>
+                <small class="form-text text-warning">⚠️ La date de début des votes doit être après la date de fin des candidatures</small>
             </div>
 
             <div class="form-group">
@@ -200,6 +168,13 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
                     </div>
                 </div>
                 <div id="filePreview" class="file-preview"></div>
+                <?php if ($edition->getImage()): ?>
+                <div class="current-image">
+                    <p>Image actuelle :</p>
+                    <img src="/Social-Media-Awards-/public/<?= htmlspecialchars($edition->getImage()) ?>" alt="Bannière actuelle">
+                    <label><input type="checkbox" name="remove_image" value="1"> Supprimer l'image actuelle</label>
+                </div>
+                <?php endif; ?>
             </div>
 
             <div class="form-actions">
@@ -212,4 +187,4 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
     </div>
 </div>
 
-<script src="../../../assets/js/admin-edition-edit.js"></script>
+<script src="../../../assets/js/admin-add-edition.js"></script>

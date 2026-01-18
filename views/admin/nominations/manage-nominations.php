@@ -1,8 +1,13 @@
 <?php
+require_once __DIR__ . '/../../../app/autoload.php'; // Add this line first
 require_once __DIR__ . '/../../../config/session.php';
+require_once __DIR__ . '/../../../config/permissions.php';
+requireAdmin(); // Add this if you have permission checking
+
 require_once __DIR__ . '/../../../config/database.php';
-require_once __DIR__ . '/../../../app/Services/NominationService.php';
-require_once __DIR__ . '/../../../app/Services/CategoryService.php';
+// Remove these individual require statements - autoload should handle them
+// require_once __DIR__ . '/../../../app/Services/NominationService.php';
+// require_once __DIR__ . '/../../../app/Services/CategoryService.php';
 require_once __DIR__ . '/../../../views/partials/admin-header.php';
 
 $pdo = Database::getInstance()->getConnection();
@@ -113,37 +118,42 @@ $platforms = ['TikTok', 'Instagram', 'YouTube', 'Facebook', 'X', 'Twitch', 'Spot
                                     </thead>
                                     <tbody>
                                         <?php foreach ($nominations as $index => $n): ?>
+                                            <?php 
+                                            // $n is a Nomination object, use getter methods
+                                            ?>
                                             <tr style="--row-index: <?php echo $index; ?>">
                                                 <td>
                                                     <div class="user-info">
                                                         <?php
-                                                        $avatar = $n['candidat_photo'] ?? $n['url_image'] ?? 'assets/images/default-avatar.png';
+                                                        $avatar = $n->getUrlImage() ?? 'assets/images/default-avatar.png';
                                                         ?>
                                                         <img src="/Social-Media-Awards-/<?php echo htmlspecialchars($avatar); ?>"
-                                                            alt="<?php echo htmlspecialchars($n['candidat_nom'] ?? 'Anonyme'); ?>"
-                                                            class="user-avatar">
+                                                            alt="<?php echo htmlspecialchars($n->getLibelle()); ?>"
+                                                            class="user-avatar"
+                                                            onerror="this.src='/Social-Media-Awards-/assets/images/default-avatar.png'">
                                                         <div class="user-details">
-                                                            <strong><?php echo htmlspecialchars($n['candidat_nom'] ?? 'Anonyme'); ?></strong>
+                                                            <strong><?php echo htmlspecialchars($n->getLibelle()); ?></strong>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <strong><?php echo htmlspecialchars($n['libelle']); ?></strong>
+                                                    <strong><?php echo htmlspecialchars($n->getLibelle()); ?></strong>
                                                     <div class="text-muted small">
-                                                        <?php echo htmlspecialchars(substr($n['argumentaire'] ?? '', 0, 80)); ?>...
+                                                        <?php echo htmlspecialchars(substr($n->getArgumentaire() ?? '', 0, 80)); ?>...
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <span class="badge badge-teal">
-                                                        <?php echo htmlspecialchars($n['categorie_nom'] ?? 'Non catégorisé'); ?>
+                                                        Catégorie #<?php echo $n->getIdCategorie(); ?>
                                                     </span>
-                                                    <div class="text-muted small">
-                                                        <?php echo htmlspecialchars($n['edition_nom'] ?? ''); ?>
-                                                    </div>
+                                                    <?php 
+                                                    // If you need the category name, you'll need to fetch it separately
+                                                    // or modify the service to include it in the query
+                                                    ?>
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    $platform = strtolower($n['plateforme']);
+                                                    $platform = strtolower($n->getPlateforme());
                                                     $icon = match ($platform) {
                                                         'tiktok' => 'fa-tiktok',
                                                         'instagram' => 'fa-instagram',
@@ -156,21 +166,21 @@ $platforms = ['TikTok', 'Instagram', 'YouTube', 'Facebook', 'X', 'Twitch', 'Spot
                                                     ?>
                                                     <span class="platform-badge">
                                                         <i class="fab <?php echo $icon; ?>"></i>
-                                                        <?php echo htmlspecialchars($n['plateforme']); ?>
+                                                        <?php echo htmlspecialchars($n->getPlateforme()); ?>
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <?php echo date('d/m/Y', strtotime($n['date_approbation'])); ?>
+                                                    <?php echo date('d/m/Y', strtotime($n->getDateApprobation() ?? 'now')); ?>
                                                 </td>
                                                 <td>
                                                     <div class="action-buttons">
-                                                        <a href="view-nomination.php?id=<?php echo $n['id_nomination']; ?>"
+                                                        <a href="view-nomination.php?id=<?php echo $n->getIdNomination(); ?>"
                                                             class="btn-icon btn-view" title="Voir">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                         <form method="POST" action="delete-nomination.php"
                                                             onsubmit="return confirmDelete()">
-                                                            <input type="hidden" name="id" value="<?php echo $n['id_nomination']; ?>">
+                                                            <input type="hidden" name="id" value="<?php echo $n->getIdNomination(); ?>">
                                                             <button type="submit" class="btn-icon btn-delete" title="Supprimer">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>

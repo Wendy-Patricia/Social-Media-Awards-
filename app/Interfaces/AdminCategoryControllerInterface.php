@@ -1,5 +1,6 @@
 <?php
-namespace App\Interfaces;
+namespace app\Interfaces;
+use app\Models\Categorie;
 
 /**
  * Interface pour le contrôleur administratif des catégories.
@@ -21,7 +22,7 @@ interface AdminCategoryControllerInterface
      * @param int $id Identifiant unique de la catégorie
      * @return array|null Données de la catégorie ou null si non trouvée
      */
-    public function getCategoryById(int $id): ?array;
+    public function getCategoryById(int $id): ?Categorie;
 
     /**
      * Crée une nouvelle catégorie.

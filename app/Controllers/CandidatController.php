@@ -90,11 +90,7 @@ class CandidatController
         require __DIR__ . '/../../views/candidate/mes-candidatures.php';
     }
 
-    /**
-     * Permet de soumettre ou modifier une candidature
-     *
-     * @return void
-     */
+    
     public function soumettreCandidature(): void
     {
         if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'candidate') {
@@ -121,6 +117,11 @@ class CandidatController
         // Traitement de la soumission/modification
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->processCandidatureSubmission($userId);
+            
+            // Redirection après traitement POST
+            if (!isset($_SESSION['error'])) {
+                exit; // Le header() dans processCandidatureSubmission devrait avoir été appelé
+            }
         }
 
         // Mode édition
@@ -133,8 +134,6 @@ class CandidatController
                 exit;
             }
         }
-
-        require __DIR__ . '/../../views/candidate/soumettre-candidature.php';
     }
 
     /**
@@ -406,6 +405,7 @@ class CandidatController
      */
     private function getActiveEditions(): array
     {
+        $this->editionService->updateAllEditionStatus();
         $allEditions = $this->editionService->getAllEditions();
         $now = date('Y-m-d H:i:s');
 
@@ -563,6 +563,7 @@ class CandidatController
      */
     private function getActiveEditionsForCandidature(): array
     {
+        $this->editionService->updateAllEditionStatus();
         $allEditions = $this->editionService->getAllEditions();
         $now = date('Y-m-d H:i:s');
 

@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($validationErrors)) {
         $image = $_FILES['image'] ?? null;
         
-        if ($controller->createCategory($data, $image)) {
+        if ($categoryController->createCategory($data, $image)) {
             header("Location: gerer-categories.php?success=1");
             exit;
         } else {

@@ -5,7 +5,8 @@ require_once __DIR__ . '/../../../config/permissions.php';
 requireAdmin();
 require_once __DIR__ . '/../../../config/bootstrap-admin.php';
 
-$editions = $editionController->getAllEditions();
+$editionService->updateAllEditionStatus();
+$editions = $editionService->getAllEditions();
 
 require_once __DIR__ . '/../../../views/partials/admin-header.php';
 ?>
@@ -31,61 +32,60 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
 
         <div class="alert alert-info">
             <i class="fas fa-info-circle"></i>
-            <strong>Système d'activation automatique:</strong> Une édition est active si la date actuelle est comprise
-            entre sa date de début et sa date de fin. Une seule édition peut être active à la fois.
+            Une édition est active entre le début des candidatures et la fin des votes.
         </div>
 
         <?php if (empty($editions)): ?>
         <div class="empty-state">
-            <i class="fas fa-calendar"></i>
-            <h3>Aucune édition</h3>
-            <a href="ajouter-edition.php" class="btn btn-primary">Créer la première édition</a>
+            <i class="fas fa-calendar-times fa-4x"></i>
+            <h3>Aucune édition trouvée</h3>
+            <p>Créez votre première édition pour commencer.</p>
+            <a href="ajouter-edition.php" class="btn btn-primary">Nouvelle édition</a>
         </div>
         <?php else: ?>
         <div class="table-responsive">
-            <table class="enhanced-table">
+            <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Édition</th>
-                        <th>Période</th>
-                        <th>Statut</th>
-                        <th>Catégories</th>
-                        <th>Candidatures</th>
-                        <th>Votants</th>
-                        <th>Actions</th>
+                        <th>ÉDITION</th>
+                        <th>PÉRIODE</th>
+                        <th>STATUT</th>
+                        <th>CATÉGORIES</th>
+                        <th>CANDIDATURES</th>
+                        <th>VOTANTS</th>
+                        <th>ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($editions as $e):
-                            $editionModel = new \App\Models\Edition($e);
-                            $status = $editionModel->getStatus();
-                            $statusClass = $status === 'active' ? 'status-active' : ($status === 'upcoming' ? 'status-upcoming' : 'status-completed');
-                            $statusText = $status === 'active' ? 'Active' : ($status === 'upcoming' ? 'À venir' : 'Terminée');
-                        ?>
+                    <?php foreach ($editions as $e): ?>
+                    <?php
+                    $statusText = $e->getEstActive() ? 'Active' : 'Terminée';
+                    $statusClass = $e->getEstActive() ? 'active' : 'finished';
+                    ?>
                     <tr>
                         <td>
-                            <strong><?= htmlspecialchars($e['nom']) ?></strong><br>
-                            <small><?= $e['annee'] ?></small>
+                            <div class="edition-name">
+                                <?= htmlspecialchars($e->getNom()) ?>
+                                <small><?= $e->getAnnee() ?></small>
+                            </div>
                         </td>
                         <td>
-                            Du <?= date('d/m/Y', strtotime($e['date_debut'])) ?><br>
-                            au <?= date('d/m/Y', strtotime($e['date_fin'])) ?>
+                            Du <?= date('d/m/Y', strtotime($e->getDateDebutCandidatures())) ?> 
+                            au <?= date('d/m/Y', strtotime($e->getDateFin())) ?>
                         </td>
                         <td>
                             <span class="status-badge <?= $statusClass ?>">
                                 <?= $statusText ?>
                             </span>
                         </td>
-                        <td><strong><?= $e['nb_categories'] ?></strong></td>
-                        <td><strong><?= $e['nb_candidatures'] ?></strong></td>
-                        <td><strong><?= $e['nb_votants'] ?></strong></td>
+                        <td><strong><?= $e->getNbCategories() ?></strong></td>
+                        <td><strong><?= $e->getNbCandidatures() ?></strong></td>
+                        <td><strong><?= $e->getNbVotants() ?></strong></td>
                         <td class="actions-cell">
-                            <a href="modifier-edition.php?id=<?= $e['id_edition'] ?>" class="action-btn edit"
-                                title="Modifier">
+                            <a href="modifier-edition.php?id=<?= $e->getIdEdition() ?>" class="action-btn edit" title="Modifier">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <a href="#" onclick="confirmDelete(<?= $e['id_edition'] ?>, '<?= addslashes($e['nom']) ?>')"
-                                class="action-btn delete" title="Supprimer">
+                            <a href="#" onclick="confirmDelete(<?= $e->getIdEdition() ?>, '<?= addslashes($e->getNom()) ?>')" class="action-btn delete" title="Supprimer">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </td>
@@ -103,6 +103,5 @@ require_once __DIR__ . '/../../../views/partials/admin-header.php';
 <?php if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     $editionController->deleteEdition($id);
-    header("Location: gerer-editions.php?success=1");
     exit;
 } ?>

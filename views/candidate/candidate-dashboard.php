@@ -62,48 +62,34 @@ try {
 // Obter categorias disponíveis para o candidato
 $availableCategories = [];
 $availableCount = 0;
+
+$availableCategories = [];
+$availableCount = 0;
 try {
-    // 1. Obter edições ativas
-    $sqlEditions = "SELECT id_edition FROM edition 
-                    WHERE est_active = 1 
-                    AND date_fin_candidatures >= NOW()";
-    $stmtEditions = $pdo->query($sqlEditions);
-    $activeEditionIds = $stmtEditions->fetchAll(PDO::FETCH_COLUMN);
+    $candidatService = new CandidatService($pdo);
 
-    if (!empty($activeEditionIds)) {
-        $editionIdsString = implode(',', $activeEditionIds);
+    // Use the service method which returns objects
+    $availableCategoriesObjects = $candidatService->getAvailableCategoriesForCandidature($userId);
 
-        // 2. Obter categorias dessas edições
-        $sqlCategories = "SELECT c.*, e.nom as edition_nom, e.date_fin_candidatures
-                          FROM categorie c
-                          JOIN edition e ON c.id_edition = e.id_edition
-                          WHERE c.id_edition IN ($editionIdsString)
-                          AND e.date_fin_candidatures >= NOW()
-                          ORDER BY e.annee DESC, c.nom ASC";
-
-        $stmtCategories = $pdo->prepare($sqlCategories);
-        $stmtCategories->execute();
-        $allCategories = $stmtCategories->fetchAll();
-
-        // 3. Obter categorias onde o usuário já se candidatou
-        $sqlUserCandidatures = "SELECT id_categorie 
-                                FROM candidature 
-                                WHERE id_compte = :userId 
-                                AND statut != 'Rejetée'";
-
-        $stmtUser = $pdo->prepare($sqlUserCandidatures);
-        $stmtUser->execute([':userId' => $userId]);
-        $userCategoryIds = $stmtUser->fetchAll(PDO::FETCH_COLUMN);
-
-        // 4. Filtrar categorias disponíveis
-        $availableCategories = array_filter($allCategories, function ($category) use ($userCategoryIds) {
-            return !in_array($category['id_categorie'], $userCategoryIds);
-        });
-
-        $availableCount = count($availableCategories);
+    // Convert objects to arrays for easier use in the view
+    foreach ($availableCategoriesObjects as $categoryObject) {
+        $availableCategories[] = [
+            'id_categorie' => $categoryObject->getIdCategorie(),
+            'nom' => $categoryObject->getNom(),
+            'description' => $categoryObject->getDescription(),
+            'plateforme_cible' => $categoryObject->getPlateformeCible(),
+            'limite_nomines' => $categoryObject->getLimiteNomines(),
+            'date_debut_votes' => $categoryObject->getDateDebutVotes(),
+            'date_fin_votes' => $categoryObject->getDateFinVotes(),
+            'id_edition' => $categoryObject->getIdEdition(),
+            'edition_nom' => $categoryObject->getEditionNom(),
+            'date_fin_candidatures' => $categoryObject->getDateFinVotes() // You might need to get this separately
+        ];
     }
+
+    $availableCount = count($availableCategories);
 } catch (Exception $e) {
-    // Ignorar erros
+    error_log("Erreur récupération catégories disponibles: " . $e->getMessage());
     $availableCategories = [];
     $availableCount = 0;
 }
@@ -480,14 +466,6 @@ function getStatusClass($status)
                                             <a href="soumettre-candidature.php" class="btn btn-primary">
                                                 <i class="fas fa-paper-plane me-1"></i> Soumettre une candidature
                                             </a>
-
-                                            <!-- Botão para ver todas as categorias -->
-                                            <?php if (count($availableCategories) > 0): ?>
-                                                <button type="button" class="btn btn-outline-primary"
-                                                    data-bs-toggle="modal" data-bs-target="#categoriesModal">
-                                                    <i class="fas fa-list me-1"></i> Voir toutes les catégories
-                                                </button>
-                                            <?php endif; ?>
                                         </div>
 
                                         <!-- Mostrar algumas categorias diretamente no dashboard -->
@@ -496,9 +474,20 @@ function getStatusClass($status)
                                         ?>
                                             <div class="available-categories-grid">
                                                 <?php foreach ($displayCategories as $category):
-                                                    $deadline = new DateTime($category['date_fin_candidatures']);
                                                     $now = new DateTime();
-                                                    $daysLeft = $now->diff($deadline)->days;
+                                                    if (!empty($category['date_fin_candidatures'])) {
+                                                        try {
+                                                            $deadline = new DateTime($category['date_fin_candidatures']);
+                                                            $daysLeft = $now->diff($deadline)->days;
+                                                        } catch (Exception $e) {
+                                                            $daysLeft = 0;
+                                                            $deadline = new DateTime();
+                                                            error_log("Erreur traitement date: " . $e->getMessage());
+                                                        }
+                                                    } else {
+                                                        $daysLeft = 0;
+                                                        $deadline = new DateTime();
+                                                    }
                                                 ?>
                                                     <div class="category-card">
                                                         <div class="category-header">
@@ -714,20 +703,24 @@ function getStatusClass($status)
 
                         <div class="row">
                             <?php foreach ($availableCategories as $category):
-                                $deadline = new DateTime($category['date_fin_candidatures']);
-                                $now = new DateTime();
-                                $daysLeft = $now->diff($deadline)->days;
-                                $isUrgent = $daysLeft <= 3;
+                                // Verificar se a data existe e não é nula
+                                if (!empty($category['date_fin_candidatures'])) {
+                                    try {
+                                        $deadline = new DateTime($category['date_fin_candidatures']);
+                                        $now = new DateTime();
+                                        $interval = $now->diff($deadline);
+                                        $daysLeft = $interval->days;
+                                    } catch (Exception $e) {
+                                        $daysLeft = 0;
+                                        error_log("Erro ao processar data: " . $e->getMessage());
+                                    }
+                                } else {
+                                    // Se não houver data, definir um valor padrão
+                                    $daysLeft = 0;
+                                    $deadline = new DateTime(); // Data atual
+                                }
                             ?>
-                                <div class="col-md-6 mb-3">
-                                    <div class="category-card h-100 <?= $isUrgent ? 'border-danger' : '' ?>">
-                                        <?php if ($isUrgent): ?>
-                                            <div class="position-absolute top-0 start-0 m-2">
-                                                <span class="badge bg-danger">
-                                                    <i class="fas fa-exclamation-triangle me-1"></i> URGENT
-                                                </span>
-                                            </div>
-                                        <?php endif; ?>
+
 
                                         <div class="category-header">
                                             <h6 class="category-title"><?= htmlspecialchars($category['nom']) ?></h6>
@@ -766,7 +759,7 @@ function getStatusClass($status)
                                             </div>
 
                                             <div class="text-end">
-                                                <div class="mb-2 <?= $isUrgent ? 'text-danger fw-bold' : 'text-muted' ?>">
+                                                <div class="mb-2 ">
                                                     <i class="fas fa-clock me-1"></i>
                                                     <small>J-<?= $daysLeft ?></small>
                                                 </div>

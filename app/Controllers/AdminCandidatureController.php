@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Services\CandidatureService;
 use App\Interfaces\AdminCandidatureControllerInterface;
+use App\Models\Candidature;
 
 /**
  * Contrôleur responsable de la gestion administrative des candidatures.
@@ -28,7 +29,7 @@ class AdminCandidatureController implements AdminCandidatureControllerInterface
     /**
      * Récupère la liste complète de toutes les candidatures.
      *
-     * @return array Tableau contenant toutes les candidatures
+     * @return Candidature[] Tableau contenant toutes les candidatures sous forme d'objets Candidature
      */
     public function getAllCandidatures(): array
     {
@@ -39,9 +40,9 @@ class AdminCandidatureController implements AdminCandidatureControllerInterface
      * Récupère une candidature spécifique par son identifiant.
      *
      * @param int $id Identifiant de la candidature
-     * @return array|null Données de la candidature ou null si non trouvée
+     * @return Candidature|null Objet Candidature ou null si non trouvée
      */
-    public function getCandidatureById(int $id): ?array
+    public function getCandidatureById(int $id): ?Candidature
     {
         return $this->candidatureService->getCandidatureById($id);
     }

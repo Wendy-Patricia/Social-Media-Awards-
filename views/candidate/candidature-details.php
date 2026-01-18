@@ -27,14 +27,14 @@ if (!$id || !is_numeric($id)) {
 
 $candidature = $candidatureService->getCandidatureById((int)$id);
 
-if (!$candidature || $candidature['id_compte'] !== $_SESSION['user_id']) {
+if (!$candidature || $candidature->getIdCompte() !== $_SESSION['user_id']) {
     $_SESSION['error'] = "Candidature non trouvée ou non autorisée.";
     header('Location: mes-candidatures.php');
     exit;
 }
 
 // Obter informações da categoria
-$category = $categoryService->getCategoryById($candidature['id_categorie']);
+$category = $categoryService->getCategoryById($candidature->getIdCategorie());
 $edition = null;
 if ($category) {
     // Obter informações da edição
@@ -44,12 +44,12 @@ if ($category) {
         JOIN categorie c ON e.id_edition = c.id_edition
         WHERE c.id_categorie = :id
     ");
-    $stmt->execute([':id' => $candidature['id_categorie']]);
+    $stmt->execute([':id' => $candidature->getIdCategorie()]);
     $edition = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 // Formatar data
-$dateSoumission = date('d/m/Y à H:i', strtotime($candidature['date_soumission']));
+$dateSoumission = date('d/m/Y à H:i', strtotime($candidature->getDateSoumission()));
 
 // Status colors
 $statusColors = [
@@ -59,7 +59,7 @@ $statusColors = [
     'En cours' => 'info'
 ];
 
-$statusClass = $statusColors[$candidature['statut']] ?? 'secondary';
+$statusClass = $statusColors[$candidature->getStatut()] ?? 'secondary';
 
 // Platform icons
 $platformIcons = [
@@ -71,7 +71,7 @@ $platformIcons = [
     'Twitch' => 'fab fa-twitch'
 ];
 
-$platformIcon = $platformIcons[$candidature['plateforme']] ?? 'fas fa-globe';
+$platformIcon = $platformIcons[$candidature->getPlateforme()] ?? 'fas fa-globe';
 ?>
 
 <!DOCTYPE html>
@@ -144,7 +144,7 @@ $platformIcon = $platformIcons[$candidature['plateforme']] ?? 'fas fa-globe';
                                     </h5>
                                 </div>
                                 <span class="badge bg-<?= $statusClass ?>">
-                                    <i class="fas fa-circle"></i> <?= htmlspecialchars($candidature['statut']) ?>
+                                    <i class="fas fa-circle"></i> <?= htmlspecialchars($candidature->getStatut()) ?>
                                 </span>
                             </div>
                         </div>
@@ -153,20 +153,20 @@ $platformIcon = $platformIcons[$candidature['plateforme']] ?? 'fas fa-globe';
                                 <div class="col-md-6">
                                     <div class="detail-item">
                                         <label><i class="fas fa-heading"></i> Titre</label>
-                                        <p class="detail-value"><?= htmlspecialchars($candidature['libelle']) ?></p>
+                                        <p class="detail-value"><?= htmlspecialchars($candidature->getLibelle()) ?></p>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="detail-item">
                                         <label><i class="<?= $platformIcon ?>"></i> Plateforme</label>
-                                        <p class="detail-value"><?= htmlspecialchars($candidature['plateforme']) ?></p>
+                                        <p class="detail-value"><?= htmlspecialchars($candidature->getPlateforme()) ?></p>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="detail-item">
                                         <label><i class="fas fa-link"></i> URL du Contenu</label>
                                         <p class="detail-value">
-                                            <a href="<?= htmlspecialchars($candidature['url_contenu']) ?>" 
+                                            <a href="<?= htmlspecialchars($candidature->getUrlContenu()) ?>" 
                                                target="_blank" 
                                                class="text-primary text-decoration-none">
                                                 <i class="fas fa-external-link-alt"></i> Voir le contenu
@@ -193,13 +193,13 @@ $platformIcon = $platformIcons[$candidature['plateforme']] ?? 'fas fa-globe';
                         </div>
                         <div class="card-body">
                             <div class="argumentaire-content">
-                                <?= nl2br(htmlspecialchars($candidature['argumentaire'])) ?>
+                                <?= nl2br(htmlspecialchars($candidature->getArgumentaire())) ?>
                             </div>
                         </div>
                     </div>
 
                     <!-- Image Preview Card -->
-                    <?php if (!empty($candidature['image'])): ?>
+                    <?php if (!empty($candidature->getImage())): ?>
                     <div class="main-card mb-4">
                         <div class="card-header">
                             <h5 class="mb-0">
@@ -208,11 +208,11 @@ $platformIcon = $platformIcons[$candidature['plateforme']] ?? 'fas fa-globe';
                         </div>
                         <div class="card-body text-center">
                             <div class="image-preview-detail">
-                                <img src="/Social-Media-Awards-/public/<?= htmlspecialchars($candidature['image']) ?>" 
+                                <img src="/Social-Media-Awards-/public/<?= htmlspecialchars($candidature->getImage()) ?>" 
                                      alt="Image de la candidature" 
                                      class="img-fluid rounded shadow">
                                 <div class="mt-3">
-                                    <a href="/Social-Media-Awards-/public/<?= htmlspecialchars($candidature['image']) ?>" 
+                                    <a href="/Social-Media-Awards-/public/<?= htmlspecialchars($candidature->getImage()) ?>" 
                                        target="_blank" 
                                        class="btn btn-outline-primary btn-sm">
                                         <i class="fas fa-expand"></i> Voir en grand
@@ -247,7 +247,7 @@ $platformIcon = $platformIcons[$candidature['plateforme']] ?? 'fas fa-globe';
                                 <?php if ($category): ?>
                                 <div class="context-item">
                                     <label><i class="fas fa-tag"></i> Catégorie</label>
-                                    <p class="context-value"><?= htmlspecialchars($category['nom']) ?></p>
+                                    <p class="context-value"><?= htmlspecialchars($category->getNom()) ?></p>
                                 </div>
                                 <?php endif; ?>
                             </div>
@@ -268,12 +268,12 @@ $platformIcon = $platformIcons[$candidature['plateforme']] ?? 'fas fa-globe';
                                         <p class="text-muted small"><?= $dateSoumission ?></p>
                                     </div>
                                 </div>
-                                <div class="timeline-item <?= $candidature['statut'] !== 'En attente' ? 'completed' : 'current' ?>">
+                                <div class="timeline-item <?= $candidature->getStatut() !== 'En attente' ? 'completed' : 'current' ?>">
                                     <div class="timeline-dot"></div>
                                     <div class="timeline-content">
                                         <h6>Évaluation</h6>
                                         <p class="text-muted small">
-                                            <?php if ($candidature['statut'] === 'En attente'): ?>
+                                            <?php if ($candidature->getStatut() === 'En attente'): ?>
                                                 En cours d'examen
                                             <?php else: ?>
                                                 Terminé le <?= date('d/m/Y') ?>
@@ -281,11 +281,11 @@ $platformIcon = $platformIcons[$candidature['plateforme']] ?? 'fas fa-globe';
                                         </p>
                                     </div>
                                 </div>
-                                <div class="timeline-item <?= $candidature['statut'] !== 'En attente' ? 'completed' : '' ?>">
+                                <div class="timeline-item <?= $candidature->getStatut() !== 'En attente' ? 'completed' : '' ?>">
                                     <div class="timeline-dot"></div>
                                     <div class="timeline-content">
                                         <h6>Décision</h6>
-                                        <p class="text-muted small"><?= htmlspecialchars($candidature['statut']) ?></p>
+                                        <p class="text-muted small"><?= htmlspecialchars($candidature->getStatut()) ?></p>
                                     </div>
                                 </div>
                             </div>
@@ -337,7 +337,7 @@ $platformIcon = $platformIcons[$candidature['plateforme']] ?? 'fas fa-globe';
     
     <script>
         function shareCandidature() {
-            const title = "<?= addslashes($candidature['libelle']) ?>";
+            const title = "<?= addslashes($candidature->getLibelle()) ?>";
             const text = "Découvrez ma candidature aux Social Media Awards !";
             const url = window.location.href;
             

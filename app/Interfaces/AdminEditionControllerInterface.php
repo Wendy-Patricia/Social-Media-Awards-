@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Interfaces;
+use App\Models\Edition;
 
 /**
  * Interface pour le contrôleur administratif des éditions.
@@ -10,7 +11,7 @@ namespace App\Interfaces;
  */
 interface AdminEditionControllerInterface
 {
- 
+
     /**
      * Récupère toutes les éditions avec leurs données complètes.
      *
@@ -24,7 +25,7 @@ interface AdminEditionControllerInterface
      * @param int $id Identifiant de l'édition
      * @return array|null Données de l'édition ou null si non trouvée
      */
-    public function getEditionById(int $id): ?array;
+    public function getEditionById(int $id): ?Edition;
 
     /**
      * Crée une nouvelle édition.

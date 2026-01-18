@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Services\CategoryService;
 use App\Interfaces\AdminCategoryControllerInterface;
+use App\Models\Categorie;
 
 /**
  * Contrôleur responsable de la gestion administrative des catégories.
@@ -28,7 +29,7 @@ class AdminCategoryController implements AdminCategoryControllerInterface
     /**
      * Récupère la liste complète de toutes les catégories.
      *
-     * @return array Tableau contenant toutes les catégories
+     * @return Categorie[] Tableau contenant toutes les catégories sous forme d'objets Categorie
      */
     public function getAllCategories(): array
     {
@@ -39,9 +40,9 @@ class AdminCategoryController implements AdminCategoryControllerInterface
      * Récupère une catégorie spécifique par son identifiant.
      *
      * @param int $id Identifiant unique de la catégorie
-     * @return array|null Données de la catégorie ou null si non trouvée
+     * @return Categorie|null Objet Categorie ou null si non trouvée
      */
-    public function getCategoryById(int $id): ?array
+    public function getCategoryById(int $id): ?Categorie
     {
         return $this->categoryService->getCategoryById($id);
     }
@@ -81,5 +82,4 @@ class AdminCategoryController implements AdminCategoryControllerInterface
     {
         return $this->categoryService->deleteCategory($id);
     }
-    
 }

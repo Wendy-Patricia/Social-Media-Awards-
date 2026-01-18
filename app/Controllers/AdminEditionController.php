@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Services\EditionService;
 use PDO;
 use App\Interfaces\AdminEditionControllerInterface;
+use App\Models\Edition;
 
 /**
  * Contrôleur responsable de la gestion administrative des éditions.
@@ -46,10 +47,11 @@ class AdminEditionController implements AdminEditionControllerInterface
     /**
      * Récupère toutes les éditions avec leurs données complètes.
      *
-     * @return array Tableau contenant toutes les éditions
+     * @return Edition[] Tableau contenant toutes les éditions sous forme d'objets Edition
      */
     public function getAllEditions(): array
     {
+        $this->editionService->updateAllEditionStatus();
         return $this->editionService->getAllEditions();
     }
 
@@ -57,11 +59,12 @@ class AdminEditionController implements AdminEditionControllerInterface
      * Récupère une édition spécifique par son identifiant.
      *
      * @param int $id Identifiant de l'édition
-     * @return array|null Données de l'édition ou null si non trouvée
+     * @return Edition|null Objet Edition ou null si non trouvée
      */
-    public function getEditionById(int $id): ?array
+    public function getEditionById(int $id): ?Edition
     {
-        return $this->editionService->getEditionById($id);
+        $data = $this->editionService->getEditionById($id);
+        return $data ? new Edition($data) : null;
     }
 
     /**

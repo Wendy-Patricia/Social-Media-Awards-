@@ -1,8 +1,4 @@
 <?php
-// FICHIER : UserController.php
-// DESCRIPTION : Contrôleur de gestion des utilisateurs avec système de redirection
-// FONCTIONNALITÉ : Gère login, inscription, logout et redirections adaptatives
-
 require_once __DIR__ . '/../Models/UserModel.php';
 require_once __DIR__ . '/../Services/UserService.php';
 
