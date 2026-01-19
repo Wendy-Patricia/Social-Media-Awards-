@@ -22,6 +22,21 @@ class VoteService
         $this->voteModel = new Vote();
         $this->userModel = new User();
     }
+    
+   
+    /**
+     * Vérifie si un utilisateur peut voter dans une catégorie
+     * Wrapper de canUserVoteSimple qui retourne un booléen
+     * 
+     * @param int $userId ID de l'utilisateur
+     * @param int $categoryId ID de la catégorie
+     * @return bool True si l'utilisateur peut voter, sinon false
+     */
+    public function canUserVote($userId, $categoryId)
+    {
+        $result = $this->canUserVoteSimple($userId, $categoryId);
+        return isset($result['can_vote']) && $result['can_vote'] === true;
+    }
 
     /**
      * Méthode getter pour accéder au modèle de vote

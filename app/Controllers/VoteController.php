@@ -126,7 +126,7 @@ class VoteController {
     }
 
     /**
-     * Traite un vote soumis - VERSION CORRIGÉE
+     * Traite um vote soumis - VERSION CORRIGÉE
      * - Vérifie l'authentification et les permissions
      * - Effectue plusieurs validations (vote existant, token, session, expiration)
      * - Traite le vote via le service
@@ -177,13 +177,25 @@ class VoteController {
         }
         
         // DEUXIÈME VÉRIFICATION : Token et session valides ?
+        // Si la session n'a pas le token, recréer la session de vote
         if (!isset($_SESSION['voting_token']) || !isset($_SESSION['voting_category'])) {
-            $this->clearVotingSession();
-            return [
-                'success' => false, 
-                'message' => 'Session de vote expirée ou invalide. Veuillez recommencer.',
-                'session_expired' => true
-            ];
+            // Essayer de recréer la session de vote si le token est présent en POST
+            if (isset($_POST['token']) && !empty($_POST['token'])) {
+                // Recréer les variables de session à partir des données POST
+                $_SESSION['voting_token'] = $_POST['token'];
+                $_SESSION['voting_category'] = $categoryId;
+                $_SESSION['voting_started'] = time();
+                $_SESSION['voting_expires'] = time() + 3600;
+                
+                error_log("DEBUG: Session de vote recréée à partir des données POST");
+            } else {
+                $this->clearVotingSession();
+                return [
+                    'success' => false, 
+                    'message' => 'Session de vote expirée ou invalide. Veuillez recommencer.',
+                    'session_expired' => true
+                ];
+            }
         }
         
         // TROISIÈME VÉRIFICATION : Le token correspond-il à la catégorie ?
@@ -316,7 +328,7 @@ class VoteController {
     }
 
     /**
-     * Fonction utilitaire : obtient le nom d'une catégorie
+     * Função utilitaire : obtient le nom d'une catégorie
      * 
      * @param int $categoryId ID de la catégorie
      * @return string Nom de la catégorie ou texte par défaut

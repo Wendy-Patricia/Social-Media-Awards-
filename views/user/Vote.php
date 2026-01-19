@@ -33,6 +33,28 @@ if ($categoryId && $categoryId > 0) {
         header('Location: vote.php?error=invalid_category');
         exit();
     }
+    
+    // Si la session de vote n'est pas active pour cette catégorie, la rétablir
+    if (!isset($_SESSION['voting_token']) || $_SESSION['voting_category'] != $categoryId) {
+        error_log("DEBUG Vote.php: Rétablissement de la session de vote pour catégorie {$categoryId}");
+        
+        // Rétablir la session en appelant directement le service
+        require_once '../../app/Services/VoteService.php';
+        $voteService = new VoteService();
+        $startResult = $voteService->startVotingProcess($_SESSION['user_id'], $categoryId);
+        
+        if ($startResult['success']) {
+            // Restaurer les variables de session
+            $_SESSION['voting_token'] = $startResult['token'];
+            $_SESSION['voting_category'] = $categoryId;
+            $_SESSION['voting_category_name'] = $currentCategory['nom'] ?? 'Catégorie';
+            $_SESSION['voting_nominations'] = $startResult['nominations'];
+            $_SESSION['voting_started'] = time();
+            $_SESSION['voting_expires'] = time() + 3600;
+            
+            error_log("DEBUG Vote.php: Session de vote rétablie avec succès");
+        }
+    }
 }
 
 // Traiter le vote si le formulaire est soumis
@@ -106,6 +128,14 @@ if (isset($_GET['error'])) {
         default:
             $error = 'Une erreur est survenue.';
     }
+
+    $votedCount = 0;
+$totalAvailable = 0;
+foreach ($pageData['available_categories'] as $cat) {
+    if ($cat['has_voted']) $votedCount++;
+    if ($cat['can_vote']) $totalAvailable++;
+}
+$percentage = $totalAvailable > 0 ? min(100, max(0, ($votedCount / $totalAvailable) * 100)) : 0;
 }
 
 $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
@@ -121,19 +151,12 @@ $initials = strtoupper(substr($_SESSION['user_pseudonyme'], 0, 2));
     <link rel="stylesheet" href="/Social-Media-Awards-/assets/css/vote.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        /* Style dynamique pour la barre de progression */
+     <style>
+        :root {
+            --progress-percentage: <?php echo $percentage; ?>%;
+        }
         .progress-fill {
-            width: <?php
-                    $votedCount = 0;
-                    $totalAvailable = 0;
-                    foreach ($pageData['available_categories'] as $cat) {
-                        if ($cat['has_voted']) $votedCount++;
-                        if ($cat['can_vote']) $totalAvailable++;
-                    }
-                    $percentage = $totalAvailable > 0 ? min(100, max(0, ($votedCount / $totalAvailable) * 100)) : 0;
-                    echo $percentage;
-                    ?>% !important;
+            width: var(--progress-percentage) !important;
         }
     </style>
 </head>
